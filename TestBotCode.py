@@ -66,15 +66,15 @@ def handleMsg(this, sender, message, *args):
     bot.chat('Hi, you said ' + message)
     match message:
       case "go":
+        look(bot, randomYaw(), randomPitch())
         move(bot, Movement.left)
         movementModifier(bot, MovementModifier.sprint)
         jump(bot, Jump.jump)
-        look(bot, randomYaw(), randomPitch())
       case "halt":
+        look(bot, randomYaw(), randomPitch())
         move(bot, Movement.none)
         movementModifier(bot, MovementModifier.none)
         jump(bot, Jump.none)
-        look(bot, randomYaw(), randomPitch())
       case "find blocks":
         blocks = bot.findBlocks({
           "matching": lambda block:
