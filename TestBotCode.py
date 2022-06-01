@@ -1,6 +1,8 @@
 from javascript import require, On
 import secrets
 from enum import Enum
+import math
+import random
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 
 BOT_USERNAME = 'HelloThere'
@@ -30,15 +32,32 @@ class MovementModifier(Enum):
   sprint = 1
   sneak = 2
 
-def move(movement):
-  bot.setControlState('forward', movement is Movement.forwards)
-  bot.setControlState('back', movement is Movement.backwards)
-  bot.setControlState('left', movement is Movement.left)
-  bot.setControlState('right', movement is Movement.right)
+class Jump(Enum):
+  none = 0
+  jump = 1
 
-def movementModifier(movementModifier):
-  bot.setControlState('sprint', movementModifier is MovementModifier.sprint)
-  bot.setControlState('sneak', movementModifier is MovementModifier.sneak)
+def move(currentBot, movement):
+  currentBot.setControlState('forward', movement is Movement.forwards)
+  currentBot.setControlState('back', movement is Movement.backwards)
+  currentBot.setControlState('left', movement is Movement.left)
+  currentBot.setControlState('right', movement is Movement.right)
+
+def movementModifier(currentBot, movementModifier):
+  currentBot.setControlState('sprint', movementModifier is MovementModifier.sprint)
+  currentBot.setControlState('sneak', movementModifier is MovementModifier.sneak)
+
+def jump(currentBot, jump):
+  currentBot.setControlState('jump', jump is Jump.jump)
+
+def look(currentBot, yaw, pitch):
+
+  currentBot.look(yaw, pitch, True)
+
+def randomYaw():
+  return random.uniform(0,6.28)
+
+def randomPitch():
+  return random.uniform(-math.pi/2,math.pi/2)
 
 @On(bot, 'chat')
 def handleMsg(this, sender, message, *args):
@@ -47,9 +66,15 @@ def handleMsg(this, sender, message, *args):
     bot.chat('Hi, you said ' + message)
     match message:
       case "go":
-        bot.setControlState('forward', True)
+        look(bot, randomYaw(), randomPitch())
+        move(bot, Movement.left)
+        movementModifier(bot, MovementModifier.sprint)
+        jump(bot, Jump.jump)
       case "halt":
-        bot.setControlState('forward', False)
+        look(bot, randomYaw(), randomPitch())
+        move(bot, Movement.none)
+        movementModifier(bot, MovementModifier.none)
+        jump(bot, Jump.none)
       case "find blocks":
         blocks = bot.findBlocks({
           "matching": lambda block:
