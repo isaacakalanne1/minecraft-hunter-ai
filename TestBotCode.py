@@ -1,5 +1,6 @@
 from javascript import require, On
 import secrets
+from enum import Enum
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 
 BOT_USERNAME = 'HelloThere'
@@ -13,19 +14,31 @@ bot = mineflayer.createBot({
   'username': BOT_USERNAME
 })
 
-bot2 = mineflayer.createBot({
-  'host': SERVER_HOST,
-  'port': SERVER_PORT,
-  'username': BOT_USERNAME_2
-})
-
 @On(bot, 'spawn')
 def handle(*args):
   print("I spawned 👋")
 
-@On(bot2, 'spawn')
-def handle(*args):
-  print("I spawned 👋")
+class Movement(Enum):
+  none = 0
+  forwards = 1
+  backwards = 2
+  left = 3
+  right = 4
+
+class MovementModifier(Enum):
+  none = 0
+  sprint = 1
+  sneak = 2
+
+def move(movement):
+  bot.setControlState('forward', movement is Movement.forwards)
+  bot.setControlState('back', movement is Movement.backwards)
+  bot.setControlState('left', movement is Movement.left)
+  bot.setControlState('right', movement is Movement.right)
+
+def movementModifier(movementModifier):
+  bot.setControlState('sprint', movementModifier is MovementModifier.sprint)
+  bot.setControlState('sneak', movementModifier is MovementModifier.sneak)
 
 @On(bot, 'chat')
 def handleMsg(this, sender, message, *args):
