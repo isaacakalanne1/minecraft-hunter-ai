@@ -4,16 +4,18 @@ mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 
 BOT_USERNAME = 'HelloThere'
 BOT_USERNAME_2 = 'HelloThereMate'
+SERVER_HOST = "localHost"
+SERVER_PORT = 52589
 
 bot = mineflayer.createBot({
-  'host': 'localHost',
-  'port': 54281,
+  'host': SERVER_HOST,
+  'port': SERVER_PORT,
   'username': BOT_USERNAME
 })
 
 bot2 = mineflayer.createBot({
-  'host': 'localHost',
-  'port': 54281,
+  'host': SERVER_HOST,
+  'port': SERVER_PORT,
   'username': BOT_USERNAME_2
 })
 
@@ -39,8 +41,8 @@ def handleMsg(this, sender, message, *args):
         blocks = bot.findBlocks({
           "matching": lambda block:
             block.boundingBox is "block",
-          "maxDistance": 100,
-          "count": 30
+          "maxDistance": 16,
+          "count": 200
         })
         print("The blocks are", blocks)
       case "current block":
