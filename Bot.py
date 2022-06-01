@@ -3,7 +3,7 @@ from enum import Enum
 import math
 import random
 import asyncio
-import Movement
+import Action.Movement as Movement
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 
