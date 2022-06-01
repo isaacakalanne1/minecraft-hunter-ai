@@ -1,9 +1,10 @@
 from javascript import require, On
-import secrets
 from enum import Enum
 import math
 import random
 import asyncio
+import Movement
+
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 
 BOT_USERNAME = 'HelloThere'
@@ -23,13 +24,6 @@ bot = mineflayer.createBot({
 def handle(*args):
   print("I spawned 👋")
 
-class Movement(Enum):
-  none = 0
-  forwards = 1
-  backwards = 2
-  left = 3
-  right = 4
-
 class MovementModifier(Enum):
   none = 0
   sprint = 1
@@ -46,12 +40,6 @@ class ItemSlot(Enum):
 
 def look(currentBot, yaw, pitch):
   currentBot.look(yaw, pitch, True)
-
-def move(currentBot, movement):
-  currentBot.setControlState('forward', movement is Movement.forwards)
-  currentBot.setControlState('back', movement is Movement.backwards)
-  currentBot.setControlState('left', movement is Movement.left)
-  currentBot.setControlState('right', movement is Movement.right)
 
 def movementModifier(currentBot, movementModifier):
   currentBot.setControlState('sprint', movementModifier is MovementModifier.sprint)
@@ -84,19 +72,21 @@ def handleMsg(this, sender, message, *args):
     match message:
       case "go":
         look(bot, randomYaw(), randomPitch())
-        move(bot, Movement.left)
+        Movement.move(bot, Movement.Direction.left)
         movementModifier(bot, MovementModifier.sprint)
         jump(bot, Jump.jump)
+        moveItem(bot, 37, 36)
         selectQuickBarSlot(bot, randomQuickBarSlot())
       case "halt":
         look(bot, randomYaw(), randomPitch())
-        move(bot, Movement.none)
+        Movement.move(bot, Movement.Direction.none)
         movementModifier(bot, MovementModifier.none)
         jump(bot, Jump.none)
+        moveItem(bot, 37, 36)
         selectQuickBarSlot(bot, randomQuickBarSlot())
       case "item slots":
-        selectQuickBarSlot(bot, 0)
         moveItem(bot, 37, 36)
+        selectQuickBarSlot(bot, 0)
         print("Inventory is", bot.inventory.items())
       case "find blocks":
         scanArea(bot)
@@ -131,3 +121,6 @@ def scanArea(currentBot):
     "count": 20
   })
   print("The blocks are", blocks)
+
+def generalAction(currentBot):
+  currentBot.craft()
