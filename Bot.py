@@ -1,16 +1,23 @@
+from ast import Num
 from javascript import require, On
 from enum import Enum
+from fastnumbers import fast_real
 import math
 import random
 import asyncio
 import Action.Movement as Movement
+import Action.MovementModifier as MovementModifier
+import Action.Jump as Jump
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 
 BOT_USERNAME = 'HelloThere'
 BOT_USERNAME_2 = 'HelloThereMate'
 SERVER_HOST = "localHost"
-SERVER_PORT = 52589
+SERVER_PORT = 59878
+
+SELECT_QUICKBAR_SLOT = 'selectQuickBarSlot'
+MOVE_ITEM_SLOT = 'moveItemSlot'
 
 inventoryItems = {}
 
@@ -20,18 +27,11 @@ bot = mineflayer.createBot({
   'username': BOT_USERNAME
 })
 
+loop = asyncio.get_event_loop()
+
 @On(bot, 'spawn')
 def handle(*args):
   print("I spawned 👋")
-
-class MovementModifier(Enum):
-  none = 0
-  sprint = 1
-  sneak = 2
-
-class Jump(Enum):
-  none = 0
-  jump = 1
 
 class ItemSlot(Enum):
   none = 0
@@ -40,13 +40,6 @@ class ItemSlot(Enum):
 
 def look(currentBot, yaw, pitch):
   currentBot.look(yaw, pitch, True)
-
-def movementModifier(currentBot, movementModifier):
-  currentBot.setControlState('sprint', movementModifier is MovementModifier.sprint)
-  currentBot.setControlState('sneak', movementModifier is MovementModifier.sneak)
-
-def jump(currentBot, jump):
-  currentBot.setControlState('jump', jump is Jump.jump)
 
 def selectQuickBarSlot(currentBot, slot):
   if slot is not None:
@@ -57,6 +50,14 @@ def randomYaw():
 
 def randomPitch():
   return random.uniform(-math.pi/2,math.pi/2)
+
+async def updateSlots(currentBot, type, slotValue):
+  if type == MOVE_ITEM_SLOT:
+    sourceSlot = int(slotValue[0])
+    destSlot = int(slotValue[1])
+    x = await moveItem(currentBot, 37, 40)
+  if type == SELECT_QUICKBAR_SLOT:
+    selectQuickBarSlot(currentBot, 1)
 
 async def moveItem(currentBot, sourceSlot, destSlot):
   await currentBot.moveSlotItem(sourceSlot, destSlot)
@@ -73,17 +74,15 @@ def handleMsg(this, sender, message, *args):
       case "go":
         look(bot, randomYaw(), randomPitch())
         Movement.move(bot, Movement.Direction.left)
-        movementModifier(bot, MovementModifier.sprint)
-        jump(bot, Jump.jump)
-        moveItem(bot, 37, 36)
-        selectQuickBarSlot(bot, randomQuickBarSlot())
+        MovementModifier.modify(bot, MovementModifier.Type.sprint)
+        Jump.jump(bot, Jump.Jump.jump)
+        updateSlots(bot, MOVE_ITEM_SLOT, (36, 40))
       case "halt":
         look(bot, randomYaw(), randomPitch())
         Movement.move(bot, Movement.Direction.none)
-        movementModifier(bot, MovementModifier.none)
-        jump(bot, Jump.none)
-        moveItem(bot, 37, 36)
-        selectQuickBarSlot(bot, randomQuickBarSlot())
+        MovementModifier.modify(bot, MovementModifier.Type.none)
+        Jump.jump(bot, Jump.Jump.none)
+        updateSlots(bot, SELECT_QUICKBAR_SLOT, 1)
       case "item slots":
         moveItem(bot, 37, 36)
         selectQuickBarSlot(bot, 0)
@@ -93,6 +92,8 @@ def handleMsg(this, sender, message, *args):
       case "current block":
         block = bot.blockAtCursor()
         print("Block is", block)
+      case "slot test":
+        updateSlots(bot, MOVE_ITEM_SLOT, (36, 38))
 
 @On(bot, 'playerCollect')
 def handlePlayerCollect(this, collector, collected):
