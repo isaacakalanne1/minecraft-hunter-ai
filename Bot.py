@@ -21,7 +21,11 @@ SELECT_QUICKBAR_SLOT = 'selectQuickBarSlot'
 MOVE_ITEM_SLOT = 'moveItemSlot'
 
 class HunterData:
-  inventoryItems = list()
+  # Will need to update inventoryItems to dictionary, like {32 : Item} so AI can access items based on their ID, rather than a raw index
+  inventoryItems = []
+
+  # Will need to update blocksInMemory to dictionary, like { Vec3{x,y,z} : Block} so AI can access blocks based on their position, rather than a raw index
+  blocksInMemory = []
 
   bot = mineflayer.createBot({
     'host': SERVER_HOST,
@@ -54,13 +58,15 @@ def randomPitch():
 def holdItem(currentBot, item):
   currentBot.equip(item)
 
+def randomIndexOf(list):
+  length = len(list)
+  if not list:
+    return None
+  return int(round(random.uniform(0,len(list) - 1), 0))
 
 def randomInventoryIndex():
   updateInventory(bot)
-  length = len(hunterData.inventoryItems)
-  if not hunterData.inventoryItems:
-    return None
-  return int(round(random.uniform(0,len(hunterData.inventoryItems) - 1), 0))
+  return randomIndexOf(hunterData.inventoryItems)
 
 @On(bot, 'chat')
 def handleMsg(this, sender, message, *args):
@@ -70,7 +76,7 @@ def handleMsg(this, sender, message, *args):
     match message:
       case "go":
         look(bot, randomYaw(), randomPitch())
-        Movement.move(bot, Movement.Direction.left)
+        Movement.move(bot, Movement.Direction.forwards)
         MovementModifier.modify(bot, MovementModifier.Type.sprint)
         Jump.jump(bot, Jump.Jump.jump)
         if randomInventoryIndex() is not None:
@@ -87,8 +93,14 @@ def handleMsg(this, sender, message, *args):
         print("Inventory is", hunterData.inventoryItems)
       case "find blocks":
         scanArea(bot)
+      case "dig":
+        hunterData.blocksInMemory.append(bot.blockAtCursor())
+        index = randomIndexOf(hunterData.blocksInMemory)
+        if index is not None:
+          print('yeee!')
+          bot.dig(hunterData.blocksInMemory[len(hunterData.blocksInMemory) - 1], True, 'rayCast')
       case "current block":
-        block = bot.blockAtCursor()
+        hunterData.blocksInMemory.append(bot.blockAtCursor())
         print("Block is", block)
 
 
