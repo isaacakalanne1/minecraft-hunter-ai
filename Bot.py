@@ -11,7 +11,7 @@ mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 BOT_USERNAME = 'HelloThere'
 BOT_USERNAME_2 = 'HelloThereMate'
 SERVER_HOST = "localHost"
-SERVER_PORT = 59610
+SERVER_PORT = 60468
 
 SELECT_QUICKBAR_SLOT = 'selectQuickBarSlot'
 MOVE_ITEM_SLOT = 'moveItemSlot'
@@ -101,16 +101,26 @@ def handleMsg(this, sender, message, *args):
         index = randomIndexOf(hunterData.blocksInMemory)
         if index is not None:
           print('yeee!')
-          bot.dig(hunterData.blocksInMemory[len(hunterData.blocksInMemory) - 1], True, 'rayCast')
+          blockIndex = len(hunterData.blocksInMemory) - 1
+          block = hunterData.blocksInMemory[blockIndex]
+          dig(bot, block, True, 'rayCast')
       case 'place':
         hunterData.blocksInMemory.append(bot.blockAtCursor())
-        block = hunterData.blocksInMemory[len(hunterData.blocksInMemory) - 1]
+        blockIndex = len(hunterData.blocksInMemory) - 1
+        block = hunterData.blocksInMemory[blockIndex]
         face = {'x' : 0, 'y' : 1, 'z' : 0}
-        place(bot, block, face)
+        try:
+          place(bot, block, face)
+        except:
+          bot.chat('I couldn\'t place a block next to ' + block.displayName)
         
       case "current block":
         hunterData.blocksInMemory.append(bot.blockAtCursor())
+        block = hunterData.blocksInMemory[len(hunterData.blocksInMemory) - 1]
         print("Block is", block)
+
+def dig(currentBot, block, forceLook, digFace):
+  currentBot.dig(block, forceLook, digFace)
 
 def place(currentBot, block, face):
   currentBot.placeBlock(block, face)
