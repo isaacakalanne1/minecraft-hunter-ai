@@ -23,6 +23,8 @@ class HunterData:
   # Will need to update blocksInMemory to dictionary, like { Vec3{x,y,z} : Block} so AI can access blocks based on their position, rather than a raw index
   blocksInMemory = []
 
+  entitiesInMemory = []
+
   bot = mineflayer.createBot({
     'host': SERVER_HOST,
     'port': SERVER_PORT,
@@ -120,17 +122,46 @@ def handleMsg(this, sender, message, *args):
         block = getCurrentlyLookedAtBlock(bot)
         print("Block is", block)
 
+      case 'attack':
+        entity = getEntityFromMemory()
+        if entity is not None:
+          attack(bot, entity)
+        else:
+          bot.chat('There\'s no entity in memory for me to attack!')
+
+      case 'nearest':
+        getNearestEntity(bot)
+
 def dig(currentBot, block, forceLook, digFace):
   currentBot.dig(block, forceLook, digFace)
 
 def place(currentBot, block, face):
   currentBot.placeBlock(block, face)
 
+def attack(currentBot, entityToAttack):
+  currentBot.attack(entityToAttack)
+
+match = lambda entity: entity.name == 'player'
+
+def getNearestEntity(currentBot):
+  entity = currentBot.nearestEntity(match)
+  hunterData.entitiesInMemory.append(entity)
+
+def nameIsCow(entity):
+  return entity.name == 'cow'
+
 def getCurrentlyLookedAtBlock(currentBot):
   hunterData.blocksInMemory.append(currentBot.blockAtCursor())
   blockIndex = len(hunterData.blocksInMemory) - 1
   block = hunterData.blocksInMemory[blockIndex]
   return block
+
+def getEntityFromMemory():
+  if len(hunterData.entitiesInMemory) is not 0:
+    index = len(hunterData.entitiesInMemory) -1
+    entity = hunterData.entitiesInMemory[index]
+    return entity
+  return None
 
 @On(bot, 'playerCollect')
 def handlePlayerCollect(this, collector, collected):
