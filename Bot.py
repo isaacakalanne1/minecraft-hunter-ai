@@ -1,7 +1,8 @@
 from ast import Num
+import json
+from queue import Empty
 from javascript import require, On
 from enum import Enum
-from fastnumbers import fast_real
 import math
 import random
 import asyncio
@@ -19,20 +20,23 @@ SERVER_PORT = 59878
 SELECT_QUICKBAR_SLOT = 'selectQuickBarSlot'
 MOVE_ITEM_SLOT = 'moveItemSlot'
 
-inventoryItems = {}
+class HunterData:
+  inventoryItems = list()
 
-bot = mineflayer.createBot({
-  'host': SERVER_HOST,
-  'port': SERVER_PORT,
-  'username': BOT_USERNAME
-})
+  bot = mineflayer.createBot({
+    'host': SERVER_HOST,
+    'port': SERVER_PORT,
+    'username': BOT_USERNAME
+  })
 
-loop = asyncio.get_event_loop()
+hunterData = HunterData()
+bot = hunterData.bot
 
 @On(bot, 'spawn')
 def handle(*args):
   print("I spawned 👋")
-
+  updateInventory(bot)
+  
 class ItemSlot(Enum):
   none = 0
   moveItemSlot = 1
@@ -41,29 +45,22 @@ class ItemSlot(Enum):
 def look(currentBot, yaw, pitch):
   currentBot.look(yaw, pitch, True)
 
-def selectQuickBarSlot(currentBot, slot):
-  if slot is not None:
-    currentBot.setQuickBarSlot(slot)
-
 def randomYaw():
   return random.uniform(0,6.28)
 
 def randomPitch():
   return random.uniform(-math.pi/2,math.pi/2)
 
-async def updateSlots(currentBot, type, slotValue):
-  if type == MOVE_ITEM_SLOT:
-    sourceSlot = int(slotValue[0])
-    destSlot = int(slotValue[1])
-    x = await moveItem(currentBot, 37, 40)
-  if type == SELECT_QUICKBAR_SLOT:
-    selectQuickBarSlot(currentBot, 1)
+def holdItem(currentBot, item):
+  currentBot.equip(item)
 
-async def moveItem(currentBot, sourceSlot, destSlot):
-  await currentBot.moveSlotItem(sourceSlot, destSlot)
 
-def randomQuickBarSlot():
-  return random.uniform(0,8)
+def randomInventoryIndex():
+  updateInventory(bot)
+  length = len(hunterData.inventoryItems)
+  if not hunterData.inventoryItems:
+    return None
+  return int(round(random.uniform(0,len(hunterData.inventoryItems) - 1), 0))
 
 @On(bot, 'chat')
 def handleMsg(this, sender, message, *args):
@@ -76,24 +73,24 @@ def handleMsg(this, sender, message, *args):
         Movement.move(bot, Movement.Direction.left)
         MovementModifier.modify(bot, MovementModifier.Type.sprint)
         Jump.jump(bot, Jump.Jump.jump)
-        updateSlots(bot, MOVE_ITEM_SLOT, (36, 40))
+        if randomInventoryIndex() is not None:
+          holdItem(bot, hunterData.inventoryItems[randomInventoryIndex()])
+        
       case "halt":
         look(bot, randomYaw(), randomPitch())
         Movement.move(bot, Movement.Direction.none)
         MovementModifier.modify(bot, MovementModifier.Type.none)
         Jump.jump(bot, Jump.Jump.none)
-        updateSlots(bot, SELECT_QUICKBAR_SLOT, 1)
-      case "item slots":
-        moveItem(bot, 37, 36)
-        selectQuickBarSlot(bot, 0)
-        print("Inventory is", bot.inventory.items())
+        if randomInventoryIndex() is not None:
+          holdItem(bot, hunterData.inventoryItems[randomInventoryIndex()])
+      case "inventory":
+        print("Inventory is", hunterData.inventoryItems)
       case "find blocks":
         scanArea(bot)
       case "current block":
         block = bot.blockAtCursor()
         print("Block is", block)
-      case "slot test":
-        updateSlots(bot, MOVE_ITEM_SLOT, (36, 38))
+
 
 @On(bot, 'playerCollect')
 def handlePlayerCollect(this, collector, collected):
@@ -102,9 +99,9 @@ def handlePlayerCollect(this, collector, collected):
     updateInventory(bot)
 
 def updateInventory(currentBot):
-  items = bot.inventory.items()
-  for item in items:
-    inventoryItems[item.slot] = item
+  hunterData.inventoryItems = []
+  for item in currentBot.inventory.items():
+    hunterData.inventoryItems.append(item)
 
 def canSeeTheBlock(block):
   if block.position is None:
