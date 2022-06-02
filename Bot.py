@@ -3,9 +3,12 @@ import json
 from queue import Empty
 from javascript import require, On
 from enum import Enum
+import asyncio
+import threading
+from promisio import promisify
+import multiprocessing
 import math
 import random
-import asyncio
 import Action.Movement as Movement
 import Action.MovementModifier as MovementModifier
 import Action.Jump as Jump
@@ -15,7 +18,17 @@ mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 BOT_USERNAME = 'HelloThere'
 BOT_USERNAME_2 = 'HelloThereMate'
 SERVER_HOST = "localHost"
-SERVER_PORT = 59878
+SERVER_PORT = 58237
+
+class Vec3(object):
+  x = 0
+  y = 0
+  z = 0
+
+  def __init__(self, x, y, z):
+    self.x = x
+    self.y = y
+    self.z = z
 
 SELECT_QUICKBAR_SLOT = 'selectQuickBarSlot'
 MOVE_ITEM_SLOT = 'moveItemSlot'
@@ -45,6 +58,14 @@ class ItemSlot(Enum):
   none = 0
   moveItemSlot = 1
   selectSlot = 2
+
+class BlockFace(Enum):
+  front = [0,0,0]
+  back = [1,0,0]
+  left = [0,0,0]
+  right = [0,0,1]
+  bottom = [0,0,0]
+  top = [0,1,0]
 
 def look(currentBot, yaw, pitch):
   currentBot.look(yaw, pitch, True)
@@ -99,10 +120,26 @@ def handleMsg(this, sender, message, *args):
         if index is not None:
           print('yeee!')
           bot.dig(hunterData.blocksInMemory[len(hunterData.blocksInMemory) - 1], True, 'rayCast')
+      case 'place':
+        hunterData.blocksInMemory.append(bot.blockAtCursor())
+        block = hunterData.blocksInMemory[len(hunterData.blocksInMemory) - 1]
+        vec3 = Vec3(0,1,0)
+        face = {'x' : 0, 'y' : 1, 'z' : 0}
+        place(bot, block, face)
+        # bot.placeBlock(block, {'x' : 0, 'y' : 1, 'z' : 0})
+        
       case "current block":
         hunterData.blocksInMemory.append(bot.blockAtCursor())
         print("Block is", block)
 
+async def create_tasks_func(currentBot, block, face):
+    tasks = list()
+    for i in range(5):
+        tasks.append(asyncio.create_task(place(currentBot, block, face)))
+    await asyncio.wait(tasks)
+
+def place(currentBot, block, face):
+  currentBot.placeBlock(block, face)
 
 @On(bot, 'playerCollect')
 def handlePlayerCollect(this, collector, collected):
@@ -131,6 +168,7 @@ def scanArea(currentBot):
     "count": 20
   })
   print("The blocks are", blocks)
+  print('Da type is', type(blocks[0]))
 
 def generalAction(currentBot):
   currentBot.craft()
