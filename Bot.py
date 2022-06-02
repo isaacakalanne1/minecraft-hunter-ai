@@ -1,12 +1,5 @@
-from ast import Num
-import json
-from queue import Empty
 from javascript import require, On
 from enum import Enum
-import asyncio
-import threading
-from promisio import promisify
-import multiprocessing
 import math
 import random
 import Action.Movement as Movement
@@ -18,17 +11,7 @@ mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 BOT_USERNAME = 'HelloThere'
 BOT_USERNAME_2 = 'HelloThereMate'
 SERVER_HOST = "localHost"
-SERVER_PORT = 58237
-
-class Vec3(object):
-  x = 0
-  y = 0
-  z = 0
-
-  def __init__(self, x, y, z):
-    self.x = x
-    self.y = y
-    self.z = z
+SERVER_PORT = 59610
 
 SELECT_QUICKBAR_SLOT = 'selectQuickBarSlot'
 MOVE_ITEM_SLOT = 'moveItemSlot'
@@ -80,7 +63,6 @@ def holdItem(currentBot, item):
   currentBot.equip(item)
 
 def randomIndexOf(list):
-  length = len(list)
   if not list:
     return None
   return int(round(random.uniform(0,len(list) - 1), 0))
@@ -123,20 +105,12 @@ def handleMsg(this, sender, message, *args):
       case 'place':
         hunterData.blocksInMemory.append(bot.blockAtCursor())
         block = hunterData.blocksInMemory[len(hunterData.blocksInMemory) - 1]
-        vec3 = Vec3(0,1,0)
         face = {'x' : 0, 'y' : 1, 'z' : 0}
         place(bot, block, face)
-        # bot.placeBlock(block, {'x' : 0, 'y' : 1, 'z' : 0})
         
       case "current block":
         hunterData.blocksInMemory.append(bot.blockAtCursor())
         print("Block is", block)
-
-async def create_tasks_func(currentBot, block, face):
-    tasks = list()
-    for i in range(5):
-        tasks.append(asyncio.create_task(place(currentBot, block, face)))
-    await asyncio.wait(tasks)
 
 def place(currentBot, block, face):
   currentBot.placeBlock(block, face)
