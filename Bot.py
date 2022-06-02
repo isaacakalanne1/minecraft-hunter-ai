@@ -105,9 +105,7 @@ def handleMsg(this, sender, message, *args):
           block = hunterData.blocksInMemory[blockIndex]
           dig(bot, block, True, 'rayCast')
       case 'place':
-        hunterData.blocksInMemory.append(bot.blockAtCursor())
-        blockIndex = len(hunterData.blocksInMemory) - 1
-        block = hunterData.blocksInMemory[blockIndex]
+        block = getCurrentlyLookedAtBlock(bot)
         face = {'x' : 0, 'y' : 1, 'z' : 0}
         try:
           place(bot, block, face)
@@ -115,15 +113,11 @@ def handleMsg(this, sender, message, *args):
           bot.chat('I couldn\'t place a block next to ' + block.displayName)
 
       case 'activate':
-        hunterData.blocksInMemory.append(bot.blockAtCursor())
-        blockIndex = len(hunterData.blocksInMemory) - 1
-        block = hunterData.blocksInMemory[blockIndex]
+        block = getCurrentlyLookedAtBlock(bot)
         bot.activateBlock(block)
         
       case "current block":
-        hunterData.blocksInMemory.append(bot.blockAtCursor())
-        blockIndex = len(hunterData.blocksInMemory) - 1
-        block = hunterData.blocksInMemory[blockIndex]
+        block = getCurrentlyLookedAtBlock(bot)
         print("Block is", block)
 
 def dig(currentBot, block, forceLook, digFace):
@@ -131,6 +125,12 @@ def dig(currentBot, block, forceLook, digFace):
 
 def place(currentBot, block, face):
   currentBot.placeBlock(block, face)
+
+def getCurrentlyLookedAtBlock(currentBot):
+  hunterData.blocksInMemory.append(currentBot.blockAtCursor())
+  blockIndex = len(hunterData.blocksInMemory) - 1
+  block = hunterData.blocksInMemory[blockIndex]
+  return block
 
 @On(bot, 'playerCollect')
 def handlePlayerCollect(this, collector, collected):
