@@ -113,10 +113,17 @@ def handleMsg(this, sender, message, *args):
           place(bot, block, face)
         except:
           bot.chat('I couldn\'t place a block next to ' + block.displayName)
+
+      case 'activate':
+        hunterData.blocksInMemory.append(bot.blockAtCursor())
+        blockIndex = len(hunterData.blocksInMemory) - 1
+        block = hunterData.blocksInMemory[blockIndex]
+        bot.activateBlock(block)
         
       case "current block":
         hunterData.blocksInMemory.append(bot.blockAtCursor())
-        block = hunterData.blocksInMemory[len(hunterData.blocksInMemory) - 1]
+        blockIndex = len(hunterData.blocksInMemory) - 1
+        block = hunterData.blocksInMemory[blockIndex]
         print("Block is", block)
 
 def dig(currentBot, block, forceLook, digFace):
