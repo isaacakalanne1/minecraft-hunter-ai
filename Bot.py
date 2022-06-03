@@ -1,71 +1,18 @@
-from operator import inv
 from javascript import require, On
-from enum import Enum
-import math
-import random
 import Action.Movement as Movement
 import Action.MovementModifier as MovementModifier
 import Action.Jump as Jump
+import Action.HunterAction as HunterAction
+import Generators.RandomGenerator as RandomGenerator
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
+
+RandomGenerator = RandomGenerator.RandomGenerator 
 
 BOT_USERNAME = 'HelloThere'
 BOT_USERNAME_2 = 'HelloThereMate'
 SERVER_HOST = "localHost"
 SERVER_PORT = 62022
-
-class HunterAction:
-
-  def getNearestEntity(self, currentBot):
-    entity = currentBot.nearestEntity(lambda entity: entity.name == 'RoyalCentaur')
-    return entity
-
-  def getPositionOfEnemyPlayer(self, entity):
-    position = entity.position
-    positionAsVec3 = {'x' : position.x, 'y' : position.y, 'z' : position.z}
-    print('Position is', positionAsVec3)
-    return positionAsVec3
-
-  def holdItem(self, currentBot, item):
-    currentBot.equip(item)
-
-  def getHeldItemOfEnemyPlayer(self, entity):
-    print('Held item is', entity.heldItem)
-    return entity.heldItem
-
-  def attack(self, currentBot, entityToAttack):
-    currentBot.attack(entityToAttack)
-
-  def getEntityFromMemory(self, entitiesInMemory):
-    if len(entitiesInMemory) is not 0:
-      index = len(entitiesInMemory) -1
-      entity = entitiesInMemory[index]
-      return entity
-    return None
-
-  def getCurrentlyLookedAtBlock(self, currentBot):
-    return currentBot.blockAtCursor()
-
-  def look(self, currentBot, yaw, pitch):
-    currentBot.look(yaw, pitch, True)
-
-  def updateInventory(self, currentBot):
-    items = []
-    for item in currentBot.inventory.items():
-      items.append(item)
-    return items
-
-  def activateHeldItem(self, currentBot, offHand):
-    currentBot.activateItem(offHand)
-
-  def place(self, currentBot, block, face):
-    currentBot.placeBlock(block, face)
-
-  def dig(self, currentBot, block, forceLook, digFace):
-    currentBot.dig(block, forceLook, digFace)
-  
-  def getTimeOfDay(currentBot):
-    return currentBot.time.timeOfDay
 
 class Hunter:
   # Will need to update inventoryItems to dictionary, like {32 : Item} so AI can access items based on their ID, rather than a raw index
@@ -94,7 +41,7 @@ class Hunter:
   currentTimeOfDay = None
 
   global action
-  action = HunterAction()
+  action = HunterAction.HunterAction()
 
   global bot
   bot = mineflayer.createBot({
@@ -112,40 +59,42 @@ class Hunter:
   @On(bot, 'chat')
   def handleMsg(this, sender, message, *args):
     print("Got message", sender, message)
+    global inventoryItems, blocksInMemory, entitiesInMemory, positionOfEnemyInMemory, currentTimeOfDay
+    
     if sender and (sender != BOT_USERNAME):
       bot.chat('Hi, you said ' + message)
       match message:
         case "go":
-          action.look(bot, randomYaw(), randomPitch())
+          action.look(bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
           Movement.move(bot, Movement.Direction.forwards)
           MovementModifier.modify(bot, MovementModifier.Type.sprint)
           Jump.jump(bot, Jump.Jump.jump)
           inventoryItems = action.updateInventory(bot)
-          if randomIndexOf(inventoryItems) is not None:
-            index = randomIndexOf(inventoryItems)
+          if RandomGenerator.randomIndexOf(inventoryItems) is not None:
+            index = RandomGenerator.randomIndexOf(inventoryItems)
             item = inventoryItems[index]
             action.holdItem(bot, item)
           
         case "halt":
-          action.look(bot, randomYaw(), randomPitch())
+          action.look(bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
           Movement.move(bot, Movement.Direction.none)
           MovementModifier.modify(bot, MovementModifier.Type.none)
           Jump.jump(bot, Jump.Jump.none)
           inventoryItems = action.updateInventory(bot)
-          if randomIndexOf(inventoryItems) is not None:
-            index = randomIndexOf(inventoryItems)
+          if RandomGenerator.randomIndexOf(inventoryItems) is not None:
+            index = RandomGenerator.randomIndexOf(inventoryItems)
             item = inventoryItems[index]
             action.holdItem(bot, item)
 
         case 'look':
-          action.look(bot, randomYaw(), randomPitch())
+          action.look(bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
 
         case "inventory":
           inventoryItems = action.updateInventory(bot)
           print("Inventory is", inventoryItems)
         case "dig":
           blocksInMemory.append(bot.blockAtCursor())
-          index = randomIndexOf(blocksInMemory)
+          index = RandomGenerator.randomIndexOf(blocksInMemory)
           if index is not None:
             print('yeee!')
             blockIndex = len(blocksInMemory) - 1
@@ -202,8 +151,8 @@ class Hunter:
           action.activateHeldItem(bot, False)
 
         case 'hold':
-          if randomIndexOf(inventoryItems) is not None:
-            index = randomIndexOf(inventoryItems)
+          if RandomGenerator.randomIndexOf(inventoryItems) is not None:
+            index = RandomGenerator.randomIndexOf(inventoryItems)
             item = inventoryItems[index]
             action.holdItem(bot, item)
 
@@ -222,22 +171,3 @@ class Hunter:
     bot.chat('My hunger is' + str(currentHunger))
   
 hunter = Hunter()
-
-class BlockFace(Enum):
-  front = {'x' : 0, 'y' : 1, 'z' : 0}
-  back = {'x' : 0, 'y' : 1, 'z' : 0}
-  left = {'x' : 0, 'y' : 1, 'z' : 0}
-  right = {'x' : 0, 'y' : 1, 'z' : 0}
-  bottom = {'x' : 0, 'y' : 1, 'z' : 0}
-  top = {'x' : 0, 'y' : 1, 'z' : 0}
-
-def randomYaw():
-  return random.uniform(0,6.28)
-
-def randomPitch():
-  return random.uniform(-math.pi/2,math.pi/2)
-
-def randomIndexOf(list):
-  if not list:
-    return None
-  return int(round(random.uniform(0,len(list) - 1), 0))
