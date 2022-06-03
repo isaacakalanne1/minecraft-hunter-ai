@@ -15,17 +15,15 @@ SERVER_PORT = 62022
 
 class HunterAction:
 
-  def getNearestEntity(self, currentBot, entitiesInMemory):
+  def getNearestEntity(self, currentBot):
     entity = currentBot.nearestEntity(lambda entity: entity.name == 'RoyalCentaur')
-    entitiesInMemory.append(entity)
-    print('Entity is', entitiesInMemory[len(entitiesInMemory) -1])
     return entity
 
-  def getPositionOfEnemyPlayer(self, entity, positionInMemory):
+  def getPositionOfEnemyPlayer(self, entity):
     position = entity.position
-    positionInMemory = {'x' : position.x, 'y' : position.y, 'z' : position.z}
-    print('Position is', positionInMemory)
-    return position
+    positionAsVec3 = {'x' : position.x, 'y' : position.y, 'z' : position.z}
+    print('Position is', positionAsVec3)
+    return positionAsVec3
 
   def holdItem(self, currentBot, item):
     currentBot.equip(item)
@@ -171,14 +169,16 @@ class Hunter:
             bot.chat('There\'s no entity in memory for me to attack!')
 
         case 'nearest':
-          action.getNearestEntity(bot, entitiesInMemory)
+          entitiesInMemory.append(action.getNearestEntity(bot))
 
         case 'position':
-          entity = action.getNearestEntity(bot, entitiesInMemory)
-          action.getPositionOfEnemyPlayer(entity, positionOfEnemyInMemory)
+          entity = action.getNearestEntity(bot)
+          entitiesInMemory.append(entity)
+          positionOfEnemyInMemory = action.getPositionOfEnemyPlayer(entity, positionOfEnemyInMemory)
 
         case 'held':
-          entity = action.getNearestEntity(bot, entitiesInMemory)
+          entity = action.getNearestEntity(bot)
+          entitiesInMemory.append(entity)
           action.getHeldItemOfEnemyPlayer(entity, heldItemOfEnemyInMemory)
 
         case 'time':
