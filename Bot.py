@@ -13,9 +13,6 @@ BOT_USERNAME_2 = 'HelloThereMate'
 SERVER_HOST = "localHost"
 SERVER_PORT = 62022
 
-SELECT_QUICKBAR_SLOT = 'selectQuickBarSlot'
-MOVE_ITEM_SLOT = 'moveItemSlot'
-
 class HunterAction:
 
   def getNearestEntity(self, currentBot, entitiesInMemory):
@@ -145,6 +142,10 @@ class Hunter:
         case 'use':
           activateHeldItem(bot, False)
 
+        case 'hold':
+          if randomInventoryIndex() is not None:
+            holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
+
   @On(bot, 'playerCollect')
   def handlePlayerCollect(this, collector, collected):
     if collector.username == bot.username:
@@ -160,20 +161,17 @@ class Hunter:
   
 hunter = Hunter()
 
-
-
 class ItemSlot(Enum):
   none = 0
-  moveItemSlot = 1
-  selectSlot = 2
+  selectItem = 1
 
 class BlockFace(Enum):
-  front = [0,0,0]
-  back = [1,0,0]
-  left = [0,0,0]
-  right = [0,0,1]
-  bottom = [0,0,0]
-  top = [0,1,0]
+  front = {'x' : 0, 'y' : 1, 'z' : 0}
+  back = {'x' : 0, 'y' : 1, 'z' : 0}
+  left = {'x' : 0, 'y' : 1, 'z' : 0}
+  right = {'x' : 0, 'y' : 1, 'z' : 0}
+  bottom = {'x' : 0, 'y' : 1, 'z' : 0}
+  top = {'x' : 0, 'y' : 1, 'z' : 0}
 
 def look(currentBot, yaw, pitch):
   currentBot.look(yaw, pitch, True)
