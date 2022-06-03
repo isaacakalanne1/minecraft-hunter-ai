@@ -157,10 +157,10 @@ class Hunter:
     self.currentHunger = self.bot.food
     self.bot.chat('My health is' + str(self.currentHealth))
     self.bot.chat('My hunger is' + str(self.currentHunger))
-  
+
 hunter = Hunter('localHost', 51238, 'HelloThere')
 
-@On(hunter.bot, 'health')
+# For some reason I can't delete the below function, or the project doesn't compile.
 def handleHealth(*args):
   hunter.currentHealth = hunter.bot.health
   hunter.currentHunger = hunter.bot.food
