@@ -27,6 +27,9 @@ class HunterAction:
     print('Position is', positionInMemory)
     return position
 
+  def holdItem(self, currentBot, item):
+    currentBot.equip(item)
+
   def getHeldItemOfEnemyPlayer(self, entity, heldItemInMemory):
     heldItemInMemory = entity.heldItem
     print('Held item is', heldItemInMemory)
@@ -80,7 +83,7 @@ class Hunter:
           MovementModifier.modify(bot, MovementModifier.Type.sprint)
           Jump.jump(bot, Jump.Jump.jump)
           if randomInventoryIndex() is not None:
-            holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
+            action.holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
           
         case "halt":
           look(bot, randomYaw(), randomPitch())
@@ -88,7 +91,7 @@ class Hunter:
           MovementModifier.modify(bot, MovementModifier.Type.none)
           Jump.jump(bot, Jump.Jump.none)
           if randomInventoryIndex() is not None:
-            holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
+            action.holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
         case "inventory":
           print("Inventory is", hunter.inventoryItems)
         case "find blocks":
@@ -144,7 +147,7 @@ class Hunter:
 
         case 'hold':
           if randomInventoryIndex() is not None:
-            holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
+            action.holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
 
   @On(bot, 'playerCollect')
   def handlePlayerCollect(this, collector, collected):
@@ -177,9 +180,6 @@ def randomYaw():
 
 def randomPitch():
   return random.uniform(-math.pi/2,math.pi/2)
-
-def holdItem(currentBot, item):
-  currentBot.equip(item)
 
 def randomIndexOf(list):
   if not list:
@@ -219,24 +219,3 @@ def updateInventory(currentBot):
   hunter.inventoryItems = []
   for item in currentBot.inventory.items():
     hunter.inventoryItems.append(item)
-
-def canSeeTheBlock(block):
-  if block.position is None:
-    return False
-  if block.boundingBox == 'block' and bot.canSeeBlock(block) is True:
-    return True
-  else:
-    return False
-
-def scanArea(currentBot):
-  blocks = currentBot.findBlocks({
-    "matching": lambda block:
-      canSeeTheBlock(block),
-    "maxDistance": 16,
-    "count": 20
-  })
-  print("The blocks are", blocks)
-  print('Da type is', type(blocks[0]))
-
-def generalAction(currentBot):
-  currentBot.craft()
