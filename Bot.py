@@ -114,6 +114,9 @@ class Hunter:
         case 'time':
           hunter.currentTimeOfDay = bot.time.timeOfDay
           print('Time of day is' + str(bot.time.timeOfDay))
+        
+        case 'use':
+          activateHeldItem(bot, False)
 
   @On(bot, 'playerCollect')
   def handlePlayerCollect(this, collector, collected):
@@ -126,6 +129,7 @@ class Hunter:
     hunter.currentHealth = bot.health
     hunter.currentHunger = bot.food
     bot.chat('My health is' + str(hunter.currentHealth))
+    bot.chat('My hunger is' + str(hunter.currentHunger))
   
 hunter = Hunter()
 
@@ -199,6 +203,9 @@ def getCurrentlyLookedAtBlock(currentBot):
   blockIndex = len(hunter.blocksInMemory) - 1
   block = hunter.blocksInMemory[blockIndex]
   return block
+
+def activateHeldItem(currentBot, offHand):
+  currentBot.activateItem(offHand)
 
 def getEntityFromMemory():
   if len(hunter.entitiesInMemory) is not 0:
