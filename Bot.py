@@ -27,20 +27,88 @@ class HunterData:
 
   positionOfEnemyInMemory = {'x' : 0, 'y' : 0, 'z' : 0}
 
+  global bot
   bot = mineflayer.createBot({
     'host': SERVER_HOST,
     'port': SERVER_PORT,
     'username': BOT_USERNAME
   })
 
-hunterData = HunterData()
-bot = hunterData.bot
+  @On(bot, 'spawn')
+  def handle(*args):
+    print("I spawned 👋")
+    updateInventory(bot)
 
-@On(bot, 'spawn')
-def handle(*args):
-  print("I spawned 👋")
-  updateInventory(bot)
+  @On(bot, 'chat')
+  def handleMsg(this, sender, message, *args):
+    print("Got message", sender, message)
+    if sender and (sender != BOT_USERNAME):
+      bot.chat('Hi, you said ' + message)
+      match message:
+        case "go":
+          look(bot, randomYaw(), randomPitch())
+          Movement.move(bot, Movement.Direction.forwards)
+          MovementModifier.modify(bot, MovementModifier.Type.sprint)
+          Jump.jump(bot, Jump.Jump.jump)
+          if randomInventoryIndex() is not None:
+            holdItem(bot, hunterData.inventoryItems[randomInventoryIndex()])
+          
+        case "halt":
+          look(bot, randomYaw(), randomPitch())
+          Movement.move(bot, Movement.Direction.none)
+          MovementModifier.modify(bot, MovementModifier.Type.none)
+          Jump.jump(bot, Jump.Jump.none)
+          if randomInventoryIndex() is not None:
+            holdItem(bot, hunterData.inventoryItems[randomInventoryIndex()])
+        case "inventory":
+          print("Inventory is", hunterData.inventoryItems)
+        case "find blocks":
+          scanArea(bot)
+        case "dig":
+          hunterData.blocksInMemory.append(bot.blockAtCursor())
+          index = randomIndexOf(hunterData.blocksInMemory)
+          if index is not None:
+            print('yeee!')
+            blockIndex = len(hunterData.blocksInMemory) - 1
+            block = hunterData.blocksInMemory[blockIndex]
+            dig(bot, block, True, 'rayCast')
+        case 'place':
+          block = getCurrentlyLookedAtBlock(bot)
+          face = {'x' : 0, 'y' : 1, 'z' : 0}
+          try:
+            place(bot, block, face)
+          except:
+            bot.chat('I couldn\'t place a block next to ' + block.displayName)
+
+        case 'activate':
+          block = getCurrentlyLookedAtBlock(bot)
+          bot.activateBlock(block)
+          
+        case "current block":
+          block = getCurrentlyLookedAtBlock(bot)
+          print("Block is", block)
+
+        case 'attack':
+          entity = getEntityFromMemory()
+          if entity is not None:
+            attack(bot, entity)
+          else:
+            bot.chat('There\'s no entity in memory for me to attack!')
+
+        case 'nearest':
+          getNearestEntity(bot)
+
+        case 'position':
+          getPositionOfEnemyPlayer(bot)
+
+  @On(bot, 'playerCollect')
+  def handlePlayerCollect(this, collector, collected):
+    if collector.username == bot.username:
+      bot.chat("I collected an item!")
+      updateInventory(bot)
   
+hunterData = HunterData()
+
 class ItemSlot(Enum):
   none = 0
   moveItemSlot = 1
@@ -74,68 +142,6 @@ def randomIndexOf(list):
 def randomInventoryIndex():
   updateInventory(bot)
   return randomIndexOf(hunterData.inventoryItems)
-
-@On(bot, 'chat')
-def handleMsg(this, sender, message, *args):
-  print("Got message", sender, message)
-  if sender and (sender != BOT_USERNAME):
-    bot.chat('Hi, you said ' + message)
-    match message:
-      case "go":
-        look(bot, randomYaw(), randomPitch())
-        Movement.move(bot, Movement.Direction.forwards)
-        MovementModifier.modify(bot, MovementModifier.Type.sprint)
-        Jump.jump(bot, Jump.Jump.jump)
-        if randomInventoryIndex() is not None:
-          holdItem(bot, hunterData.inventoryItems[randomInventoryIndex()])
-        
-      case "halt":
-        look(bot, randomYaw(), randomPitch())
-        Movement.move(bot, Movement.Direction.none)
-        MovementModifier.modify(bot, MovementModifier.Type.none)
-        Jump.jump(bot, Jump.Jump.none)
-        if randomInventoryIndex() is not None:
-          holdItem(bot, hunterData.inventoryItems[randomInventoryIndex()])
-      case "inventory":
-        print("Inventory is", hunterData.inventoryItems)
-      case "find blocks":
-        scanArea(bot)
-      case "dig":
-        hunterData.blocksInMemory.append(bot.blockAtCursor())
-        index = randomIndexOf(hunterData.blocksInMemory)
-        if index is not None:
-          print('yeee!')
-          blockIndex = len(hunterData.blocksInMemory) - 1
-          block = hunterData.blocksInMemory[blockIndex]
-          dig(bot, block, True, 'rayCast')
-      case 'place':
-        block = getCurrentlyLookedAtBlock(bot)
-        face = {'x' : 0, 'y' : 1, 'z' : 0}
-        try:
-          place(bot, block, face)
-        except:
-          bot.chat('I couldn\'t place a block next to ' + block.displayName)
-
-      case 'activate':
-        block = getCurrentlyLookedAtBlock(bot)
-        bot.activateBlock(block)
-        
-      case "current block":
-        block = getCurrentlyLookedAtBlock(bot)
-        print("Block is", block)
-
-      case 'attack':
-        entity = getEntityFromMemory()
-        if entity is not None:
-          attack(bot, entity)
-        else:
-          bot.chat('There\'s no entity in memory for me to attack!')
-
-      case 'nearest':
-        getNearestEntity(bot)
-
-      case 'position':
-        getPositionOfEnemyPlayer(bot)
 
 def dig(currentBot, block, forceLook, digFace):
   currentBot.dig(block, forceLook, digFace)
@@ -173,12 +179,6 @@ def getEntityFromMemory():
     entity = hunterData.entitiesInMemory[index]
     return entity
   return None
-
-@On(bot, 'playerCollect')
-def handlePlayerCollect(this, collector, collected):
-  if collector.username == bot.username:
-    bot.chat("I collected an item!")
-    updateInventory(bot)
 
 def updateInventory(currentBot):
   hunterData.inventoryItems = []
