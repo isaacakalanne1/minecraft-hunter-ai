@@ -31,9 +31,10 @@ class Hunter:
     self.bot.on('health', self.healthUpdated)
 
   def healthUpdated(self, *args):
-    print('Health updated!')
     self.currentHealth = self.bot.health
     self.currentHunger = self.bot.food
+    self.bot.chat('My health is' + str(self.currentHealth))
+    self.bot.chat('My hunger is' + str(self.currentHunger))
   
   def startBot(self):
     print('Starting!')
@@ -160,9 +161,7 @@ class Hunter:
 
 hunter = Hunter('localHost', 51238, 'HelloThere')
 
-# For some reason I can't delete the below function, or the project doesn't compile.
-def handleHealth(*args):
-  hunter.currentHealth = hunter.bot.health
-  hunter.currentHunger = hunter.bot.food
-  hunter.bot.chat('My health is' + str(hunter.currentHealth))
-  hunter.bot.chat('My hunger is' + str(hunter.currentHunger))
+# For some reason I can't delete the below decorator and function, or the project doesn't compile
+@On(hunter.bot, 'eventNeverUsed')
+def h(*args):
+  pass
