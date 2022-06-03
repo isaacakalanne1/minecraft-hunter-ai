@@ -158,6 +158,7 @@ class Hunter:
 
   @On(bot, 'playerCollect')
   def handlePlayerCollect(this, collector, collected):
+    global inventoryItems
     if collector.username == bot.username:
       bot.chat("I collected an item!")
       inventoryItems = action.updateInventory(bot)
@@ -165,6 +166,7 @@ class Hunter:
 
   @On(bot, 'health')
   def handle(*args):
+    global currentHealth, currentHunger
     currentHealth = bot.health
     currentHunger = bot.food
     bot.chat('My health is' + str(currentHealth))
