@@ -35,9 +35,6 @@ class Hunter:
     self.currentHunger = self.bot.food
     self.bot.chat('My health is' + str(self.currentHealth))
     self.bot.chat('My hunger is' + str(self.currentHunger))
-  
-  def startBot(self):
-    print('Starting!')
 
   def createBot(self, host, port, username):
     self.bot = mineflayer.createBot({
@@ -48,7 +45,7 @@ class Hunter:
                 
   def handle(self, *args):
     print("I spawned 👋")
-    self.inventoryItems = self.action.updateInventory(hunter.bot)
+    self.inventoryItems = self.action.updateInventory(self.bot)
 
   def handleMsg(self, this, sender, message, *args):
     print("Got message", sender, message)
@@ -88,10 +85,12 @@ class Hunter:
           self.blocksInMemory.append(self.bot.blockAtCursor())
           index = RandomGenerator.randomIndexOf(self.blocksInMemory)
           if index is not None:
-            print('yeee!')
             blockIndex = len(self.blocksInMemory) - 1
             block = self.blocksInMemory[blockIndex]
-            self.action.dig(self.bot, block, True, 'rayCast')
+            try:
+              self.action.dig(self.bot, block, True, 'rayCast')
+            except:
+              self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
         case 'place':
           block = self.action.getCurrentlyLookedAtBlock(self.bot)
           self.blocksInMemory.append(block)
@@ -158,10 +157,3 @@ class Hunter:
     self.currentHunger = self.bot.food
     self.bot.chat('My health is' + str(self.currentHealth))
     self.bot.chat('My hunger is' + str(self.currentHunger))
-
-hunter = Hunter('localHost', 51238, 'HelloThere')
-
-# For some reason I can't delete the below decorator and function, or the project doesn't compile
-@On(hunter.bot, 'eventNeverUsed')
-def h(*args):
-  pass
