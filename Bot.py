@@ -16,6 +16,25 @@ SERVER_PORT = 62022
 SELECT_QUICKBAR_SLOT = 'selectQuickBarSlot'
 MOVE_ITEM_SLOT = 'moveItemSlot'
 
+class HunterAction:
+
+  def getNearestEntity(self, currentBot, entitiesInMemory):
+    entity = currentBot.nearestEntity(lambda entity: entity.name == 'RoyalCentaur')
+    entitiesInMemory.append(entity)
+    print('Entity is', entity)
+    return entity
+
+  def getPositionOfEnemyPlayer(self, entity, positionInMemory):
+    position = entity.position
+    positionInMemory = {'x' : position.x, 'y' : position.y, 'z' : position.z}
+    print('Position is', positionInMemory)
+    return position
+
+  def getHeldItemOfEnemyPlayer(self, entity, heldItemInMemory):
+    heldItemInMemory = entity.heldItem
+    print('Held item is', heldItemInMemory)
+    return heldItemInMemory
+
 class Hunter:
   # Will need to update inventoryItems to dictionary, like {32 : Item} so AI can access items based on their ID, rather than a raw index
   inventoryItems = []
@@ -23,16 +42,22 @@ class Hunter:
   # Will need to update blocksInMemory to dictionary, like { Vec3{x,y,z} : Block} so AI can access blocks based on their position, rather than a raw index
   blocksInMemory = []
 
+  global entitiesInMemory
   entitiesInMemory = []
 
+  global positionOfEnemyInMemory
   positionOfEnemyInMemory = {'x' : 0, 'y' : 0, 'z' : 0}
 
+  global heldItemOfEnemyInMemory
   heldItemOfEnemyInMemory = None
 
   currentHealth = None
   currentHunger = None
 
   currentTimeOfDay = None
+
+  global action
+  action = HunterAction()
 
   global bot
   bot = mineflayer.createBot({
@@ -103,13 +128,15 @@ class Hunter:
             bot.chat('There\'s no entity in memory for me to attack!')
 
         case 'nearest':
-          getNearestEntity(bot)
+          action.getNearestEntity(bot, entitiesInMemory)
 
         case 'position':
-          getPositionOfEnemyPlayer(bot)
+          entity = action.getNearestEntity(bot, entitiesInMemory)
+          action.getPositionOfEnemyPlayer(entity, positionOfEnemyInMemory)
 
         case 'held':
-          getHeldItemOfEnemyPlayer(bot)
+          entity = action.getNearestEntity(bot, entitiesInMemory)
+          action.getHeldItemOfEnemyPlayer(entity, heldItemOfEnemyInMemory)
 
         case 'time':
           hunter.currentTimeOfDay = bot.time.timeOfDay
@@ -132,6 +159,8 @@ class Hunter:
     bot.chat('My hunger is' + str(hunter.currentHunger))
   
 hunter = Hunter()
+
+
 
 class ItemSlot(Enum):
   none = 0
@@ -175,28 +204,6 @@ def place(currentBot, block, face):
 
 def attack(currentBot, entityToAttack):
   currentBot.attack(entityToAttack)
-
-match = lambda entity: entity.name == 'RoyalCentaur'
-
-def getNearestEntity(currentBot):
-  entity = currentBot.nearestEntity(match)
-  hunter.entitiesInMemory.append(entity)
-  print('Entity is', entity)
-  return entity
-
-def getPositionOfEnemyPlayer(currentBot):
-  entity = getNearestEntity(currentBot)
-  position = entity.position
-  hunter.positionOfEnemyInMemory = {'x' : position.x, 'y' : position.y, 'z' : position.z}
-  print('Position is', hunter.positionOfEnemyInMemory)
-  return position
-
-def getHeldItemOfEnemyPlayer(currentBot):
-  entity = getNearestEntity(currentBot)
-  heldItem = entity.heldItem
-  hunter.heldItemOfEnemyInMemory = heldItem
-  print('Held item is', heldItem)
-  return heldItem
 
 def getCurrentlyLookedAtBlock(currentBot):
   hunter.blocksInMemory.append(currentBot.blockAtCursor())
