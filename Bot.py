@@ -106,7 +106,8 @@ class Hunter:
   @On(bot, 'spawn')
   def handle(*args):
     print("I spawned 👋")
-    inventoryItems = action.updateInventory(bot, inventoryItems)
+    inventoryItems = action.updateInventory(bot)
+    print('Inventory is', inventoryItems)
 
   @On(bot, 'chat')
   def handleMsg(this, sender, message, *args):
@@ -119,10 +120,10 @@ class Hunter:
           Movement.move(bot, Movement.Direction.forwards)
           MovementModifier.modify(bot, MovementModifier.Type.sprint)
           Jump.jump(bot, Jump.Jump.jump)
-          inventoryItems = action.updateInventory(bot, inventoryItems)
+          inventoryItems = action.updateInventory(bot)
           if randomIndexOf(inventoryItems) is not None:
             index = randomIndexOf(inventoryItems)
-            item = hunter.inventoryItems[index]
+            item = inventoryItems[index]
             action.holdItem(bot, item)
           
         case "halt":
@@ -130,25 +131,25 @@ class Hunter:
           Movement.move(bot, Movement.Direction.none)
           MovementModifier.modify(bot, MovementModifier.Type.none)
           Jump.jump(bot, Jump.Jump.none)
-          inventoryItems = action.updateInventory(bot, inventoryItems)
+          inventoryItems = action.updateInventory(bot)
           if randomIndexOf(inventoryItems) is not None:
             index = randomIndexOf(inventoryItems)
-            item = hunter.inventoryItems[index]
+            item = inventoryItems[index]
             action.holdItem(bot, item)
 
         case 'look':
           action.look(bot, randomYaw(), randomPitch())
 
         case "inventory":
-          inventoryItems = action.updateInventory(bot, inventoryItems)
+          inventoryItems = action.updateInventory(bot)
           print("Inventory is", inventoryItems)
         case "dig":
-          hunter.blocksInMemory.append(bot.blockAtCursor())
-          index = randomIndexOf(hunter.blocksInMemory)
+          blocksInMemory.append(bot.blockAtCursor())
+          index = randomIndexOf(blocksInMemory)
           if index is not None:
             print('yeee!')
-            blockIndex = len(hunter.blocksInMemory) - 1
-            block = hunter.blocksInMemory[blockIndex]
+            blockIndex = len(blocksInMemory) - 1
+            block = blocksInMemory[blockIndex]
             action.dig(bot, block, True, 'rayCast')
         case 'place':
           block = action.getCurrentlyLookedAtBlock(bot)
@@ -210,7 +211,8 @@ class Hunter:
   def handlePlayerCollect(this, collector, collected):
     if collector.username == bot.username:
       bot.chat("I collected an item!")
-      inventoryItems = action.updateInventory(bot, inventoryItems)
+      inventoryItems = action.updateInventory(bot)
+
 
   @On(bot, 'health')
   def handle(*args):
