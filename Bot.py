@@ -27,6 +27,8 @@ class Hunter:
 
   positionOfEnemyInMemory = {'x' : 0, 'y' : 0, 'z' : 0}
 
+  heldItemOfEnemyInMemory = None
+
   global bot
   bot = mineflayer.createBot({
     'host': SERVER_HOST,
@@ -101,6 +103,9 @@ class Hunter:
         case 'position':
           getPositionOfEnemyPlayer(bot)
 
+        case 'held':
+          getHeldItemOfEnemyPlayer(bot)
+
   @On(bot, 'playerCollect')
   def handlePlayerCollect(this, collector, collected):
     if collector.username == bot.username:
@@ -166,6 +171,13 @@ def getPositionOfEnemyPlayer(currentBot):
   hunter.positionOfEnemyInMemory = {'x' : position.x, 'y' : position.y, 'z' : position.z}
   print('Position is', hunter.positionOfEnemyInMemory)
   return position
+
+def getHeldItemOfEnemyPlayer(currentBot):
+  entity = getNearestEntity(currentBot)
+  heldItem = entity.heldItem
+  hunter.heldItemOfEnemyInMemory = heldItem
+  print('Held item is', heldItem)
+  return heldItem
 
 def getCurrentlyLookedAtBlock(currentBot):
   hunter.blocksInMemory.append(currentBot.blockAtCursor())
