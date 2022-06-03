@@ -18,7 +18,7 @@ class HunterAction:
   def getNearestEntity(self, currentBot, entitiesInMemory):
     entity = currentBot.nearestEntity(lambda entity: entity.name == 'RoyalCentaur')
     entitiesInMemory.append(entity)
-    print('Entity is', entity)
+    print('Entity is', entitiesInMemory[len(entitiesInMemory) -1])
     return entity
 
   def getPositionOfEnemyPlayer(self, entity, positionInMemory):
@@ -38,7 +38,7 @@ class HunterAction:
   def attack(self, currentBot, entityToAttack):
     currentBot.attack(entityToAttack)
 
-  def getEntityFromMemory(entitiesInMemory):
+  def getEntityFromMemory(self, entitiesInMemory):
     if len(entitiesInMemory) is not 0:
       index = len(entitiesInMemory) -1
       entity = entitiesInMemory[index]
@@ -53,8 +53,24 @@ class HunterAction:
   def look(self, currentBot, yaw, pitch):
     currentBot.look(yaw, pitch, True)
 
+  def updateInventory(self, currentBot, inventoryItems):
+    items = []
+    for item in currentBot.inventory.items():
+      items.append(item)
+    inventoryItems = items
+
+  def activateHeldItem(self, currentBot, offHand):
+    currentBot.activateItem(offHand)
+
+  def place(self, currentBot, block, face):
+    currentBot.placeBlock(block, face)
+
+  def dig(self, currentBot, block, forceLook, digFace):
+    currentBot.dig(block, forceLook, digFace)
+
 class Hunter:
   # Will need to update inventoryItems to dictionary, like {32 : Item} so AI can access items based on their ID, rather than a raw index
+  global inventoryItems
   inventoryItems = []
 
   # Will need to update blocksInMemory to dictionary, like { Vec3{x,y,z} : Block} so AI can access blocks based on their position, rather than a raw index
@@ -88,7 +104,7 @@ class Hunter:
   @On(bot, 'spawn')
   def handle(*args):
     print("I spawned 👋")
-    updateInventory(bot)
+    action.updateInventory(bot, inventoryItems)
 
   @On(bot, 'chat')
   def handleMsg(this, sender, message, *args):
@@ -101,22 +117,25 @@ class Hunter:
           Movement.move(bot, Movement.Direction.forwards)
           MovementModifier.modify(bot, MovementModifier.Type.sprint)
           Jump.jump(bot, Jump.Jump.jump)
-          if randomInventoryIndex() is not None:
-            action.holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
+          action.updateInventory(bot, inventoryItems)
+          if randomIndexOf(inventoryItems) is not None:
+            action.holdItem(bot, hunter.inventoryItems[randomIndexOf(inventoryItems)])
           
         case "halt":
           action.look(bot, randomYaw(), randomPitch())
           Movement.move(bot, Movement.Direction.none)
           MovementModifier.modify(bot, MovementModifier.Type.none)
           Jump.jump(bot, Jump.Jump.none)
-          if randomInventoryIndex() is not None:
-            action.holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
+          action.updateInventory(bot, inventoryItems)
+          if randomIndexOf(inventoryItems) is not None:
+            action.holdItem(bot, hunter.inventoryItems[randomIndexOf(inventoryItems)])
 
         case 'look':
           action.look(bot, randomYaw(), randomPitch())
 
         case "inventory":
-          print("Inventory is", hunter.inventoryItems)
+          action.updateInventory(bot, inventoryItems)
+          print("Inventory is", inventoryItems)
         case "dig":
           hunter.blocksInMemory.append(bot.blockAtCursor())
           index = randomIndexOf(hunter.blocksInMemory)
@@ -124,12 +143,12 @@ class Hunter:
             print('yeee!')
             blockIndex = len(hunter.blocksInMemory) - 1
             block = hunter.blocksInMemory[blockIndex]
-            dig(bot, block, True, 'rayCast')
+            action.dig(bot, block, True, 'rayCast')
         case 'place':
           block = action.getCurrentlyLookedAtBlock(bot, blocksInMemory)
           face = {'x' : 0, 'y' : 1, 'z' : 0}
           try:
-            place(bot, block, face)
+            action.place(bot, block, face)
           except:
             try:
               bot.chat('I couldn\'t place a block next to ' + block.displayName)
@@ -167,17 +186,17 @@ class Hunter:
           print('Time of day is' + str(bot.time.timeOfDay))
         
         case 'use':
-          activateHeldItem(bot, False)
+          action.activateHeldItem(bot, False)
 
         case 'hold':
-          if randomInventoryIndex() is not None:
-            action.holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
+          if randomIndexOf(inventoryItems) is not None:
+            action.holdItem(bot, hunter.inventoryItems[randomIndexOf(inventoryItems)])
 
   @On(bot, 'playerCollect')
   def handlePlayerCollect(this, collector, collected):
     if collector.username == bot.username:
       bot.chat("I collected an item!")
-      updateInventory(bot)
+      action.updateInventory(bot, inventoryItems)
 
   @On(bot, 'health')
   def handle(*args):
@@ -206,21 +225,3 @@ def randomIndexOf(list):
   if not list:
     return None
   return int(round(random.uniform(0,len(list) - 1), 0))
-
-def randomInventoryIndex():
-  updateInventory(bot)
-  return randomIndexOf(hunter.inventoryItems)
-
-def dig(currentBot, block, forceLook, digFace):
-  currentBot.dig(block, forceLook, digFace)
-
-def place(currentBot, block, face):
-  currentBot.placeBlock(block, face)
-
-def activateHeldItem(currentBot, offHand):
-  currentBot.activateItem(offHand)
-
-def updateInventory(currentBot):
-  hunter.inventoryItems = []
-  for item in currentBot.inventory.items():
-    hunter.inventoryItems.append(item)
