@@ -35,11 +35,30 @@ class HunterAction:
     print('Held item is', heldItemInMemory)
     return heldItemInMemory
 
+  def attack(self, currentBot, entityToAttack):
+    currentBot.attack(entityToAttack)
+
+  def getEntityFromMemory(entitiesInMemory):
+    if len(entitiesInMemory) is not 0:
+      index = len(entitiesInMemory) -1
+      entity = entitiesInMemory[index]
+      return entity
+    return None
+
+  def getCurrentlyLookedAtBlock(self, currentBot, blocksInMemory):
+    block = currentBot.blockAtCursor()
+    blocksInMemory.append(currentBot.blockAtCursor())
+    return block
+
+  def look(self, currentBot, yaw, pitch):
+    currentBot.look(yaw, pitch, True)
+
 class Hunter:
   # Will need to update inventoryItems to dictionary, like {32 : Item} so AI can access items based on their ID, rather than a raw index
   inventoryItems = []
 
   # Will need to update blocksInMemory to dictionary, like { Vec3{x,y,z} : Block} so AI can access blocks based on their position, rather than a raw index
+  global blocksInMemory
   blocksInMemory = []
 
   global entitiesInMemory
@@ -78,7 +97,7 @@ class Hunter:
       bot.chat('Hi, you said ' + message)
       match message:
         case "go":
-          look(bot, randomYaw(), randomPitch())
+          action.look(bot, randomYaw(), randomPitch())
           Movement.move(bot, Movement.Direction.forwards)
           MovementModifier.modify(bot, MovementModifier.Type.sprint)
           Jump.jump(bot, Jump.Jump.jump)
@@ -86,16 +105,18 @@ class Hunter:
             action.holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
           
         case "halt":
-          look(bot, randomYaw(), randomPitch())
+          action.look(bot, randomYaw(), randomPitch())
           Movement.move(bot, Movement.Direction.none)
           MovementModifier.modify(bot, MovementModifier.Type.none)
           Jump.jump(bot, Jump.Jump.none)
           if randomInventoryIndex() is not None:
             action.holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
+
+        case 'look':
+          action.look(bot, randomYaw(), randomPitch())
+
         case "inventory":
           print("Inventory is", hunter.inventoryItems)
-        case "find blocks":
-          scanArea(bot)
         case "dig":
           hunter.blocksInMemory.append(bot.blockAtCursor())
           index = randomIndexOf(hunter.blocksInMemory)
@@ -105,25 +126,28 @@ class Hunter:
             block = hunter.blocksInMemory[blockIndex]
             dig(bot, block, True, 'rayCast')
         case 'place':
-          block = getCurrentlyLookedAtBlock(bot)
+          block = action.getCurrentlyLookedAtBlock(bot, blocksInMemory)
           face = {'x' : 0, 'y' : 1, 'z' : 0}
           try:
             place(bot, block, face)
           except:
-            bot.chat('I couldn\'t place a block next to ' + block.displayName)
+            try:
+              bot.chat('I couldn\'t place a block next to ' + block.displayName)
+            except:
+              bot.chat('I couldn\'t place a block, there\'s no block in memory to place it next to')
 
         case 'activate':
-          block = getCurrentlyLookedAtBlock(bot)
+          block = action.getCurrentlyLookedAtBlock(bot, blocksInMemory)
           bot.activateBlock(block)
           
         case "current block":
-          block = getCurrentlyLookedAtBlock(bot)
-          print("Block is", block)
+          block = action.getCurrentlyLookedAtBlock(bot, blocksInMemory)
+          print('Block is', block)
 
         case 'attack':
-          entity = getEntityFromMemory()
+          entity = action.getEntityFromMemory(entitiesInMemory)
           if entity is not None:
-            attack(bot, entity)
+            action.attack(bot, entity)
           else:
             bot.chat('There\'s no entity in memory for me to attack!')
 
@@ -172,9 +196,6 @@ class BlockFace(Enum):
   bottom = {'x' : 0, 'y' : 1, 'z' : 0}
   top = {'x' : 0, 'y' : 1, 'z' : 0}
 
-def look(currentBot, yaw, pitch):
-  currentBot.look(yaw, pitch, True)
-
 def randomYaw():
   return random.uniform(0,6.28)
 
@@ -196,24 +217,8 @@ def dig(currentBot, block, forceLook, digFace):
 def place(currentBot, block, face):
   currentBot.placeBlock(block, face)
 
-def attack(currentBot, entityToAttack):
-  currentBot.attack(entityToAttack)
-
-def getCurrentlyLookedAtBlock(currentBot):
-  hunter.blocksInMemory.append(currentBot.blockAtCursor())
-  blockIndex = len(hunter.blocksInMemory) - 1
-  block = hunter.blocksInMemory[blockIndex]
-  return block
-
 def activateHeldItem(currentBot, offHand):
   currentBot.activateItem(offHand)
-
-def getEntityFromMemory():
-  if len(hunter.entitiesInMemory) is not 0:
-    index = len(hunter.entitiesInMemory) -1
-    entity = hunter.entitiesInMemory[index]
-    return entity
-  return None
 
 def updateInventory(currentBot):
   hunter.inventoryItems = []
