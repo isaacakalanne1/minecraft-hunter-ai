@@ -29,6 +29,9 @@ class Hunter:
 
   heldItemOfEnemyInMemory = None
 
+  currentHealth = None
+  currentHunger = None
+
   global bot
   bot = mineflayer.createBot({
     'host': SERVER_HOST,
@@ -111,6 +114,13 @@ class Hunter:
     if collector.username == bot.username:
       bot.chat("I collected an item!")
       updateInventory(bot)
+
+  @On(bot, 'health')
+  def handle(*args):
+    bot.chat('My health changed!')
+    hunter.currentHealth = bot.health
+    hunter.currentHunger = bot.food
+    bot.chat('My health is' + str(hunter.currentHealth))
   
 hunter = Hunter()
 
