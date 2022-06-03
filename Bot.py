@@ -11,7 +11,7 @@ mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 BOT_USERNAME = 'HelloThere'
 BOT_USERNAME_2 = 'HelloThereMate'
 SERVER_HOST = "localHost"
-SERVER_PORT = 60468
+SERVER_PORT = 62022
 
 SELECT_QUICKBAR_SLOT = 'selectQuickBarSlot'
 MOVE_ITEM_SLOT = 'moveItemSlot'
@@ -24,6 +24,8 @@ class HunterData:
   blocksInMemory = []
 
   entitiesInMemory = []
+
+  positionOfEnemyInMemory = {'x' : 0, 'y' : 0, 'z' : 0}
 
   bot = mineflayer.createBot({
     'host': SERVER_HOST,
@@ -132,6 +134,9 @@ def handleMsg(this, sender, message, *args):
       case 'nearest':
         getNearestEntity(bot)
 
+      case 'position':
+        getPositionOfEnemyPlayer(bot)
+
 def dig(currentBot, block, forceLook, digFace):
   currentBot.dig(block, forceLook, digFace)
 
@@ -141,14 +146,20 @@ def place(currentBot, block, face):
 def attack(currentBot, entityToAttack):
   currentBot.attack(entityToAttack)
 
-match = lambda entity: entity.name == 'player'
+match = lambda entity: entity.name == 'RoyalCentaur'
 
 def getNearestEntity(currentBot):
   entity = currentBot.nearestEntity(match)
   hunterData.entitiesInMemory.append(entity)
+  print('Entity is', entity)
+  return entity
 
-def nameIsCow(entity):
-  return entity.name == 'cow'
+def getPositionOfEnemyPlayer(currentBot):
+  entity = getNearestEntity(currentBot)
+  position = entity.position
+  hunterData.positionOfEnemyInMemory = {'x' : position.x, 'y' : position.y, 'z' : position.z}
+  print('Position is', hunterData.positionOfEnemyInMemory)
+  return position
 
 def getCurrentlyLookedAtBlock(currentBot):
   hunterData.blocksInMemory.append(currentBot.blockAtCursor())
