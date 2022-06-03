@@ -16,7 +16,7 @@ SERVER_PORT = 62022
 SELECT_QUICKBAR_SLOT = 'selectQuickBarSlot'
 MOVE_ITEM_SLOT = 'moveItemSlot'
 
-class HunterData:
+class Hunter:
   # Will need to update inventoryItems to dictionary, like {32 : Item} so AI can access items based on their ID, rather than a raw index
   inventoryItems = []
 
@@ -51,7 +51,7 @@ class HunterData:
           MovementModifier.modify(bot, MovementModifier.Type.sprint)
           Jump.jump(bot, Jump.Jump.jump)
           if randomInventoryIndex() is not None:
-            holdItem(bot, hunterData.inventoryItems[randomInventoryIndex()])
+            holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
           
         case "halt":
           look(bot, randomYaw(), randomPitch())
@@ -59,18 +59,18 @@ class HunterData:
           MovementModifier.modify(bot, MovementModifier.Type.none)
           Jump.jump(bot, Jump.Jump.none)
           if randomInventoryIndex() is not None:
-            holdItem(bot, hunterData.inventoryItems[randomInventoryIndex()])
+            holdItem(bot, hunter.inventoryItems[randomInventoryIndex()])
         case "inventory":
-          print("Inventory is", hunterData.inventoryItems)
+          print("Inventory is", hunter.inventoryItems)
         case "find blocks":
           scanArea(bot)
         case "dig":
-          hunterData.blocksInMemory.append(bot.blockAtCursor())
-          index = randomIndexOf(hunterData.blocksInMemory)
+          hunter.blocksInMemory.append(bot.blockAtCursor())
+          index = randomIndexOf(hunter.blocksInMemory)
           if index is not None:
             print('yeee!')
-            blockIndex = len(hunterData.blocksInMemory) - 1
-            block = hunterData.blocksInMemory[blockIndex]
+            blockIndex = len(hunter.blocksInMemory) - 1
+            block = hunter.blocksInMemory[blockIndex]
             dig(bot, block, True, 'rayCast')
         case 'place':
           block = getCurrentlyLookedAtBlock(bot)
@@ -107,7 +107,7 @@ class HunterData:
       bot.chat("I collected an item!")
       updateInventory(bot)
   
-hunterData = HunterData()
+hunter = Hunter()
 
 class ItemSlot(Enum):
   none = 0
@@ -141,7 +141,7 @@ def randomIndexOf(list):
 
 def randomInventoryIndex():
   updateInventory(bot)
-  return randomIndexOf(hunterData.inventoryItems)
+  return randomIndexOf(hunter.inventoryItems)
 
 def dig(currentBot, block, forceLook, digFace):
   currentBot.dig(block, forceLook, digFace)
@@ -156,34 +156,34 @@ match = lambda entity: entity.name == 'RoyalCentaur'
 
 def getNearestEntity(currentBot):
   entity = currentBot.nearestEntity(match)
-  hunterData.entitiesInMemory.append(entity)
+  hunter.entitiesInMemory.append(entity)
   print('Entity is', entity)
   return entity
 
 def getPositionOfEnemyPlayer(currentBot):
   entity = getNearestEntity(currentBot)
   position = entity.position
-  hunterData.positionOfEnemyInMemory = {'x' : position.x, 'y' : position.y, 'z' : position.z}
-  print('Position is', hunterData.positionOfEnemyInMemory)
+  hunter.positionOfEnemyInMemory = {'x' : position.x, 'y' : position.y, 'z' : position.z}
+  print('Position is', hunter.positionOfEnemyInMemory)
   return position
 
 def getCurrentlyLookedAtBlock(currentBot):
-  hunterData.blocksInMemory.append(currentBot.blockAtCursor())
-  blockIndex = len(hunterData.blocksInMemory) - 1
-  block = hunterData.blocksInMemory[blockIndex]
+  hunter.blocksInMemory.append(currentBot.blockAtCursor())
+  blockIndex = len(hunter.blocksInMemory) - 1
+  block = hunter.blocksInMemory[blockIndex]
   return block
 
 def getEntityFromMemory():
-  if len(hunterData.entitiesInMemory) is not 0:
-    index = len(hunterData.entitiesInMemory) -1
-    entity = hunterData.entitiesInMemory[index]
+  if len(hunter.entitiesInMemory) is not 0:
+    index = len(hunter.entitiesInMemory) -1
+    entity = hunter.entitiesInMemory[index]
     return entity
   return None
 
 def updateInventory(currentBot):
-  hunterData.inventoryItems = []
+  hunter.inventoryItems = []
   for item in currentBot.inventory.items():
-    hunterData.inventoryItems.append(item)
+    hunter.inventoryItems.append(item)
 
 def canSeeTheBlock(block):
   if block.position is None:
