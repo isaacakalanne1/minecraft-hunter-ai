@@ -35,11 +35,10 @@ class Hunter:
   global currentTimeOfDay
   currentTimeOfDay = None
 
-  global action
-  action = HunterAction.HunterAction()
-
   def __init__(self, host, port, username):
     self.createBot(host, port, username)
+    self.action = HunterAction.HunterAction()
+
 
   def createBot(self, host, port, username):
     self.bot = mineflayer.createBot({
@@ -51,13 +50,13 @@ class Hunter:
 hunter = Hunter('localHost', 50661, 'HelloThere')
 
 @On(hunter.bot, 'spawn')
-def handle(*args):
+def handle(self, *args):
   global inventoryItems
   print("I spawned 👋")
-  inventoryItems = action.updateInventory(hunter.bot)
+  inventoryItems = hunter.action.updateInventory(hunter.bot)
 
 @On(hunter.bot, 'chat')
-def handleMsg(this, sender, message, *args):
+def handleMsg(self, sender, message, *args):
   print("Got message", sender, message)
   global inventoryItems, blocksInMemory, entitiesInMemory, positionOfEnemyInMemory, currentTimeOfDay
   
@@ -65,32 +64,32 @@ def handleMsg(this, sender, message, *args):
     hunter.bot.chat('Hi, you said ' + message)
     match message:
       case "go":
-        action.look(hunter.bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
+        hunter.action.look(hunter.bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
         Movement.move(hunter.bot, Movement.Direction.forwards)
         MovementModifier.modify(hunter.bot, MovementModifier.Type.sprint)
         Jump.jump(hunter.bot, Jump.Jump.jump)
-        inventoryItems = action.updateInventory(hunter.bot)
+        inventoryItems = hunter.action.updateInventory(hunter.bot)
         if RandomGenerator.randomIndexOf(inventoryItems) is not None:
           index = RandomGenerator.randomIndexOf(inventoryItems)
           item = inventoryItems[index]
-          action.holdItem(hunter.bot, item)
+          hunter.action.holdItem(hunter.bot, item)
         
       case "halt":
-        action.look(hunter.bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
+        hunter.action.look(hunter.bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
         Movement.move(hunter.bot, Movement.Direction.none)
         MovementModifier.modify(hunter.bot, MovementModifier.Type.none)
         Jump.jump(hunter.bot, Jump.Jump.none)
-        inventoryItems = action.updateInventory(hunter.bot)
+        inventoryItems = hunter.action.updateInventory(hunter.bot)
         if RandomGenerator.randomIndexOf(inventoryItems) is not None:
           index = RandomGenerator.randomIndexOf(inventoryItems)
           item = inventoryItems[index]
-          action.holdItem(hunter.bot, item)
+          hunter.action.holdItem(hunter.bot, item)
 
       case 'look':
-        action.look(hunter.bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
+        hunter.action.look(hunter.bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
 
       case "inventory":
-        inventoryItems = action.updateInventory(hunter.bot)
+        inventoryItems = hunter.action.updateInventory(hunter.bot)
         print("Inventory is", inventoryItems)
       case "dig":
         blocksInMemory.append(hunter.bot.blockAtCursor())
@@ -99,13 +98,13 @@ def handleMsg(this, sender, message, *args):
           print('yeee!')
           blockIndex = len(blocksInMemory) - 1
           block = blocksInMemory[blockIndex]
-          action.dig(hunter.bot, block, True, 'rayCast')
+          hunter.action.dig(hunter.bot, block, True, 'rayCast')
       case 'place':
-        block = action.getCurrentlyLookedAtBlock(hunter.bot)
+        block = hunter.action.getCurrentlyLookedAtBlock(hunter.bot)
         blocksInMemory.append(block)
         face = {'x' : 0, 'y' : 1, 'z' : 0}
         try:
-          action.place(hunter.bot, block, face)
+          hunter.action.place(hunter.bot, block, face)
         except:
           try:
             hunter.bot.chat('I couldn\'t place a block next to ' + block.displayName)
@@ -113,55 +112,55 @@ def handleMsg(this, sender, message, *args):
             hunter.bot.chat('I couldn\'t place a block, there\'s no block in memory to place it next to')
 
       case 'activate':
-        block = action.getCurrentlyLookedAtBlock(hunter.bot, blocksInMemory)
+        block = hunter.action.getCurrentlyLookedAtBlock(hunter.bot, blocksInMemory)
         blocksInMemory.append(block)
         hunter.bot.activateBlock(block)
         
       case "current block":
-        block = action.getCurrentlyLookedAtBlock(hunter.bot, blocksInMemory)
+        block = hunter.action.getCurrentlyLookedAtBlock(hunter.bot, blocksInMemory)
         blocksInMemory.append(block)
         print('Block is', block)
 
       case 'attack':
-        entity = action.getEntityFromMemory(entitiesInMemory)
+        entity = hunter.action.getEntityFromMemory(entitiesInMemory)
         if entity is not None:
-          action.attack(hunter.bot, entity)
+          hunter.action.attack(hunter.bot, entity)
         else:
           hunter.bot.chat('There\'s no entity in memory for me to attack!')
 
       case 'nearest':
-        entity = action.getNearestEntity(hunter.bot)
+        entity = hunter.action.getNearestEntity(hunter.bot)
         entitiesInMemory.append(entity)
 
       case 'position':
-        entity = action.getNearestEntity(hunter.bot)
+        entity = hunter.action.getNearestEntity(hunter.bot)
         entitiesInMemory.append(entity)
-        positionOfEnemyInMemory = action.getPositionOfEnemyPlayer(entity, positionOfEnemyInMemory)
+        positionOfEnemyInMemory = hunter.action.getPositionOfEnemyPlayer(entity, positionOfEnemyInMemory)
 
       case 'held':
-        entity = action.getNearestEntity(hunter.bot)
+        entity = hunter.action.getNearestEntity(hunter.bot)
         entitiesInMemory.append(entity)
-        item = action.getHeldItemOfEnemyPlayer(entity)
+        item = hunter.action.getHeldItemOfEnemyPlayer(entity)
 
       case 'time':
-        currentTimeOfDay = action.getTimeOfDay(hunter.bot)
+        currentTimeOfDay = hunter.action.getTimeOfDay(hunter.bot)
         print('Time of day is' + str(currentTimeOfDay))
       
       case 'use':
-        action.activateHeldItem(hunter.bot, False)
+        hunter.action.activateHeldItem(hunter.bot, False)
 
       case 'hold':
         if RandomGenerator.randomIndexOf(inventoryItems) is not None:
           index = RandomGenerator.randomIndexOf(inventoryItems)
           item = inventoryItems[index]
-          action.holdItem(hunter.bot, item)
+          hunter.action.holdItem(hunter.bot, item)
 
 @On(hunter.bot, 'playerCollect')
 def handlePlayerCollect(this, collector, collected):
   global inventoryItems
   if collector.username == hunter.bot.username:
     hunter.bot.chat("I collected an item!")
-    inventoryItems = action.updateInventory(hunter.bot)
+    inventoryItems = hunter.action.updateInventory(hunter.bot)
 
 
 @On(hunter.bot, 'health')
