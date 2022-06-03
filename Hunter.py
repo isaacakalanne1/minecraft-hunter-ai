@@ -4,7 +4,6 @@ import Action.MovementModifier as MovementModifier
 import Action.Jump as Jump
 import Action.HunterAction as HunterAction
 import Generators.RandomGenerator as RandomGenerator
-from javascript import config
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 
@@ -38,11 +37,6 @@ class Hunter:
 
   global action
   action = HunterAction.HunterAction()
-
-  BOT_USERNAME = 'HelloThere'
-  BOT_USERNAME_2 = 'HelloThereMate'
-  SERVER_HOST = "localHost"
-  SERVER_PORT = 62022
 
   def __init__(self, host, port, username):
     self.createBot(host, port, username)
