@@ -52,9 +52,9 @@ class Hunter:
 
   @On(bot, 'spawn')
   def handle(*args):
+    global inventoryItems
     print("I spawned 👋")
     inventoryItems = action.updateInventory(bot)
-    print('Inventory is', inventoryItems)
 
   @On(bot, 'chat')
   def handleMsg(this, sender, message, *args):
