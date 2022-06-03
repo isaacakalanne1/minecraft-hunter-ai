@@ -32,6 +32,8 @@ class Hunter:
   currentHealth = None
   currentHunger = None
 
+  currentTimeOfDay = None
+
   global bot
   bot = mineflayer.createBot({
     'host': SERVER_HOST,
@@ -109,6 +111,10 @@ class Hunter:
         case 'held':
           getHeldItemOfEnemyPlayer(bot)
 
+        case 'time':
+          hunter.currentTimeOfDay = bot.time.timeOfDay
+          print('Time of day is' + str(bot.time.timeOfDay))
+
   @On(bot, 'playerCollect')
   def handlePlayerCollect(this, collector, collected):
     if collector.username == bot.username:
@@ -117,7 +123,6 @@ class Hunter:
 
   @On(bot, 'health')
   def handle(*args):
-    bot.chat('My health changed!')
     hunter.currentHealth = bot.health
     hunter.currentHunger = bot.food
     bot.chat('My health is' + str(hunter.currentHealth))
