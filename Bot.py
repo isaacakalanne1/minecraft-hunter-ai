@@ -161,10 +161,6 @@ class Hunter:
   
 hunter = Hunter()
 
-class ItemSlot(Enum):
-  none = 0
-  selectItem = 1
-
 class BlockFace(Enum):
   front = {'x' : 0, 'y' : 1, 'z' : 0}
   back = {'x' : 0, 'y' : 1, 'z' : 0}
