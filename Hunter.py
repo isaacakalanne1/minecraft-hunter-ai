@@ -87,8 +87,8 @@ class Hunter:
           for direction in directions:
             listOfBlocks.append(self.getBlockAt(direction))
           # print('Count of listOfBlocks is', len(listOfBlocks))
-          print('Blocks are', listOfBlocks)
-          # print('Directions are', directions)
+          # print('Blocks are', listOfBlocks)
+          print('Directions are', directions)
 
         case "inventory":
           self.inventoryItems = self.action.updateInventory(self.bot)
@@ -230,14 +230,18 @@ class Hunter:
   def getRangeOfPointValues(self, lowerPoint, fieldOfView, resolution):
     pointValues = []
     for number in range(1,resolution + 1):
+      # Need to fix function to ensure it correctly gets points for centre point values like 0.8
       point = lowerPoint + number*(fieldOfView/resolution)
       if point > 1:
-        diff = point % 1
+        diff = point - 1
         point = 1 - diff
+      if point < -1:
+        diff = point + 1
+        point = -1 - diff
       pointValues.append(point)
     return pointValues
 
-hunter = Hunter('localHost', 54352, 'HelloThere')
+hunter = Hunter('localHost', 57340, 'HelloThere')
 
 # It seems like if this listener isn't placed here, the Python file assumes it only needs to run briefly, and stops itself running
 @On(hunter.bot, 'eventNeverUsed')
