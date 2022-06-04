@@ -81,16 +81,8 @@ class Hunter:
           yaw = RandomGenerator.randomYaw()
           pitch = RandomGenerator.randomPitch()
           self.action.look(self.bot, yaw, pitch)
-          lookDirection = self.getLookDirection(yaw, pitch)
-          vecPosition = self.bot.entity.position
-          height = self.bot.entity.height
-          vecTest = Vec3(0,0,0)
-          print('vecTest is', vecTest)
-          eyePosition = Vec3(vecPosition.x, vecPosition.y + height, vecPosition.z)
-          blockHere = self.bot.world.raycast(eyePosition, lookDirection, 160, None)
-          print('Look direction is:', lookDirection)
-          print('height is:', height)
-          print('bot eye position is:', eyePosition)
+
+          blockHere = self.getBlockAt(yaw, pitch)
           print('block currently looked at is:', blockHere)
 
         case "inventory":
@@ -174,6 +166,12 @@ class Hunter:
     self.bot.chat('My health is' + str(self.currentHealth))
     self.bot.chat('My hunger is' + str(self.currentHunger))
 
+  def getEyePositionOfBot(self):
+    vecPosition = self.bot.entity.position
+    height = self.bot.entity.height
+    eyePosition = Vec3(vecPosition.x, vecPosition.y + height, vecPosition.z)
+    return eyePosition
+
   def getLookDirection(self, yaw, pitch):
     csYaw = math.cos(yaw)
     snYaw = math.sin(yaw)
@@ -181,6 +179,12 @@ class Hunter:
     snPitch = math.sin(pitch)
     direction = Vec3(-snYaw * csPitch, snPitch, -csYaw * csPitch)
     return direction
+
+  def getBlockAt(self, yaw, pitch):
+    eyePosition = self.getEyePositionOfBot()
+    lookDirection = self.getLookDirection(yaw, pitch)
+    block = self.bot.world.raycast(eyePosition, lookDirection, 160, None)
+    return block
 
 hunter = Hunter('localHost', 54352, 'HelloThere')
 
