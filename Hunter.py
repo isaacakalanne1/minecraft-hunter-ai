@@ -177,14 +177,48 @@ class Hunter:
     snYaw = math.sin(yaw)
     csPitch = math.cos(pitch)
     snPitch = math.sin(pitch)
-    direction = Vec3(-snYaw * csPitch, snPitch, -csYaw * csPitch)
+    x = -snYaw * csPitch
+    y = snPitch
+    z = -csYaw * csPitch
+    directions = self.getLookDirectionsInFieldAround(x, y, z)
+    direction = Vec3(x, y, z)
     return direction
 
   def getBlockAt(self, yaw, pitch):
     eyePosition = self.getEyePositionOfBot()
     lookDirection = self.getLookDirection(yaw, pitch)
+    print('Look direction is', lookDirection)
     block = self.bot.world.raycast(eyePosition, lookDirection, 160, None)
     return block
+
+  def getLookDirectionsInFieldAround(self, lookX, lookY, lookZ):
+    fieldOfView = 0.5
+    lowerX = self.getLowerBoundOf(lookX, fieldOfView)
+    upperX = self.getUpperBoundOf(lookX, fieldOfView)
+    lowerY = self.getLowerBoundOf(lookY, fieldOfView)
+    upperY = self.getUpperBoundOf(lookY, fieldOfView)
+    lowerZ = self.getLowerBoundOf(lookZ, fieldOfView)
+    upperZ = self.getUpperBoundOf(lookZ, fieldOfView)
+    print('Lower x is', lowerX)
+    print('Upper x is', upperX)
+    print('Lower y is', lowerY)
+    print('Upper y is', upperY)
+    print('Lower z is', lowerZ)
+    print('Upper z is', upperZ)
+
+  def getLowerBoundOf(self, val, fieldOfView):
+    lower = val - fieldOfView
+    if lower < -1:
+      diff = 1 + lower
+      lower = -1 - diff
+    return lower
+  
+  def getUpperBoundOf(self, val, fieldOfView):
+    upper = val + fieldOfView
+    if upper > 1:
+      diff = upper - 1
+      upper = 1 - diff
+    return upper
 
 hunter = Hunter('localHost', 54352, 'HelloThere')
 
