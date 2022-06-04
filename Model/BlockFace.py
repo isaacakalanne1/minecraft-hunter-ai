@@ -1,9 +1,11 @@
+from javascript import require, On
 from enum import Enum
+Vec3 = require('vec3')
 
 class BlockFace(Enum):
-  front = {'x' : 0, 'y' : 1, 'z' : 0}
-  back = {'x' : 0, 'y' : 1, 'z' : 0}
-  left = {'x' : 0, 'y' : 1, 'z' : 0}
-  right = {'x' : 0, 'y' : 1, 'z' : 0}
-  bottom = {'x' : 0, 'y' : 1, 'z' : 0}
-  top = {'x' : 0, 'y' : 1, 'z' : 0}
+  front = Vec3(-1, 0, 0)
+  back = Vec3(1, 0, 0)
+  left = Vec3(0, 0, -1)
+  right = Vec3(0, 0, 1)
+  bottom = Vec3(0, -1, 0)
+  top = Vec3(0, 1, 0)
