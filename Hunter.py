@@ -4,8 +4,10 @@ import Action.MovementModifier as MovementModifier
 import Action.Jump as Jump
 import Action.HunterAction as HunterAction
 import Generators.RandomGenerator as RandomGenerator
+import math
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
+Vec3 = require('vec3')
 
 RandomGenerator = RandomGenerator.RandomGenerator 
 
@@ -76,7 +78,20 @@ class Hunter:
             self.action.holdItem(self.bot, item)
 
         case 'look':
-          self.action.look(self.bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
+          yaw = RandomGenerator.randomYaw()
+          pitch = RandomGenerator.randomPitch()
+          self.action.look(self.bot, yaw, pitch)
+          lookDirection = self.getLookDirection(yaw, pitch)
+          vecPosition = self.bot.entity.position
+          height = self.bot.entity.height
+          vecTest = Vec3(0,0,0)
+          print('vecTest is', vecTest)
+          eyePosition = Vec3(vecPosition.x, vecPosition.y + height, vecPosition.z)
+          blockHere = self.bot.world.raycast(eyePosition, lookDirection, 160, None)
+          print('Look direction is:', lookDirection)
+          print('height is:', height)
+          print('bot eye position is:', eyePosition)
+          print('block currently looked at is:', blockHere)
 
         case "inventory":
           self.inventoryItems = self.action.updateInventory(self.bot)
@@ -122,6 +137,7 @@ class Hunter:
 
         case 'nearest':
           entity = self.action.getNearestEntity(self.bot)
+          print('Entity is', entity)
           self.entitiesInMemory.append(entity)
 
         case 'position':
@@ -157,3 +173,18 @@ class Hunter:
     self.currentHunger = self.bot.food
     self.bot.chat('My health is' + str(self.currentHealth))
     self.bot.chat('My hunger is' + str(self.currentHunger))
+
+  def getLookDirection(self, yaw, pitch):
+    csYaw = math.cos(yaw)
+    snYaw = math.sin(yaw)
+    csPitch = math.cos(pitch)
+    snPitch = math.sin(pitch)
+    direction = Vec3(-snYaw * csPitch, snPitch, -csYaw * csPitch)
+    return direction
+
+hunter = Hunter('localHost', 54352, 'HelloThere')
+
+# It seems like if this listener isn't placed here, the Python file assumes it only needs to run briefly, and stops itself running
+@On(hunter.bot, 'eventNeverUsed')
+def h(*args):
+  pass
