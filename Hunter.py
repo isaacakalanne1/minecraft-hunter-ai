@@ -82,11 +82,11 @@ class Hunter:
           pitch = RandomGenerator.randomPitch()
           self.action.look(self.bot, yaw, pitch)
 
-          directions = self.getLookDirectionsAround(yaw, pitch, 0.7, 5)
+          directions = self.getLookDirectionsAround(yaw, pitch, 0.7, 2)
           listOfBlocks = []
           for direction in directions:
             listOfBlocks.append(self.getBlockAt(direction))
-          print('Cound of listOfBlocks is', len(listOfBlocks))
+          # print('Count of listOfBlocks is', len(listOfBlocks))
           print('Blocks are', listOfBlocks)
           # print('Directions are', directions)
 
