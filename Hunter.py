@@ -82,8 +82,11 @@ class Hunter:
           pitch = RandomGenerator.randomPitch()
           self.action.look(self.bot, yaw, pitch)
 
-          blockHere = self.getBlockAt(yaw, pitch)
-          print('block currently looked at is:', blockHere)
+          directions = self.getLookDirectionsAround(yaw, pitch)
+          # for direction in directions:
+          #   blockHere = self.getBlockAt(direction)
+          # print('block currently looked at is:', blockHere)
+          print('lookDirections count is', len(directions))
 
         case "inventory":
           self.inventoryItems = self.action.updateInventory(self.bot)
@@ -172,7 +175,7 @@ class Hunter:
     eyePosition = Vec3(vecPosition.x, vecPosition.y + height, vecPosition.z)
     return eyePosition
 
-  def getLookDirection(self, yaw, pitch):
+  def getLookDirectionsAround(self, yaw, pitch):
     csYaw = math.cos(yaw)
     snYaw = math.sin(yaw)
     csPitch = math.cos(pitch)
@@ -180,31 +183,22 @@ class Hunter:
     x = -snYaw * csPitch
     y = snPitch
     z = -csYaw * csPitch
-    directions = self.getLookDirectionsInFieldAround(x, y, z)
-    direction = Vec3(x, y, z)
-    return direction
+    directions = self.getLookDirectionsAroundDirection(x, y, z)
+    return directions
 
-  def getBlockAt(self, yaw, pitch):
+  def getBlockAt(self, lookDirection):
     eyePosition = self.getEyePositionOfBot()
-    lookDirection = self.getLookDirection(yaw, pitch)
     print('Look direction is', lookDirection)
     block = self.bot.world.raycast(eyePosition, lookDirection, 160, None)
     return block
 
-  def getLookDirectionsInFieldAround(self, lookX, lookY, lookZ):
+  def getLookDirectionsAroundDirection(self, lookX, lookY, lookZ):
     fieldOfView = 0.5
     lowerX = self.getLowerBoundOf(lookX, fieldOfView)
-    upperX = self.getUpperBoundOf(lookX, fieldOfView)
     lowerY = self.getLowerBoundOf(lookY, fieldOfView)
-    upperY = self.getUpperBoundOf(lookY, fieldOfView)
     lowerZ = self.getLowerBoundOf(lookZ, fieldOfView)
-    upperZ = self.getUpperBoundOf(lookZ, fieldOfView)
-    print('Lower x is', lowerX)
-    print('Upper x is', upperX)
-    print('Lower y is', lowerY)
-    print('Upper y is', upperY)
-    print('Lower z is', lowerZ)
-    print('Upper z is', upperZ)
+    lookDirections = self.getLookDirections(lowerX, lowerY, lowerZ)
+    return lookDirections
 
   def getLowerBoundOf(self, val, fieldOfView):
     lower = val - fieldOfView
@@ -219,6 +213,22 @@ class Hunter:
       diff = upper - 1
       upper = 1 - diff
     return upper
+
+  def getLookDirections(self, lowerX, lowerY, lowerZ):
+    fov = 1
+    fieldOfView = fov * 2
+    resolution = 3
+    points = []
+    for number in range(1,resolution + 1):
+      x = lowerX + number*(fieldOfView/resolution)
+      xPoint = 1 - (1 - x)
+      y = lowerY + number*(fieldOfView/resolution)
+      yPoint = 1 - (1 - y)
+      z = lowerZ + number*(fieldOfView/resolution)
+      zPoint = 1 - (1 - z)
+      point = Vec3(xPoint, yPoint, zPoint)
+      points.append(point)
+    return points
 
 hunter = Hunter('localHost', 54352, 'HelloThere')
 
