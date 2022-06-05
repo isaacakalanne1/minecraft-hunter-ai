@@ -1,9 +1,38 @@
 from javascript import require, On
-import Hunter
 
-hunter = Hunter.Hunter('localHost', 54352, 'HelloThere')
+flyingSquid = require('/Users/iakalann/node_modules/flying-squid')
 
-# It seems like if this listener isn't placed here, the Python file assumes it only needs to run briefly, and stops itself running
-@On(hunter.bot, 'eventNeverUsed')
-def h(*args):
-  pass
+test = "test"
+
+flyingSquid.createMCServer({
+  'motd': 'A Minecraft Server \nRunning flying-squid',
+  'port': 25565,
+  'max-players': 10,
+  'online-mode': False,
+  'logging': True,
+  'gameMode': 0,
+  'difficulty': 1,
+  'worldFolder': 'world',
+  'generation': {
+    'name': 'empty',
+    'options': {
+      'worldHeight': 80
+    }
+  },
+  'kickTimeout': 10000,
+  'plugins': {
+
+  },
+  'modpe': False,
+  'view-distance': 10,
+  'player-list-text': {
+    'header': 'Flying squid',
+    'footer': 'Test server'
+  },
+  'everybody-op': False,
+  'max-entities': 100,
+  'version': '1.18'
+})
+
+while True:
+    pass

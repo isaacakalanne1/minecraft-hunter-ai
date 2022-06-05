@@ -230,7 +230,6 @@ class Hunter:
   def getRangeOfPointValues(self, lowerPoint, fieldOfView, resolution):
     pointValues = []
     for number in range(1,resolution + 1):
-      # Need to fix function to ensure it correctly gets points for centre point values like 0.8
       point = lowerPoint + number*(fieldOfView/resolution)
       if point > 1:
         diff = point - 1
