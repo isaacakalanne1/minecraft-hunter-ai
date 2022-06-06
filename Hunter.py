@@ -182,6 +182,23 @@ class Hunter:
     block = self.bot.world.raycast(eyePosition, lookDirection, 160, None)
     return block
 
+  def play_step(self, action):
+    self.action.look(self.bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
+    Movement.move(self.bot, Movement.Direction.forwards)
+    MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
+    Jump.jump(self.bot, Jump.Jump.jump)
+    self.inventoryItems = self.action.updateInventory(self.bot)
+    if RandomGenerator.randomIndexOf(self.inventoryItems) is not None:
+      index = RandomGenerator.randomIndexOf(self.inventoryItems)
+      item = self.inventoryItems[index]
+      self.action.holdItem(self.bot, item)
+
+  def reset(self):
+    # 1. Set new spawn for both bots
+    # 2. Kill both bots to respawn them
+    pass
+
+
 hunter = Hunter('localHost', 62217, 'HelloThere')
 
 # It seems like if this listener isn't placed here, the Python file assumes it only needs to run briefly, and stops itself running
