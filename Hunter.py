@@ -10,9 +10,6 @@ mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
 
 class Hunter:
-  # Will need to update inventoryItems to dictionary, like {32 : Item} so AI can access items based on their ID, rather than a raw index
-
-  # Will need to update blocksInMemory to dictionary, like { Vec3{x,y,z} : Block} so AI can access blocks based on their position, rather than a raw index
 
   def __init__(self, host, port, username):
     self.createBot(host, port, username)
