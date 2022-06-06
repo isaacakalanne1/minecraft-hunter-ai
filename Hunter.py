@@ -20,8 +20,7 @@ class Hunter:
     self.inventoryItems = {}
     self.blocksInMemory = {}
     self.entitiesInMemory = {}
-    self.positionOfEnemyInMemory = {'x' : 0, 'y' : 0, 'z' : 0}
-    self.heldItemOfEnemyInMemory = None
+    self.currentHeldItem = (0, 0) # (Id, count)
     self.currentHealth = None
     self.currentHunger = None
     self.currentTimeOfDay = None
@@ -142,8 +141,14 @@ class Hunter:
 
         case 'held':
           entity = self.action.getNearestEntity(self.bot)
-          self.entitiesInMemory.append(entity)
+          position = (entity.position.x, entity.position.y, entity.position.z)
+          self.entitiesInMemory[entity.id] = [position, entity.heldItem.type]
           item = self.action.getHeldItemOfEnemyPlayer(entity)
+
+        case 'own held':
+          heldItem = self.bot.entity.heldItem
+          self.currentHeldItem = (heldItem.type, heldItem.count)
+          print('Current held is', self.currentHeldItem)
 
         case 'time':
           self.currentTimeOfDay = self.action.getTimeOfDay(self.bot)
