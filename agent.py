@@ -18,30 +18,19 @@ class Agent:
         # model, trainer
 
     def get_state(self, hunter):
-        state = [
-            hunter.inventoryItemsArray,
-            hunter.blocksInMemoryArray,
-            hunter.entitiesInMemoryArray,
-            hunter.currentHeldItem,
-            hunter.currentHealth,
-            hunter.currentHunger,
-            hunter.currentTimeOfDay,
-            hunter.currentPosition
-        ]
-        inventoryNames = ['itemId','slot', 'count']
-        inventoryFormats = ['i4','i4', 'i4']
-        inventoryDType = dict(names = inventoryNames, formats=inventoryFormats)
+        state = {
+            'inventory': list(hunter.inventoryItems.items()),
+            'blocks': list(hunter.blocksInMemory.items()),
+            'entities': list(hunter.entitiesInMemory.items()),
+            'heldItem': hunter.currentHeldItem,
+            'currentHealth': hunter.currentHealth,
+            'currentHunger': hunter.currentHunger,
+            'currentTimeOfDay': hunter.currentTimeOfDay,
+            'currentPosition': hunter.currentPosition
+        }
 
-        blockPositionNames = ['blockX','blockX', 'blockX']
-        blockPositionFormats = ['i4','i4', 'i4']
-
-        blockNames = [blockPositionNames,'blockType']
-        blockFormats = [blockPositionFormats,'i4']
-        blockDType = dict(names = blockNames, names = blockFormats)
-
-        dtype = dict(inventory = inventoryDType, blocks = blockDType)
-        np.array(list(state.items()), dtype=dtype)
-        return np.array(state, dtype=np.single)
+        stateArray = np.array(state, dtype=np.object0) # May need to use dtype=object, or one of other dtype=np.obj... values
+        return stateArray
 
     def remember(self, state, action, reward, next_state, done):
         pass

@@ -173,15 +173,15 @@ class Hunter:
           state = {
               'inventory': list(self.inventoryItems.items()),
               'blocks': list(self.blocksInMemory.items()),
-              'entities': list(hunter.entitiesInMemory.items()),
-              'heldItem': hunter.currentHeldItem,
-              'currentHealth': hunter.currentHealth,
-              'currentHunger': hunter.currentHunger,
-              'currentTimeOfDay': hunter.currentTimeOfDay,
-              'currentPosition': hunter.currentPosition
+              'entities': list(self.entitiesInMemory.items()),
+              'heldItem': self.currentHeldItem,
+              'currentHealth': self.currentHealth,
+              'currentHunger': self.currentHunger,
+              'currentTimeOfDay': self.currentTimeOfDay,
+              'currentPosition': self.currentPosition
           }
 
-          stateArray = np.array(state, dtype=object)
+          stateArray = np.array(state, dtype=np.object0)
           print('The array is', stateArray)
 
   def handlePlayerCollect(self, this, collector, collected, *args):
