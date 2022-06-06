@@ -45,5 +45,5 @@ class HunterAction:
   def dig(self, currentBot, block, forceLook, digFace):
     currentBot.dig(block, forceLook, digFace)
   
-  def getTimeOfDay(currentBot):
+  def getTimeOfDay(self, currentBot):
     return currentBot.time.timeOfDay

@@ -5,6 +5,7 @@ import Action.Jump as Jump
 import Action.HunterAction as HunterAction
 import Generators.RandomGenerator as RandomGenerator
 import Generators.LookDirection as LookDirection
+import numpy as np
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
@@ -17,10 +18,11 @@ class Hunter:
     self.inventoryItems = {}
     self.blocksInMemory = {}
     self.entitiesInMemory = {}
-    self.currentHeldItem = (0, 0) # (Id, count)
-    self.currentHealth = None
-    self.currentHunger = None
-    self.currentTimeOfDay = None
+    self.currentHeldItem = (0, 0) # [Id, count]
+    self.currentHealth = 0
+    self.currentHunger = 0
+    self.currentTimeOfDay = 0
+    self.currentPosition = (0,0,0)
     self.bot.on('spawn', self.handle)
     self.bot.on('chat', self.handleMsg)
     self.bot.on('playerCollect', self.handlePlayerCollect)
@@ -41,7 +43,11 @@ class Hunter:
                 
   def handle(self, *args):
     print("I spawned 👋")
-    self.inventoryItems = self.action.updateInventory(self.bot)
+    self.inventoryItems = {}
+    items = self.action.updateInventory(self.bot)
+    for item in items:
+      self.inventoryItems[(item.type, item.slot)] = item.count
+    print("Inventory is", self.inventoryItems)
 
   def handleMsg(self, this, sender, message, *args):
     print("Got message", sender, message)
@@ -90,20 +96,16 @@ class Hunter:
           for item in items:
             self.inventoryItems[(item.type, item.slot)] = item.count
           print("Inventory is", self.inventoryItems)
+
         case "dig":
-          self.blocksInMemory.append(self.bot.blockAtCursor())
-          index = RandomGenerator.randomIndexOf(self.blocksInMemory)
-          if index is not None:
-            blockIndex = len(self.blocksInMemory) - 1
-            block = self.blocksInMemory[blockIndex]
-            try:
-              self.action.dig(self.bot, block, True, 'rayCast')
-            except:
-              self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
+          block = self.bot.blockAtCursor()
+          try:
+            self.action.dig(self.bot, block, True, 'rayCast')
+          except:
+            self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
         case 'place':
           block = self.action.getCurrentlyLookedAtBlock(self.bot)
-          self.blocksInMemory.append(block)
-          face = {'x' : 0, 'y' : 1, 'z' : 0}
+          face = Vec3(0,1,0)
           try:
             self.action.place(self.bot, block, face)
           except:
@@ -114,12 +116,10 @@ class Hunter:
 
         case 'activate':
           block = self.action.getCurrentlyLookedAtBlock(self.bot, self.blocksInMemory)
-          self.blocksInMemory.append(block)
           self.bot.activateBlock(block)
           
         case "current block":
           block = self.action.getCurrentlyLookedAtBlock(self.bot, self.blocksInMemory)
-          self.blocksInMemory.append(block)
           print('Block is', block)
 
         case 'attack':
@@ -133,7 +133,11 @@ class Hunter:
           entity = self.action.getNearestEntity(self.bot)
           # print('Entity is', entity)
           position = (entity.position.x, entity.position.y, entity.position.z)
-          self.entitiesInMemory[entity.id] = [position, entity.heldItem.type]
+          if entity.heldItem is None:
+            heldItem = None
+          else:
+            heldItem = entity.heldItem.type
+          self.entitiesInMemory[entity.id] = [position, heldItem]
           print('Entities in memory are:', self.entitiesInMemory)
 
         case 'held':
@@ -157,19 +161,33 @@ class Hunter:
         case 'hold':
           if RandomGenerator.randomIndexOf(self.inventoryItems) is not None:
             index = RandomGenerator.randomIndexOf(self.inventoryItems)
-            item = self.inventoryItems[index]
+            item = self.inventoryItems[(index)]
             self.action.holdItem(self.bot, item)
+
+        case 'position':
+          position = self.bot.entity.position
+          self.currentPosition = (position.x, position.y, position.z)
+          print('Current position is', self.currentPosition)
+
+        case 'numpyy':
+          state = {
+              'inventory': list(self.inventoryItems.items()),
+              'blocks': list(self.blocksInMemory.items()),
+              'entities': list(hunter.entitiesInMemory.items()),
+              'heldItem': hunter.currentHeldItem,
+              'currentHealth': hunter.currentHealth,
+              'currentHunger': hunter.currentHunger,
+              'currentTimeOfDay': hunter.currentTimeOfDay,
+              'currentPosition': hunter.currentPosition
+          }
+
+          stateArray = np.array(state, dtype=object)
+          print('The array is', stateArray)
 
   def handlePlayerCollect(self, this, collector, collected, *args):
     if collector.username == self.bot.username:
       self.bot.chat("I collected an item!")
       self.inventoryItems = self.action.updateInventory(self.bot)
-
-  def handleHealth(self):
-    self.currentHealth = self.bot.health
-    self.currentHunger = self.bot.food
-    self.bot.chat('My health is' + str(self.currentHealth))
-    self.bot.chat('My hunger is' + str(self.currentHunger))
 
   def getEyePositionOfBot(self):
     vecPosition = self.bot.entity.position

@@ -18,7 +18,30 @@ class Agent:
         # model, trainer
 
     def get_state(self, hunter):
-        pass
+        state = [
+            hunter.inventoryItemsArray,
+            hunter.blocksInMemoryArray,
+            hunter.entitiesInMemoryArray,
+            hunter.currentHeldItem,
+            hunter.currentHealth,
+            hunter.currentHunger,
+            hunter.currentTimeOfDay,
+            hunter.currentPosition
+        ]
+        inventoryNames = ['itemId','slot', 'count']
+        inventoryFormats = ['i4','i4', 'i4']
+        inventoryDType = dict(names = inventoryNames, formats=inventoryFormats)
+
+        blockPositionNames = ['blockX','blockX', 'blockX']
+        blockPositionFormats = ['i4','i4', 'i4']
+
+        blockNames = [blockPositionNames,'blockType']
+        blockFormats = [blockPositionFormats,'i4']
+        blockDType = dict(names = blockNames, names = blockFormats)
+
+        dtype = dict(inventory = inventoryDType, blocks = blockDType)
+        np.array(list(state.items()), dtype=dtype)
+        return np.array(state, dtype=np.single)
 
     def remember(self, state, action, reward, next_state, done):
         pass
