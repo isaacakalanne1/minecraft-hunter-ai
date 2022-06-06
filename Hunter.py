@@ -17,7 +17,7 @@ class Hunter:
   def __init__(self, host, port, username):
     self.createBot(host, port, username)
     self.action = HunterAction.HunterAction()
-    self.inventoryItems = []
+    self.inventoryItems = {}
     self.blocksInMemory = {}
     self.entitiesInMemory = []
     self.positionOfEnemyInMemory = {'x' : 0, 'y' : 0, 'z' : 0}
@@ -89,7 +89,10 @@ class Hunter:
           print('Blocks are', self.blocksInMemory)
 
         case "inventory":
-          self.inventoryItems = self.action.updateInventory(self.bot)
+          self.inventoryItems = {}
+          items = self.action.updateInventory(self.bot)
+          for item in items:
+            self.inventoryItems[(item.type, item.slot)] = item.count
           print("Inventory is", self.inventoryItems)
         case "dig":
           self.blocksInMemory.append(self.bot.blockAtCursor())
