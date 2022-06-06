@@ -18,7 +18,7 @@ class Hunter:
     self.createBot(host, port, username)
     self.action = HunterAction.HunterAction()
     self.inventoryItems = []
-    self.blocksInMemory = []
+    self.blocksInMemory = {}
     self.entitiesInMemory = []
     self.positionOfEnemyInMemory = {'x' : 0, 'y' : 0, 'z' : 0}
     self.heldItemOfEnemyInMemory = None
@@ -81,12 +81,12 @@ class Hunter:
           self.action.look(self.bot, yaw, pitch)
 
           directions = LookDirection.getLookDirectionsAround(yaw, pitch, 0.7, 2)
-          listOfBlocks = []
           for direction in directions:
-            listOfBlocks.append(self.getBlockAt(direction))
-          # print('Count of listOfBlocks is', len(listOfBlocks))
-          # print('Blocks are', listOfBlocks)
-          print('Directions are', directions)
+            block = self.getBlockAt(direction)
+            if block is not None:
+              pos = (block.position.x, block.position.y, block.position.z)
+              self.blocksInMemory[pos] = block.type
+          print('Blocks are', self.blocksInMemory)
 
         case "inventory":
           self.inventoryItems = self.action.updateInventory(self.bot)
