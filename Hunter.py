@@ -19,7 +19,7 @@ class Hunter:
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
     self.blocksInMemory = {}
-    self.entitiesInMemory = []
+    self.entitiesInMemory = {}
     self.positionOfEnemyInMemory = {'x' : 0, 'y' : 0, 'z' : 0}
     self.heldItemOfEnemyInMemory = None
     self.currentHealth = None
@@ -135,13 +135,10 @@ class Hunter:
 
         case 'nearest':
           entity = self.action.getNearestEntity(self.bot)
-          print('Entity is', entity)
-          self.entitiesInMemory.append(entity)
-
-        case 'position':
-          entity = self.action.getNearestEntity(self.bot)
-          self.entitiesInMemory.append(entity)
-          self.positionOfEnemyInMemory = self.action.getPositionOfEnemyPlayer(entity, self.positionOfEnemyInMemory)
+          # print('Entity is', entity)
+          position = (entity.position.x, entity.position.y, entity.position.z)
+          self.entitiesInMemory[entity.id] = [position, entity.heldItem.type]
+          print('Entities in memory are:', self.entitiesInMemory)
 
         case 'held':
           entity = self.action.getNearestEntity(self.bot)

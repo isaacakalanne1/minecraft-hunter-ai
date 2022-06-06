@@ -7,12 +7,6 @@ class HunterAction:
     entity = currentBot.nearestEntity(lambda entity: entity.name == 'RoyalCentaur')
     return entity
 
-  def getPositionOfEnemyPlayer(self, entity):
-    position = entity.position
-    positionAsVec3 = {'x' : position.x, 'y' : position.y, 'z' : position.z}
-    print('Position is', positionAsVec3)
-    return positionAsVec3
-
   def holdItem(self, currentBot, item):
     currentBot.equip(item)
 
