@@ -24,7 +24,7 @@ class HunterAction:
     currentBot.attack(entityToAttack)
 
   def getEntityFromMemory(self, entitiesInMemory):
-    if len(entitiesInMemory) is not 0:
+    if len(entitiesInMemory) != 0:
       index = len(entitiesInMemory) -1
       entity = entitiesInMemory[index]
       return entity

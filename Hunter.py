@@ -4,12 +4,10 @@ import Action.MovementModifier as MovementModifier
 import Action.Jump as Jump
 import Action.HunterAction as HunterAction
 import Generators.RandomGenerator as RandomGenerator
-import math
+import Generators.LookDirection as LookDirection
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
-
-RandomGenerator = RandomGenerator.RandomGenerator 
 
 class Hunter:
   # Will need to update inventoryItems to dictionary, like {32 : Item} so AI can access items based on their ID, rather than a raw index
@@ -82,7 +80,7 @@ class Hunter:
           pitch = RandomGenerator.randomPitch()
           self.action.look(self.bot, yaw, pitch)
 
-          directions = self.getLookDirectionsAround(yaw, pitch, 0.7, 2)
+          directions = LookDirection.getLookDirectionsAround(yaw, pitch, 0.7, 2)
           listOfBlocks = []
           for direction in directions:
             listOfBlocks.append(self.getBlockAt(direction))
@@ -177,70 +175,12 @@ class Hunter:
     eyePosition = Vec3(vecPosition.x, vecPosition.y + height, vecPosition.z)
     return eyePosition
 
-  def getLookDirectionsAround(self, yaw, pitch, fieldOfView, resolution):
-    csYaw = math.cos(yaw)
-    snYaw = math.sin(yaw)
-    csPitch = math.cos(pitch)
-    snPitch = math.sin(pitch)
-    x = -snYaw * csPitch
-    y = snPitch
-    z = -csYaw * csPitch
-    directions = self.getLookDirectionsAroundDirection(x, y, z, fieldOfView, resolution)
-    return directions
-
   def getBlockAt(self, lookDirection):
     eyePosition = self.getEyePositionOfBot()
     block = self.bot.world.raycast(eyePosition, lookDirection, 160, None)
     return block
 
-  def getLookDirectionsAroundDirection(self, lookX, lookY, lookZ, fieldOfView, resolution):
-    lowerX = self.getLowerBoundOf(lookX, fieldOfView)
-    lowerY = self.getLowerBoundOf(lookY, fieldOfView)
-    lowerZ = self.getLowerBoundOf(lookZ, fieldOfView)
-    lookDirections = self.getLookDirections(lowerX, lowerY, lowerZ, fieldOfView, resolution)
-    return lookDirections
-
-  def getLowerBoundOf(self, val, fieldOfView):
-    lower = val - fieldOfView/2
-    if lower < -1:
-      diff = 1 + lower
-      lower = -1 - diff
-    return lower
-  
-  def getUpperBoundOf(self, val, fieldOfView):
-    upper = val + fieldOfView
-    if upper > 1:
-      diff = upper - 1
-      upper = 1 - diff
-    return upper
-
-  def getLookDirections(self, lowerX, lowerY, lowerZ, fieldOfView, resolution):
-    points = []
-
-    xValues = self.getRangeOfPointValues(lowerX, fieldOfView, resolution)
-    yValues = self.getRangeOfPointValues(lowerY, fieldOfView, resolution)
-    zValues = self.getRangeOfPointValues(lowerZ, fieldOfView, resolution)
-
-    for x in xValues:
-      for y in yValues:
-        for z in zValues:
-          points.append(Vec3(x, y, z))
-    return points
-  
-  def getRangeOfPointValues(self, lowerPoint, fieldOfView, resolution):
-    pointValues = []
-    for number in range(1,resolution + 1):
-      point = lowerPoint + number*(fieldOfView/resolution)
-      if point > 1:
-        diff = point - 1
-        point = 1 - diff
-      if point < -1:
-        diff = point + 1
-        point = -1 - diff
-      pointValues.append(point)
-    return pointValues
-
-hunter = Hunter('localHost', 57340, 'HelloThere')
+hunter = Hunter('localHost', 62217, 'HelloThere')
 
 # It seems like if this listener isn't placed here, the Python file assumes it only needs to run briefly, and stops itself running
 @On(hunter.bot, 'eventNeverUsed')
