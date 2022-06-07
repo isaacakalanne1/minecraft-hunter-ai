@@ -16,7 +16,7 @@ class Hunter:
     self.createBot(host, port, username)
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
-    self.blocksInMemory = {}
+    self.blocksInMemory = {} # TODO: Update to be a dictionary which has a maximum size of around 10,000, and pops left when values are received above this number
     self.entitiesInMemory = {}
     self.currentHeldItem = (0, 0) # [Id, count]
     self.currentHealth = 0
