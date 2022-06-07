@@ -201,6 +201,14 @@ class Hunter:
     return block
 
   def play_step(self, action):
+    testAction = [
+      0, 0, # Look
+      0, 0, # Move
+      0, # MovementModifier
+      0, # Jump
+      0, # Inventory select
+      0, # Action (dig = 1, place = 2, attack player = 3)
+    ]
     self.action.look(self.bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
     Movement.move(self.bot, Movement.Direction.forwards)
     MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
