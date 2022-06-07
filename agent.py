@@ -49,7 +49,17 @@ class Agent:
         self.trainer.train_step(state, action, reward, next_state, done)
 
     def get_action(self, state):
-        pass
+        # Random moves: tradeoff betwen exploration & exploitation
+        self.epsilon = 80 - self.number_of_games
+        final_move = [0,0,0] # Change to format of Hunter moves
+        if random.randint(0, 200) < self.epsilon:
+            move = random.randint(0, 2) # 2 is included
+            final_move[move] = 1
+        else:
+            state0 = torch.tensor(state, dtype=torch.float)
+            prediction = self.model.predict(state0)
+            move = torch.argmax(prediction).item()
+            final_move[move] = 1
 
 def train():
     plot_scores = []
