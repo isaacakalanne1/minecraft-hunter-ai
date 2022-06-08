@@ -20,14 +20,14 @@ class Agent:
 
     def get_state(self, hunter):
         state = {
-            'inventory': list(hunter.inventoryItems.items()),
-            'blocks': list(hunter.blocksInMemory.items()),
-            'entities': list(hunter.entitiesInMemory.items()),
-            'heldItem': hunter.currentHeldItem,
-            'currentHealth': hunter.currentHealth,
-            'currentHunger': hunter.currentHunger,
-            'currentTimeOfDay': hunter.currentTimeOfDay,
-            'currentPosition': hunter.currentPosition
+            0: list(hunter.inventoryItems.items()),
+            1: list(hunter.blocksInMemory.items()),
+            2: list(hunter.entitiesInMemory.items()),
+            3: hunter.currentHeldItem,
+            4: hunter.currentHealth,
+            5: hunter.currentHunger,
+            6: hunter.currentTimeOfDay,
+            7: hunter.currentPosition
         }
 
         stateArray = np.array(state, dtype=np.object0) # May need to use dtype=object, or one of other dtype=np.obj... values
