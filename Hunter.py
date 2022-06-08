@@ -115,15 +115,15 @@ class Hunter:
               self.bot.chat('I couldn\'t place a block, there\'s no block in memory to place it next to')
 
         case 'activate':
-          block = self.action.getCurrentlyLookedAtBlock(self.bot, self.blocksInMemory)
+          block = self.action.getCurrentlyLookedAtBlock(self.bot)
           self.bot.activateBlock(block)
           
         case "current block":
-          block = self.action.getCurrentlyLookedAtBlock(self.bot, self.blocksInMemory)
+          block = self.action.getCurrentlyLookedAtBlock(self.bot)
           print('Block is', block)
 
         case 'attack':
-          entity = self.action.getEntityFromMemory(self.entitiesInMemory)
+          entity = self.action.getNearestEntity(self.bot)
           if entity is not None:
             self.action.attack(self.bot, entity)
           else:
@@ -225,7 +225,7 @@ class Hunter:
     pass
 
 
-hunter = Hunter('localHost', 62217, 'HelloThere')
+hunter = Hunter('localHost', 56666, 'HelloThere')
 
 # It seems like if this listener isn't placed here, the Python file assumes it only needs to run briefly, and stops itself running
 @On(hunter.bot, 'eventNeverUsed')

@@ -20,7 +20,7 @@ class Agent:
 
     def get_state(self, hunter):
         state = {
-            0: list(hunter.inventoryItems.items()),
+            0: list(hunter.inventoryItems.items()), # May be worth using text instead of numbers
             1: list(hunter.blocksInMemory.items()),
             2: list(hunter.entitiesInMemory.items()),
             3: hunter.currentHeldItem,
