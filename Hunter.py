@@ -204,10 +204,8 @@ class Hunter:
     testAction = [
       0, 0, # Look (yaw, pitch)
       0, 0, # Move (front-move, side-move)
-      0, # MovementModifier
       0, # Jump
-      0, # Inventory select (index of item in inventoryItems)
-      0, # Action (dig = 1, place = 2, attack player = 3)
+      0, # MovementModifier
     ]
     self.action.look(self.bot, RandomGenerator.randomYaw(), RandomGenerator.randomPitch())
     Movement.move(self.bot, Movement.Direction.forwards)

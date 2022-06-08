@@ -3,6 +3,7 @@ import random
 import numpy as np
 from collections import deque
 from Hunter import Hunter
+from model import Linear_QNet, QTrainer
 
 MAX_MEMORY = 10_000
 BATCH_SIZE = 100
@@ -13,21 +14,26 @@ class Agent:
     def __init__(self):
         self.number_of_games = 0
         self.epsilon = 0 # Controls randomness
-        self.gamma = 0 # Discount rate
+        self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = None # TODO
-        self.trainer = None # TODO
+        self.model = Linear_QNet(11, 256, 3)
+        self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
+        # state = {
+        #     0: list(hunter.inventoryItems.items()), # May be worth using text instead of numbers
+        #     1: list(hunter.blocksInMemory.items()),
+        #     2: list(hunter.entitiesInMemory.items()),
+        #     3: hunter.currentHeldItem,
+        #     4: hunter.currentHealth,
+        #     5: hunter.currentHunger,
+        #     6: hunter.currentTimeOfDay,
+        #     7: hunter.currentPosition
+        # }
+
         state = {
-            0: list(hunter.inventoryItems.items()), # May be worth using text instead of numbers
             1: list(hunter.blocksInMemory.items()),
-            2: list(hunter.entitiesInMemory.items()),
-            3: hunter.currentHeldItem,
-            4: hunter.currentHealth,
-            5: hunter.currentHunger,
-            6: hunter.currentTimeOfDay,
-            7: hunter.currentPosition
+            7: hunter.currentPosition # Same numbers in case simple AI can be used to train other AIs
         }
 
         stateArray = np.array(state, dtype=np.object0) # May need to use dtype=object, or one of other dtype=np.obj... values
@@ -57,7 +63,7 @@ class Agent:
             final_move[move] = 1
         else:
             state0 = torch.tensor(state, dtype=torch.float)
-            prediction = self.model.predict(state0)
+            prediction = self.model(state0)
             move = torch.argmax(prediction).item()
             final_move[move] = 1
 
