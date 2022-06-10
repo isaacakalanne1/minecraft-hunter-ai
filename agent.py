@@ -4,6 +4,9 @@ import numpy as np
 from collections import deque
 from Hunter import Hunter
 from model import Linear_QNet, QTrainer
+from helper import plot
+from javascript import require, On
+import time
 
 MAX_MEMORY = 10_000
 BATCH_SIZE = 100
@@ -16,27 +19,15 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(11, 256, 3)
+        self.model = Linear_QNet(38, 256, 100, 17)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
-        # state = {
-        #     0: list(hunter.inventoryItems.items()), # May be worth using text instead of numbers
-        #     1: list(hunter.blocksInMemory.items()),
-        #     2: list(hunter.entitiesInMemory.items()),
-        #     3: hunter.currentHeldItem,
-        #     4: hunter.currentHealth,
-        #     5: hunter.currentHunger,
-        #     6: hunter.currentTimeOfDay,
-        #     7: hunter.currentPosition
-        # }
-
-        state = {
-            1: list(hunter.blocksInMemory.items()),
-            7: hunter.currentPosition # Same numbers in case simple AI can be used to train other AIs
-        }
-
-        stateArray = np.array(state, dtype=np.object0) # May need to use dtype=object, or one of other dtype=np.obj... values
+        
+        state = hunter.blocksInMemory + hunter.currentPosition + hunter.currentLookDirection
+        
+        print('Stateeee is', state)
+        stateArray = np.array(state, dtype=float)
         return stateArray
 
     def remember(self, state, action, reward, next_state, done):
@@ -57,23 +48,58 @@ class Agent:
     def get_action(self, state):
         # Random moves: tradeoff betwen exploration & exploitation
         self.epsilon = 80 - self.number_of_games
-        final_move = [0,0,0] # Change to format of Hunter moves
+
         if random.randint(0, 200) < self.epsilon:
-            move = random.randint(0, 2) # 2 is included
-            final_move[move] = 1
+            lookYawValue = random.random()
+            lookPitchValue = random.random()
+            moveValue = random.randint(0, 8)
+            jumpValue = random.randint(0, 1)
+            moveModifierValue = random.randint(0, 2)
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
-            move = torch.argmax(prediction).item()
-            final_move[move] = 1
+
+            noLookChangeIndex = torch.tensor([0])
+            lookYawIndex = torch.tensor([1])
+            lookPitchIndex = torch.tensor([2])
+            allLookTensor = torch.index_select(prediction, 0, noLookChangeIndex)
+            maxLook = torch.argmax(allLookTensor).item()
+
+            if maxLook == 0:
+                lookYawValue = -1
+                lookPitchValue = -1
+            else:
+                lookYawValue = torch.index_select(prediction, 0, lookYawIndex).item()
+                lookPitchValue = torch.index_select(prediction, 0, lookPitchIndex).item()
+
+            moveIndexesAll = torch.tensor([3, 4, 5, 6, 7, 8, 9, 10, 11])
+            moveTensor = torch.index_select(prediction, 0, moveIndexesAll)
+            moveValue = torch.argmax(moveTensor).item()
+
+            jumpIndexesAll = torch.tensor([12, 13])
+            jumpTensor = torch.index_select(prediction, 0, jumpIndexesAll)
+            jumpValue = torch.argmax(jumpTensor).item()
+
+            moveModifierIndexesAll = torch.tensor([14, 15, 16])
+            moveModifierTensor = torch.index_select(prediction, 0, moveModifierIndexesAll)
+            moveModifierValue = torch.argmax(moveModifierTensor).item()
+
+        final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
+        return final_move
 
 def train():
+    print('Trainingg!')
+    game = Hunter('localHost', 63110, 'HelloThere')
+    game.bot.on('spawn', startTraining(game))
+
+def startTraining(game):
+    time.sleep(1.5)
     plot_scores = []
     plot_mean_scores = []
     total_score = 0
     record = 0
     agent = Agent()
-    game = Hunter('localHost', 62217, 'HelloThere')
+    print('Starting training!')
     while True:
         # Get old state
         state_old = agent.get_state(game)
@@ -82,6 +108,7 @@ def train():
         final_move = agent.get_action(state_old)
 
         # Perform move and get new state
+        print('Final move is', final_move)
         reward, done, score = game.play_step(final_move)
         state_new = agent.get_state(game)
 
@@ -103,7 +130,11 @@ def train():
 
             print('Game', agent.number_of_games, 'Score', score, 'Record', record)
 
-            # TODO: Plot
+            plot_scores.append(score)
+            total_score += score
+            mean_score = total_score/agent.number_of_games
+            plot_mean_scores.append(mean_score)
+            plot(plot_scores, plot_mean_scores)
 
 if __name__ == '__main__':
     train()

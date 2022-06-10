@@ -2,7 +2,7 @@ import math
 from javascript import require, On
 Vec3 = require('vec3')
 
-def getLookDirectionsAround(yaw, pitch, fieldOfView, resolution):
+def getLookDirectionOf(yaw, pitch):
     csYaw = math.cos(yaw)
     snYaw = math.sin(yaw)
     csPitch = math.cos(pitch)
@@ -10,6 +10,13 @@ def getLookDirectionsAround(yaw, pitch, fieldOfView, resolution):
     x = -snYaw * csPitch
     y = snPitch
     z = -csYaw * csPitch
+    return [x,y,z]
+
+def getLookDirectionsAround(yaw, pitch, fieldOfView, resolution):
+    lookDirection = getLookDirectionOf(yaw, pitch)
+    x = lookDirection[0]
+    y = lookDirection[1]
+    z = lookDirection[2]
     directions = getLookDirectionsAroundDirection(x, y, z, fieldOfView, resolution)
     return directions
 
