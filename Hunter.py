@@ -25,9 +25,12 @@ class Hunter:
     self.currentHeldItem = (0, 0) # [Id, count]
     self.currentHealth = 0
     self.currentHunger = 0
+    self.initialTimeOfDay = 0
     self.currentTimeOfDay = 0
     self.currentPosition = [0,0,0]
     self.currentLookDirection = [0,0,0]
+    self.initialX = 0
+    self.currentScore = 0
     self.bot.on('spawn', self.handle)
     self.bot.on('chat', self.handleMsg)
     self.bot.on('playerCollect', self.handlePlayerCollect)
@@ -49,6 +52,8 @@ class Hunter:
   def handle(self, *args):
     print("I spawned 👋")
     self.inventoryItems = {}
+    self.initialX = self.bot.entity.position.x
+    self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     items = self.action.updateInventory(self.bot)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
@@ -229,6 +234,17 @@ class Hunter:
     block = self.bot.world.raycast(eyePosition, lookDirection, 160, None)
     return block
 
+  def getBlocksInMemory(self):
+    return self.blocksInMemory
+
+  def getCurrentPosition(self):
+    position = self.bot.entity.position
+    self.currentPosition = [position.x, position.y, position.z]
+    return self.currentPosition
+
+  def getCurrentLookDirection(self):
+    return self.currentLookDirection
+
   def play_step(self, action):
 
     lookYawMultiplier = action[0]
@@ -250,7 +266,19 @@ class Hunter:
     print('New pitch is', pitch)
     print('New pitchMultiplier is', lookPitchMultiplier)
     if lookYawMultiplier != -1:
+      self.currentLookDirection = LookDirection.getLookDirectionOf(yaw, pitch)
       self.action.look(self.bot, yaw, pitch)
+      currentLookDir = LookDirection.getLookDirectionOf(yaw, pitch)
+      self.currentLookDirection = currentLookDir
+      directions = LookDirection.getLookDirectionsAround(yaw, pitch, 0.9, 2)
+      self.blocksInMemory = []
+      for direction in directions:
+        block = self.getBlockAt(direction)
+        if block is not None:
+          blockData = [block.position.x, block.position.y, block.position.z, block.type]
+        else:
+          blockData = [0, 0, 0, 0]
+        self.blocksInMemory += blockData
     Movement.move(self.bot, movement)
     MovementModifier.modify(self.bot, movementMod)
     Jump.jump(self.bot, jump)
@@ -266,6 +294,19 @@ class Hunter:
   def getPitch(self, multiplier):
     pitch = math.pi * multiplier
     return pitch - (math.pi/2)
+
+  def getRewardDoneScore(self):
+    reward = self.bot.entity.position.x - self.initialX
+    self.initialX = self.bot.entity.position.x
+    currentTime = self.action.getTimeOfDay(self.bot)
+    if self.initialTimeOfDay + 1200 < currentTime:
+      done = 1
+    else:
+      done = 0
+    self.currentScore += reward
+    score = self.currentScore
+
+    return reward, done, score
 
   def reset(self):
 
@@ -286,9 +327,9 @@ class Hunter:
     return int(round(random.uniform(initial, initial + 100), 0))
 
 
-# hunter = Hunter('localHost', 63110, 'HelloThere')
+hunter = Hunter('localHost', 63110, 'HelloThere')
 
-# # It seems like if this listener isn't placed here, the Python file assumes it only needs to run briefly, and stops itself running
-# @On(hunter.bot, 'eventNeverUsed')
-# def h(*args):
-#   pass
+# It seems like if this listener isn't placed here, the Python file assumes it only needs to run briefly, and stops itself running
+@On(hunter.bot, 'eventNeverUsed')
+def h(*args):
+  pass

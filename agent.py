@@ -23,10 +23,12 @@ class Agent:
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
+        blocks = hunter.getBlocksInMemory()
+        position = hunter.getCurrentPosition()
+        lookDirection = hunter.getCurrentLookDirection()
+        state = blocks + position + lookDirection
         
-        state = hunter.blocksInMemory + hunter.currentPosition + hunter.currentLookDirection
-        
-        print('Stateeee is', state)
+        print('The state is', state)
         stateArray = np.array(state, dtype=float)
         return stateArray
 
@@ -58,7 +60,7 @@ class Agent:
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
-
+            print('The prediction is', prediction)
             noLookChangeIndex = torch.tensor([0])
             lookYawIndex = torch.tensor([1])
             lookPitchIndex = torch.tensor([2])
@@ -109,7 +111,9 @@ def startTraining(game):
 
         # Perform move and get new state
         print('Final move is', final_move)
-        reward, done, score = game.play_step(final_move)
+        game.play_step(final_move)
+        time.sleep(0.2)
+        reward, done, score = game.getRewardDoneScore()
         state_new = agent.get_state(game)
 
         # Train short memory
