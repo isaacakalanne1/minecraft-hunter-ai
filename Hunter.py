@@ -325,11 +325,3 @@ class Hunter:
 
   def randomPositionChange(self, initial):
     return int(round(random.uniform(initial, initial + 100), 0))
-
-
-hunter = Hunter('localHost', 63110, 'HelloThere')
-
-# It seems like if this listener isn't placed here, the Python file assumes it only needs to run briefly, and stops itself running
-@On(hunter.bot, 'eventNeverUsed')
-def h(*args):
-  pass
