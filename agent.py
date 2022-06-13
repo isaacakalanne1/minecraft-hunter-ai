@@ -91,7 +91,7 @@ class Agent:
 
 def train():
     print('Trainingg!')
-    game = Hunter('localHost', 63110, 'HelloThere')
+    game = Hunter('localHost', 25565, 'HelloThere')
     game.bot.on('spawn', startTraining(game))
 
 def startTraining(game):

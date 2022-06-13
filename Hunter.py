@@ -1,4 +1,5 @@
 from email.policy import default
+from typing_extensions import Self
 from javascript import require, On
 import Action.Movement as Movement
 import Action.MovementModifier as MovementModifier
@@ -10,6 +11,9 @@ import numpy as np
 import random
 import torch
 import math
+import multiprocessing
+from threading import Thread
+import asyncio
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
@@ -17,6 +21,7 @@ Vec3 = require('vec3')
 class Hunter:
 
   def __init__(self, host, port, username):
+    self.bot = ""
     self.createBot(host, port, username)
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
@@ -88,22 +93,8 @@ class Hunter:
             self.action.holdItem(self.bot, item)
 
         case 'look':
-          yaw = RandomGenerator.randomYaw()
-          pitch = RandomGenerator.randomPitch()
-          self.action.look(self.bot, yaw, pitch)
-
-          currentLookDir = LookDirection.getLookDirectionOf(yaw, pitch)
-          self.currentLookDirection = currentLookDir
-          directions = LookDirection.getLookDirectionsAround(yaw, pitch, 0.9, 2)
-          self.blocksInMemory = []
-          for direction in directions:
-            block = self.getBlockAt(direction)
-            if block is not None:
-              blockData = [block.position.x, block.position.y, block.position.z, block.type]
-            else:
-              blockData = [0, 0, 0, 0]
-            self.blocksInMemory += blockData
-          print('Blocks are', self.blocksInMemory)
+          self.runLook()
+          # Thread(target=self.runLook()).start()
 
         case "inventory":
           self.inventoryItems = {}
@@ -218,6 +209,28 @@ class Hunter:
           print('testIdx is', testIdx)
           # print('TestIdx is', testIdx)
 
+        case 'yo':
+          print('Yo yo!')
+
+  def runLook(self):
+    print('Ayo!')
+    yaw = RandomGenerator.randomYaw()
+    pitch = RandomGenerator.randomPitch()
+    self.action.look(self.bot, yaw, pitch)
+
+    # currentLookDir = LookDirection.getLookDirectionOf(yaw, pitch)
+    # self.currentLookDirection = currentLookDir
+    # directions = LookDirection.getLookDirectionsAround(yaw, pitch, 0.9, 2)
+    # self.blocksInMemory = []
+    # for direction in directions:
+    #   block = self.getBlockAt(direction)
+    #   if block is not None:
+    #     blockData = [block.position.x, block.position.y, block.position.z, block.type]
+    #   else:
+    #     blockData = [0, 0, 0, 0]
+    #   self.blocksInMemory += blockData
+    # print('Blocks are', self.blocksInMemory)
+
   def handlePlayerCollect(self, this, collector, collected, *args):
     if collector.username == self.bot.username:
       self.bot.chat("I collected an item!")
@@ -325,3 +338,17 @@ class Hunter:
 
   def randomPositionChange(self, initial):
     return int(round(random.uniform(initial, initial + 100), 0))
+
+
+def createHunter(i):
+  name = 'HelloThere' + str(i)
+  hunter = Hunter('localHost', 25565, name)
+
+if __name__ == '__main__':
+  for i in range(10):
+    p = multiprocessing.Process(target=createHunter(i))
+    p.start()
+
+
+while True:
+  pass
