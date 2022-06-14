@@ -7,6 +7,7 @@ from model import Linear_QNet, QTrainer
 from helper import plot
 from javascript import require, On
 import time
+import multiprocessing
 
 MAX_MEMORY = 10_000
 BATCH_SIZE = 100
@@ -28,7 +29,7 @@ class Agent:
         lookDirection = hunter.getCurrentLookDirection()
         state = blocks + position + lookDirection
         
-        print('The state is', state)
+        # print('The state is', state)
         stateArray = np.array(state, dtype=float)
         return stateArray
 
@@ -50,6 +51,7 @@ class Agent:
     def get_action(self, state):
         # Random moves: tradeoff betwen exploration & exploitation
         self.epsilon = 80 - self.number_of_games
+        print('number_of_games is', self.number_of_games)
 
         if random.randint(0, 200) < self.epsilon:
             lookYawValue = random.random()
@@ -60,7 +62,7 @@ class Agent:
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
-            print('The prediction is', prediction)
+            # print('The prediction is', prediction)
             noLookChangeIndex = torch.tensor([0])
             lookYawIndex = torch.tensor([1])
             lookPitchIndex = torch.tensor([2])
@@ -89,13 +91,18 @@ class Agent:
         final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
         return final_move
 
-def train():
-    print('Trainingg!')
-    game = Hunter('localHost', 25565, 'HelloThere')
-    game.bot.on('spawn', startTraining(game))
+def train(i):
+    game = Hunter('localHost', 25565, 'HelloThere' + str(i))
+    game.bot.on('spawn', checkIfReady(game))
+
+def checkIfReady(game):
+    if hasattr(game.bot.entity, 'position'):
+        startTraining(game)
+    else:
+        time.sleep(1)
+        checkIfReady(game)
 
 def startTraining(game):
-    time.sleep(1.5)
     plot_scores = []
     plot_mean_scores = []
     total_score = 0
@@ -110,9 +117,9 @@ def startTraining(game):
         final_move = agent.get_action(state_old)
 
         # Perform move and get new state
-        print('Final move is', final_move)
+        # print('Final move is', final_move)
         game.play_step(final_move)
-        time.sleep(0.2)
+        time.sleep(0.05)
         reward, done, score = game.getRewardDoneScore()
         state_new = agent.get_state(game)
 
@@ -141,4 +148,7 @@ def startTraining(game):
             plot(plot_scores, plot_mean_scores)
 
 if __name__ == '__main__':
-    train()
+    train(1)
+    # for i in range(10):
+    #     p = multiprocessing.Process(target=train, args=[i])
+    #     p.start()

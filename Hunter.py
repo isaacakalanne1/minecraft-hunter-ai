@@ -274,10 +274,10 @@ class Hunter:
     movementMod = MovementModifier.Type(moveMod)
     jump = Jump.Jump(jumpVal)
 
-    print('New yaw is', yaw)
-    print('New yawMultiplier is', lookYawMultiplier)
-    print('New pitch is', pitch)
-    print('New pitchMultiplier is', lookPitchMultiplier)
+    # print('New yaw is', yaw)
+    # print('New yawMultiplier is', lookYawMultiplier)
+    # print('New pitch is', pitch)
+    # print('New pitchMultiplier is', lookPitchMultiplier)
     if lookYawMultiplier != -1:
       self.currentLookDirection = LookDirection.getLookDirectionOf(yaw, pitch)
       self.action.look(self.bot, yaw, pitch)
@@ -340,15 +340,15 @@ class Hunter:
     return int(round(random.uniform(initial, initial + 100), 0))
 
 
-def createHunter(i):
-  name = 'HelloThere' + str(i)
-  hunter = Hunter('localHost', 25565, name)
+# def createHunter(i):
+#   name = 'HelloThere' + str(i)
+#   hunter = Hunter('localHost', 25565, name)
 
-if __name__ == '__main__':
-  for i in range(10):
-    p = multiprocessing.Process(target=createHunter(i))
-    p.start()
+# if __name__ == '__main__':
+#   for i in range(10):
+#     p = multiprocessing.Process(target=createHunter(i))
+#     p.start()
 
 
-while True:
-  pass
+# while True:
+#   pass
