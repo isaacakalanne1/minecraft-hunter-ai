@@ -66,3 +66,33 @@ def getRangeOfPointValues(lowerPoint, fieldOfView, resolution):
             point = -1 - diff
         pointValues.append(point)
     return pointValues
+
+def getEyePositionOfBot(currentBot):
+    vecPosition = currentBot.entity.position
+    height = currentBot.entity.height
+    eyePosition = Vec3(vecPosition.x, vecPosition.y + height, vecPosition.z)
+    return eyePosition
+
+def getBlockAt(currentBot, lookDirection):
+    eyePosition = getEyePositionOfBot()
+    block = currentBot.world.raycast(eyePosition, lookDirection, 160, None)
+    return block
+
+def getBlocksInFieldOfView(currentBot, yaw, pitch, fieldOfView, resolution):
+    directions = getLookDirectionsAround(yaw, pitch, fieldOfView, resolution)
+    blocksInMemory = []
+    for direction in directions:
+        block = getBlockAt(currentBot, direction)
+        if block is not None:
+            blockData = [block.position.x, block.position.y, block.position.z, block.type]
+        else:
+            blockData = [0, 0, 0, 0]
+        blocksInMemory += blockData
+    return blocksInMemory
+
+def getYaw(multiplier):
+    return 6.28 * multiplier
+
+def getPitch(multiplier):
+    pitch = math.pi * multiplier
+    return pitch - (math.pi/2)

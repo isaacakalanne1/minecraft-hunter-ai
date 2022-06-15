@@ -29,8 +29,8 @@ class Agent:
         lookDirection = hunter.getCurrentLookDirection()
         state = blocks + position + lookDirection
         
-        # print('The state is', state)
         stateArray = np.array(state, dtype=float)
+        print('The stateArray is', stateArray)
         return stateArray
 
     def remember(self, state, action, reward, next_state, done):
@@ -51,7 +51,6 @@ class Agent:
     def get_action(self, state):
         # Random moves: tradeoff betwen exploration & exploitation
         self.epsilon = 80 - self.number_of_games
-        print('number_of_games is', self.number_of_games)
 
         if random.randint(0, 200) < self.epsilon:
             lookYawValue = random.random()
@@ -137,7 +136,7 @@ def startTraining(game):
 
             if score > record:
                 record = score
-                # agent.model.save()
+                agent.model.save()
 
             print('Game', agent.number_of_games, 'Score', score, 'Record', record)
 
