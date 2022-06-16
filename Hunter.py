@@ -33,6 +33,8 @@ class Hunter:
     self.currentLookDirection = [0,0,0]
     self.initialX = 0
     self.currentScore = 0
+    self.botHasDied = False
+    self.botIsActive = False
     self.bot.on('spawn', self.handle)
     self.bot.on('chat', self.handleMsg)
     self.bot.on('playerCollect', self.handlePlayerCollect)
@@ -50,6 +52,7 @@ class Hunter:
                 })
                 
   def handle(self, *args):
+    self.botHasDied = True
     print("I spawned 👋")
     self.inventoryItems = {}
     self.initialX = self.bot.entity.position.x
@@ -207,7 +210,7 @@ class Hunter:
     reward = self.bot.entity.position.x - self.initialX
     self.initialX = self.bot.entity.position.x
     currentTime = self.action.getTimeOfDay(self.bot)
-    if self.initialTimeOfDay + 320 < currentTime:
+    if self.initialTimeOfDay + 400 < currentTime or (self.botHasDied == True and currentTime > self.initialTimeOfDay + 40):
       done = 1
     else:
       done = 0
@@ -217,6 +220,8 @@ class Hunter:
     return reward, done, score
 
   def reset(self):
+    # TODO: Reset the game when the bot dies
+    self.botHasDied = False
     currentPosition = self.bot.entity.position
     currentX = currentPosition.x
     currentZ = currentPosition.z

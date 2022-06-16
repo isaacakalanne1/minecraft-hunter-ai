@@ -97,11 +97,15 @@ def train(i):
     game.bot.on('spawn', checkIfReady(game))
 
 def checkIfReady(game):
-    if hasattr(game.bot.entity, 'position') and hasattr(game.bot, 'health'):
-        startTraining(game)
-    else:
-        time.sleep(1)
-        checkIfReady(game)
+    print('Checking!')
+    if game.botIsActive == False:
+        game.botHasDied = False
+        if hasattr(game.bot.entity, 'position') and hasattr(game.bot, 'health'):
+            game.botIsActive = True
+            startTraining(game)
+        else:
+            time.sleep(1)
+            checkIfReady(game)
 
 def startTraining(game):
     plot_scores = []
