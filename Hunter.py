@@ -223,6 +223,9 @@ class Hunter:
     randomX = self.randomPositionChange(currentX)
     randomZ = self.randomPositionChange(currentZ)
     self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
+    time.sleep(1)
+    self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
+    self.initialX = self.bot.entity.position.x
 
   def randomPositionChange(self, initial):
     return int(round(random.uniform(initial, initial + 100), 0))

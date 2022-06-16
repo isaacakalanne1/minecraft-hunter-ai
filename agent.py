@@ -89,7 +89,7 @@ class Agent:
             moveModifierValue = torch.argmax(moveModifierTensor).item()
 
         final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
-        print('final_move is', final_move)
+        # print('final_move is', final_move)
         return final_move
 
 def train(i):
@@ -97,7 +97,7 @@ def train(i):
     game.bot.on('spawn', checkIfReady(game))
 
 def checkIfReady(game):
-    if hasattr(game.bot.entity, 'position'):
+    if hasattr(game.bot.entity, 'position') and hasattr(game.bot, 'health'):
         startTraining(game)
     else:
         time.sleep(1)
@@ -133,6 +133,7 @@ def startTraining(game):
         if done:
             # Train long memory
             game.reset()
+            time.sleep(1)
             agent.number_of_games += 1
             agent.train_long_memory()
 

@@ -119,5 +119,4 @@ class QTrainer:
         moveModifierValue = torch.argmax(moveModifierTensor).item()
 
         final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
-        print('final_move is', final_move)
         return final_move
