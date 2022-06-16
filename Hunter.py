@@ -10,10 +10,7 @@ import Generators.LookDirection as LookDirection
 import numpy as np
 import random
 import torch
-import math
-import multiprocessing
-from threading import Thread
-import asyncio
+import time
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
@@ -183,6 +180,9 @@ class Hunter:
 
   def getCurrentLookDirection(self):
     return self.currentLookDirection
+  
+  def getCurrentHealth(self):
+    return [float(self.bot.health)]
 
   def play_step(self, action):
 
@@ -207,7 +207,7 @@ class Hunter:
     reward = self.bot.entity.position.x - self.initialX
     self.initialX = self.bot.entity.position.x
     currentTime = self.action.getTimeOfDay(self.bot)
-    if self.initialTimeOfDay + 1200 < currentTime:
+    if self.initialTimeOfDay + 320 < currentTime:
       done = 1
     else:
       done = 0
@@ -230,13 +230,12 @@ class Hunter:
 
 # def createHunter(i):
 #   name = 'HelloThere' + str(i)
-hunter = Hunter('localHost', 25565, 'HelloThere')
+# hunter = Hunter('localHost', 25565, 'HelloThere')
+
+# while True:
+#   time.sleep(1)
 
 # if __name__ == '__main__':
 #   for i in range(10):
 #     p = multiprocessing.Process(target=createHunter(i))
 #     p.start()
-
-
-while True:
-  pass

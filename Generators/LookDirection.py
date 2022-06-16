@@ -74,7 +74,7 @@ def getEyePositionOfBot(currentBot):
     return eyePosition
 
 def getBlockAt(currentBot, lookDirection):
-    eyePosition = getEyePositionOfBot()
+    eyePosition = getEyePositionOfBot(currentBot)
     block = currentBot.world.raycast(eyePosition, lookDirection, 160, None)
     return block
 

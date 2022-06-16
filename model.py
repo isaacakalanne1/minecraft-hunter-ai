@@ -19,13 +19,14 @@ class Linear_QNet(nn.Module):
         return x
     
     def save(self, file_name='model.pth'):
-        model_folder_path = './model'
+        model_folder_path = '/Users/iakalann/Documents/minecraft-hunter-ai/Plot'
         print('Path is', os.path)
         if not os.path.exists(model_folder_path):
             print('Making directory!')
             os.makedirs(model_folder_path)
         
-        file_name = os.path.join(model_folder_path)
+        file_name = os.path.join(model_folder_path, file_name)
+        print('file_name is', file_name)
         torch.save(self.state_dict(), file_name)
 
 class QTrainer:
@@ -59,8 +60,26 @@ class QTrainer:
             Q_New = reward[i]
             if not done[i]:
                 Q_New = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
+            lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue = self.get_action(target[i])
+            if lookYawValue != -1:
+                target[i][1] = Q_New
+                target[i][2] = Q_New
 
-            target[i][torch.argmax(action).item()] = Q_New
+            moveArgmax = moveValue + 3
+            jumpArgmax = jumpValue + 12
+            moveModArgmax = moveModifierValue + 14
+
+            # print('actions length is', len(action))
+            # print('actions is', action)
+            # print('done length is', len(done))
+            # print('target length is', len(target))
+            # print('target is', target)
+            # print('argmax is', torch.argmax(action).item())
+            # print('QNew is', Q_New)
+            target[i][moveArgmax] = Q_New
+            target[i][jumpArgmax] = Q_New
+            target[i][moveModArgmax] = Q_New
+            # target[i][torch.argmax(action[i]).item()] = Q_New
 
         # 2: Q_New = Reward + gamma * max(next_predicted_q_value)
         # pred.clone()
@@ -70,3 +89,35 @@ class QTrainer:
         loss.backward()
 
         self.optimizer.step()
+
+    def get_action(self, state):
+
+        # print('The prediction is', prediction)
+        noLookChangeIndex = torch.tensor([0])
+        lookYawIndex = torch.tensor([1])
+        lookPitchIndex = torch.tensor([2])
+        allLookTensor = torch.index_select(state, 0, noLookChangeIndex)
+        maxLook = torch.argmax(allLookTensor).item()
+
+        if maxLook == 0:
+            lookYawValue = -1
+            lookPitchValue = -1
+        else:
+            lookYawValue = torch.index_select(state, 0, lookYawIndex).item()
+            lookPitchValue = torch.index_select(state, 0, lookPitchIndex).item()
+
+        moveIndexesAll = torch.tensor([3, 4, 5, 6, 7, 8, 9, 10, 11])
+        moveTensor = torch.index_select(state, 0, moveIndexesAll)
+        moveValue = torch.argmax(moveTensor).item()
+
+        jumpIndexesAll = torch.tensor([12, 13])
+        jumpTensor = torch.index_select(state, 0, jumpIndexesAll)
+        jumpValue = torch.argmax(jumpTensor).item()
+
+        moveModifierIndexesAll = torch.tensor([14, 15, 16])
+        moveModifierTensor = torch.index_select(state, 0, moveModifierIndexesAll)
+        moveModifierValue = torch.argmax(moveModifierTensor).item()
+
+        final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
+        print('final_move is', final_move)
+        return final_move

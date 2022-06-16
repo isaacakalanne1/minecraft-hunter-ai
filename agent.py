@@ -20,17 +20,18 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(38, 256, 100, 17)
+        self.model = Linear_QNet(39, 256, 100, 17)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
-        blocks = hunter.getBlocksInMemory()
-        position = hunter.getCurrentPosition()
-        lookDirection = hunter.getCurrentLookDirection()
-        state = blocks + position + lookDirection
+        blocks = hunter.getBlocksInMemory() # 32 floats
+        position = hunter.getCurrentPosition() # 3 floats
+        lookDirection = hunter.getCurrentLookDirection() # 3 floats
+        currentHealth = hunter.getCurrentHealth() # 1 float
+        state = blocks + position + lookDirection + currentHealth
         
         stateArray = np.array(state, dtype=float)
-        print('The stateArray is', stateArray)
+        # print('The stateArray is', stateArray)
         return stateArray
 
     def remember(self, state, action, reward, next_state, done):
@@ -88,6 +89,7 @@ class Agent:
             moveModifierValue = torch.argmax(moveModifierTensor).item()
 
         final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
+        print('final_move is', final_move)
         return final_move
 
 def train(i):
@@ -118,7 +120,7 @@ def startTraining(game):
         # Perform move and get new state
         # print('Final move is', final_move)
         game.play_step(final_move)
-        time.sleep(0.05)
+        time.sleep(0.2)
         reward, done, score = game.getRewardDoneScore()
         state_new = agent.get_state(game)
 
