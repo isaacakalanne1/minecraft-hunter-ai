@@ -228,6 +228,8 @@ class Hunter:
     currentZ = currentPosition.z
     randomX = self.randomPositionChange(currentX)
     randomZ = self.randomPositionChange(currentZ)
+    self.bot.chat('/time set 300')
+    self.bot.chat('/weather clear')
     self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
     time.sleep(1)
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
@@ -235,7 +237,7 @@ class Hunter:
     self.currentScore = 0
 
   def randomPositionChange(self, initial):
-    return int(round(random.uniform(initial, initial + 100), 0))
+    return int(round(random.uniform(initial, initial - 100), 0))
 
 
 # def createHunter(i):
