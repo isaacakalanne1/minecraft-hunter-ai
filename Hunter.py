@@ -208,7 +208,10 @@ class Hunter:
     Jump.jump(self.bot, jump)
 
   def getRewardDoneScore(self):
-    reward = self.bot.entity.position.x - self.initialX
+    if self.botHasDied == False:
+      reward = self.bot.entity.position.x - self.initialX
+    else:
+      reward = 0
     self.initialX = self.bot.entity.position.x
     currentTime = self.action.getTimeOfDay(self.bot)
     if self.initialTimeOfDay + 400 < currentTime or self.botHasDied == True:
