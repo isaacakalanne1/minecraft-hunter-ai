@@ -137,7 +137,6 @@ def startTraining(game):
         if done:
             # Train long memory
             game.reset()
-            time.sleep(1)
             agent.number_of_games += 1
             agent.train_long_memory()
 

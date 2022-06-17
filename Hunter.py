@@ -52,7 +52,8 @@ class Hunter:
                 })
                 
   def handle(self, *args):
-    self.botHasDied = True
+    if self.initialX != 0:
+      self.botHasDied = True
     print("I spawned 👋")
     self.inventoryItems = {}
     self.initialX = self.bot.entity.position.x
@@ -63,7 +64,7 @@ class Hunter:
     # print("Inventory is", self.inventoryItems)
 
   def handleMsg(self, this, sender, message, *args):
-  
+    print('Received message:', message)
     if sender and (sender != 'HelloThere'):
       match message:
 
@@ -210,7 +211,7 @@ class Hunter:
     reward = self.bot.entity.position.x - self.initialX
     self.initialX = self.bot.entity.position.x
     currentTime = self.action.getTimeOfDay(self.bot)
-    if self.initialTimeOfDay + 400 < currentTime or (self.botHasDied == True and currentTime > self.initialTimeOfDay + 40):
+    if self.initialTimeOfDay + 400 < currentTime or self.botHasDied == True:
       done = 1
     else:
       done = 0
@@ -231,6 +232,7 @@ class Hunter:
     time.sleep(1)
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.initialX = self.bot.entity.position.x
+    self.currentScore = 0
 
   def randomPositionChange(self, initial):
     return int(round(random.uniform(initial, initial + 100), 0))
