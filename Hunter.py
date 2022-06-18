@@ -22,7 +22,7 @@ class Hunter:
     self.createBot(host, port, username)
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
-    self.blocksInMemory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] # TODO: Update to be a dictionary which has a maximum size of around 10,000, and pops left when values are received above this number
+    self.blocksInMemory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     self.entitiesInMemory = {}
     self.currentHeldItem = [0, 0] # [Id, count]
     self.currentHealth = 0
@@ -139,6 +139,17 @@ class Hunter:
         case 'use':
           self.action.activateHeldItem(self.bot, False)
 
+        case 'look':
+          self.runLook()
+
+        case 'blocks':
+          yaw = RandomGenerator.randomYaw()
+          pitch = RandomGenerator.randomPitch()
+          self.action.look(self.bot, yaw, pitch)
+          self.currentLookDirection = LookDirection.getLookDirectionOf(yaw, pitch)
+          blockss = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=0.9, resolution=3)
+          print('Blocks are:', blockss)
+
         case 'hold':
           if RandomGenerator.randomIndexOf(self.inventoryItems) is not None:
             index = RandomGenerator.randomIndexOf(self.inventoryItems)
@@ -249,8 +260,6 @@ class Hunter:
     return int(round(random.uniform(initial, initial - 100), 0))
 
 
-# def createHunter(i):
-#   name = 'HelloThere' + str(i)
 # hunter = Hunter('localHost', 25565, 'HelloThere')
 
 # while True:

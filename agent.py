@@ -20,7 +20,7 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.3 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(39, 1000, 500, 250, 17)
+        self.model = Linear_QNet(23, 250, 50, 17)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
