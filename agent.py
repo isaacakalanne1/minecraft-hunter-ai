@@ -18,9 +18,9 @@ class Agent:
     def __init__(self):
         self.number_of_games = 0
         self.epsilon = 0 # Controls randomness
-        self.gamma = 0.9 # Discount rate
+        self.gamma = 0.3 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(39, 256, 100, 17)
+        self.model = Linear_QNet(39, 1000, 500, 250, 17)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
@@ -98,10 +98,9 @@ def train(i):
 
 def checkIfReady(game):
     print('Checking!')
-    if game.botIsActive == False:
-        game.botHasDied = False
+    if game.rlIsActive == False:
         if hasattr(game.bot.entity, 'position') and hasattr(game.bot, 'health'):
-            game.botIsActive = True
+            game.rlIsActive = True
             startTraining(game)
         else:
             time.sleep(1)

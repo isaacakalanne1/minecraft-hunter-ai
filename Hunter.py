@@ -34,8 +34,9 @@ class Hunter:
     self.initialX = 0
     self.currentScore = 0
     self.botHasDied = False
-    self.botIsActive = False
+    self.rlIsActive = False
     self.bot.on('spawn', self.handle)
+    self.bot.on('death', self.handleDeath)
     self.bot.on('chat', self.handleMsg)
     self.bot.on('playerCollect', self.handlePlayerCollect)
     self.bot.on('health', self.healthUpdated)
@@ -52,8 +53,6 @@ class Hunter:
                 })
                 
   def handle(self, *args):
-    if self.initialX != 0:
-      self.botHasDied = True
     print("I spawned 👋")
     self.inventoryItems = {}
     self.initialX = self.bot.entity.position.x
@@ -62,6 +61,10 @@ class Hunter:
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
     # print("Inventory is", self.inventoryItems)
+
+  def handleDeath(self, *args):
+    self.botHasDied = True
+    print('I died!')
 
   def handleMsg(self, this, sender, message, *args):
     print('Received message:', message)
@@ -208,13 +211,17 @@ class Hunter:
     Jump.jump(self.bot, jump)
 
   def getRewardDoneScore(self):
-    if self.botHasDied == False:
-      reward = self.bot.entity.position.x - self.initialX
+    if self.botHasDied == True:
+      self.botHasDied = False
+      print('Game ended from bot death!')
+      return 0, 1, self.currentScore
     else:
-      reward = 0
+      reward = self.bot.entity.position.x - self.initialX
+
     self.initialX = self.bot.entity.position.x
     currentTime = self.action.getTimeOfDay(self.bot)
-    if self.initialTimeOfDay + 400 < currentTime or self.botHasDied == True:
+    if self.initialTimeOfDay + 400 < currentTime:
+      print('Game ended naturally!')
       done = 1
     else:
       done = 0
@@ -225,7 +232,6 @@ class Hunter:
 
   def reset(self):
     # TODO: Reset the game when the bot dies
-    self.botHasDied = False
     currentPosition = self.bot.entity.position
     currentX = currentPosition.x
     currentZ = currentPosition.z
@@ -234,10 +240,10 @@ class Hunter:
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
     self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
-    time.sleep(1)
+    time.sleep(2)
+    self.currentScore = 0
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.initialX = self.bot.entity.position.x
-    self.currentScore = 0
 
   def randomPositionChange(self, initial):
     return int(round(random.uniform(initial, initial - 100), 0))
