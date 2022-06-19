@@ -1,15 +1,15 @@
 from enum import Enum
 
 class Direction(Enum):
-  none = 0
-  forwards = 1
-  backwards = 2
-  left = 3
-  right = 4
-  forwardLeft = 5
-  forwardRight = 6
-  backwardLeft = 7
-  backwardRight = 8
+  forwards = 0
+  forwardLeft = 1
+  forwardRight = 2
+  backwards = 3
+  left = 4
+  right = 5
+  backwardLeft = 6
+  backwardRight = 7
+  none = 8
 
 def move(currentBot, movement):
   currentBot.setControlState('forward', movement is Direction.forwards or movement is Direction.forwardLeft or movement is Direction.forwardRight)

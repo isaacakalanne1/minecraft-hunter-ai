@@ -5,17 +5,14 @@ import torch.nn.functional as F
 import os
 
 class Linear_QNet(nn.Module):
-    def __init__(self, input_size, l1_dims, l2_dims, output_size):
+    def __init__(self, input_size, l1_dims, output_size):
         super().__init__()
         self.linear1 = nn.Linear(input_size, l1_dims)
-        self.linear2 = nn.Linear(l1_dims, l2_dims)
-        self.linear3 = nn.Linear(l2_dims, output_size)
+        self.linear2 = nn.Linear(l1_dims, output_size)
 
     def forward(self, x):
-        x = F.relu(self.linear1(x))
-        x = F.relu(self.linear2(x))
-        x = F.relu(self.linear3(x))
-        x = torch.sigmoid(x) # Ensure values are always between 0 and 1
+        x = F.leaky_relu(self.linear1(x))
+        x = self.linear2(x)
         return x
     
     def save(self, file_name='model.pth'):
@@ -60,14 +57,12 @@ class QTrainer:
             Q_New = reward[i]
             if not done[i]:
                 Q_New = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
-            lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue = self.get_action(target[i])
-            if lookYawValue != -1:
-                target[i][1] = Q_New
-                target[i][2] = Q_New
-
-            moveArgmax = moveValue + 3
-            jumpArgmax = jumpValue + 12
-            moveModArgmax = moveModifierValue + 14
+            lookYawValue, lookPitchValue, moveValue, jumpValue = self.get_action(target[i])
+            target[i][0] = Q_New
+            target[i][1] = Q_New
+            # print('Action is', action)
+            moveArgmax = moveValue + 2
+            jumpArgmax = jumpValue + 5
 
             # print('actions length is', len(action))
             # print('actions is', action)
@@ -78,7 +73,6 @@ class QTrainer:
             # print('QNew is', Q_New)
             target[i][moveArgmax] = Q_New
             target[i][jumpArgmax] = Q_New
-            target[i][moveModArgmax] = Q_New
             # target[i][torch.argmax(action[i]).item()] = Q_New
 
         # 2: Q_New = Reward + gamma * max(next_predicted_q_value)
@@ -92,31 +86,19 @@ class QTrainer:
 
     def get_action(self, state):
 
-        # print('The prediction is', prediction)
-        noLookChangeIndex = torch.tensor([0])
-        lookYawIndex = torch.tensor([1])
-        lookPitchIndex = torch.tensor([2])
-        allLookTensor = torch.index_select(state, 0, noLookChangeIndex)
-        maxLook = torch.argmax(allLookTensor).item()
+        lookYawIndex = torch.tensor([0])
+        lookPitchIndex = torch.tensor([1])
 
-        if maxLook == 0:
-            lookYawValue = -1
-            lookPitchValue = -1
-        else:
-            lookYawValue = torch.index_select(state, 0, lookYawIndex).item()
-            lookPitchValue = torch.index_select(state, 0, lookPitchIndex).item()
+        lookYawValue = torch.index_select(state, 0, lookYawIndex).item()
+        lookPitchValue = torch.index_select(state, 0, lookPitchIndex).item()
 
-        moveIndexesAll = torch.tensor([3, 4, 5, 6, 7, 8, 9, 10, 11])
+        moveIndexesAll = torch.tensor([2, 3, 4])
         moveTensor = torch.index_select(state, 0, moveIndexesAll)
         moveValue = torch.argmax(moveTensor).item()
 
-        jumpIndexesAll = torch.tensor([12, 13])
+        jumpIndexesAll = torch.tensor([5, 6])
         jumpTensor = torch.index_select(state, 0, jumpIndexesAll)
         jumpValue = torch.argmax(jumpTensor).item()
 
-        moveModifierIndexesAll = torch.tensor([14, 15, 16])
-        moveModifierTensor = torch.index_select(state, 0, moveModifierIndexesAll)
-        moveModifierValue = torch.argmax(moveModifierTensor).item()
-
-        final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
+        final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue]
         return final_move

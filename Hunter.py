@@ -60,6 +60,7 @@ class Hunter:
     items = self.action.updateInventory(self.bot)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
+    MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
     # print("Inventory is", self.inventoryItems)
 
   def handleDeath(self, *args):
@@ -203,41 +204,42 @@ class Hunter:
     return [float(self.bot.health)]
 
   def play_step(self, action):
-
-    lookYawMultiplier, lookPitchMultiplier, move, jumpVal, moveMod = action
-
+    
+    lookYawMultiplier, lookPitchMultiplier, move, jumpVal = action
+    
     yaw = LookDirection.getYaw(lookYawMultiplier)
     pitch = LookDirection.getPitch(lookPitchMultiplier)
 
     movement = Movement.Direction(move)
-    movementMod = MovementModifier.Type(moveMod)
     jump = Jump.Jump(jumpVal)
 
-    if lookYawMultiplier != -1:
-      self.action.look(self.bot, yaw, pitch)
-      self.currentLookDirection = LookDirection.getLookDirectionOf(yaw, pitch)
-      self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=0.9, resolution=2)
+    self.action.look(self.bot, yaw, pitch)
+    self.currentLookDirection = LookDirection.getLookDirectionOf(yaw, pitch)
+    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=0.9, resolution=2)
+    
     Movement.move(self.bot, movement)
-    MovementModifier.modify(self.bot, movementMod)
     Jump.jump(self.bot, jump)
 
   def getRewardDoneScore(self):
     if self.botHasDied == True:
       self.botHasDied = False
       print('Game ended from bot death!')
-      return 0, 1, self.currentScore
+      return 0, 1, 0
     else:
       reward = self.bot.entity.position.x - self.initialX
 
     self.initialX = self.bot.entity.position.x
     currentTime = self.action.getTimeOfDay(self.bot)
-    if self.initialTimeOfDay + 400 < currentTime:
+    if self.initialTimeOfDay + 200 < currentTime:
       print('Game ended naturally!')
       done = 1
     else:
       done = 0
     self.currentScore += reward
-    score = self.currentScore
+    if self.currentScore < 0:
+      score = 0
+    else:
+      score = self.currentScore
 
     return reward, done, score
 
@@ -251,7 +253,7 @@ class Hunter:
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
     self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
-    time.sleep(2)
+    time.sleep(1)
     self.currentScore = 0
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.initialX = self.bot.entity.position.x
