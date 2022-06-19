@@ -1,4 +1,5 @@
 from email.policy import default
+from typing import NewType
 from typing_extensions import Self
 from javascript import require, On
 import Action.Movement as Movement
@@ -31,6 +32,8 @@ class Hunter:
     self.currentTimeOfDay = 0
     self.currentPosition = [0,0,0]
     self.currentLookDirection = [0,0,0]
+    self.currentPitch = 0
+    self.currentYaw = 0
     self.initialX = 0
     self.currentScore = 0
     self.botHasDied = False
@@ -54,12 +57,12 @@ class Hunter:
                 
   def handle(self, *args):
     print("I spawned 👋")
+    self.resetValues()
     self.inventoryItems = {}
-    self.initialX = self.bot.entity.position.x
-    self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     items = self.action.updateInventory(self.bot)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
+    Movement.move(self.bot, Movement.Direction.forwards)
     MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
     # print("Inventory is", self.inventoryItems)
 
@@ -205,20 +208,25 @@ class Hunter:
 
   def play_step(self, action):
     
-    lookYawMultiplier, lookPitchMultiplier, move, jumpVal = action
+    noChange, yawLeft, yawRight, pitchUp, pitchDown, jump = action
     
-    yaw = LookDirection.getYaw(lookYawMultiplier)
-    pitch = LookDirection.getPitch(lookPitchMultiplier)
+    yawChange = LookDirection.getYawChange()
+    pitchChange = LookDirection.getPitchChange()
 
-    movement = Movement.Direction(move)
-    jump = Jump.Jump(jumpVal)
-
-    self.action.look(self.bot, yaw, pitch)
-    self.currentLookDirection = LookDirection.getLookDirectionOf(yaw, pitch)
-    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=0.9, resolution=2)
-    
-    Movement.move(self.bot, movement)
-    Jump.jump(self.bot, jump)
+    if yawLeft == 1:
+      self.currentYaw -= yawChange
+    if yawRight == 1:
+      self.currentYaw += yawChange
+    if pitchUp == 1:
+      self.currentPitch += pitchChange
+    if pitchDown == 1:
+      self.currentPitch -= pitchChange
+    jumpType = Jump.Jump(jump)
+    Jump.jump(self.bot, jumpType)
+      
+    self.action.look(self.bot, self.currentYaw, self.currentPitch)
+    self.currentLookDirection = LookDirection.getLookDirectionOf(self.currentYaw, self.currentPitch)
+    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
 
   def getRewardDoneScore(self):
     if self.botHasDied == True:
@@ -254,9 +262,15 @@ class Hunter:
     self.bot.chat('/weather clear')
     self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
     time.sleep(1)
+    self.resetValues()
+    
+  def resetValues(self):
     self.currentScore = 0
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.initialX = self.bot.entity.position.x
+    self.currentYaw = 0
+    self.currentPitch = 0
+    self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
   def randomPositionChange(self, initial):
     return int(round(random.uniform(initial, initial - 100), 0))

@@ -20,7 +20,7 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.5 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(23, 2000, 7)
+        self.model = Linear_QNet(23, 500, 6)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
@@ -52,32 +52,17 @@ class Agent:
     def get_action(self, state):
         # Random moves: tradeoff betwen exploration & exploitation
         self.epsilon = 80 - self.number_of_games
-
+        final_move = [0,0,0,0,0,0]
         if random.randint(0, 200) < self.epsilon:
-            lookYawValue = random.random()
-            lookPitchValue = random.random()
-            moveValue = random.randint(0, 2)
-            jumpValue = random.randint(0, 1)
-            final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue]
+            move = random.randint(0, 5)
+            final_move[move] = 1
             # print('Random final move is', final_move)
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
-            lookYawIndex = torch.tensor([0])
-            lookPitchIndex = torch.tensor([1])
+            move = torch.argmax(prediction).item()
 
-            lookYawValue = torch.index_select(prediction, 0, lookYawIndex).item()
-            lookPitchValue = torch.index_select(prediction, 0, lookPitchIndex).item()
-
-            moveIndexesAll = torch.tensor([2, 3, 4])
-            moveTensor = torch.index_select(prediction, 0, moveIndexesAll)
-            moveValue = torch.argmax(moveTensor).item()
-
-            jumpIndexesAll = torch.tensor([5, 6])
-            jumpTensor = torch.index_select(prediction, 0, jumpIndexesAll)
-            jumpValue = torch.argmax(jumpTensor).item()
-
-            final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue]
+            final_move[move] = 1
             print('Prediction final move is', prediction)
             print('Predicted final move is', final_move)
         return final_move

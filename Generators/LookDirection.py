@@ -2,6 +2,9 @@ import math
 from javascript import require, On
 Vec3 = require('vec3')
 
+maxYaw = 6.28
+maxPitch = math.pi/2
+
 def getLookDirectionOf(yaw, pitch):
     csYaw = math.cos(yaw)
     snYaw = math.sin(yaw)
@@ -95,8 +98,14 @@ def getBlocksInFieldOfView(currentBot, yaw, pitch, fieldOfView, resolution):
     return blocksInMemory
 
 def getYaw(multiplier):
-    return 6.28 * multiplier
+    return maxYaw * multiplier
+
+def getYawChange():
+    return maxYaw/8
 
 def getPitch(multiplier):
-    pitch = math.pi * multiplier
-    return pitch - (math.pi/2)
+    pitch = (maxPitch*2) * multiplier
+    return pitch - (maxPitch)
+
+def getPitchChange():
+    return maxPitch/8
