@@ -30,7 +30,7 @@ class Agent:
         state = blocks + position + lookDirection
         
         stateArray = np.array(state, dtype=float)
-        print('The stateArray is', stateArray)
+        # print('The stateArray is', stateArray)
         return stateArray
 
     def remember(self, state, action, reward, next_state, done):
@@ -101,7 +101,7 @@ def startTraining(game):
         # Perform move and get new state
         # print('Final move is', final_move)
         game.play_step(final_move)
-        time.sleep(0.2)
+        # time.sleep(0.2)
         reward, done, score = game.getRewardDoneScore()
         state_new = agent.get_state(game)
 
