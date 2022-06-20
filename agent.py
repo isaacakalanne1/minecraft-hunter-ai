@@ -10,7 +10,7 @@ import time
 import multiprocessing
 
 MAX_MEMORY = 10_000
-BATCH_SIZE = 100
+BATCH_SIZE = 1000
 LR = 0.001
 
 class Agent:
@@ -20,7 +20,7 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.5 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(23, 500, 6)
+        self.model = Linear_QNet(23, 500, 500, 500, 500, 6)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
