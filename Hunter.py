@@ -1,6 +1,3 @@
-from email.policy import default
-from typing import NewType
-from typing_extensions import Self
 from javascript import require, On
 import Action.Movement as Movement
 import Action.MovementModifier as MovementModifier
@@ -8,7 +5,6 @@ import Action.Jump as Jump
 import Action.HunterAction as HunterAction
 import Generators.RandomGenerator as RandomGenerator
 import Generators.LookDirection as LookDirection
-import numpy as np
 import random
 import torch
 import time
@@ -23,7 +19,7 @@ class Hunter:
     self.createBot(host, port, username)
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
-    self.blocksInMemory = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
+    self.blocksInMemory = [0.00] * 16
     self.entitiesInMemory = {}
     self.currentHeldItem = [0, 0] # [Id, count]
     self.currentHealth = 0.00

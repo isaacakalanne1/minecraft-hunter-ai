@@ -10,8 +10,8 @@ import time
 import multiprocessing
 
 MAX_MEMORY = 10_000
-BATCH_SIZE = 1000
-LR = 0.001
+BATCH_SIZE = 100
+LR = 0.00001
 
 class Agent:
 
@@ -20,11 +20,11 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(37, 500, 500, 500, 500, 6)
+        self.model = Linear_QNet(21, 500, 500, 500, 500, 6)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
-        blocks = hunter.getBlocksInMemory() # 32 floats
+        blocks = hunter.getBlocksInMemory() # 16 floats
         position = hunter.getCurrentPosition() # 3 floats
         lookDirection = hunter.getCurrentYawAndPitch() # 2 floats
         state = blocks + position + lookDirection
@@ -101,7 +101,7 @@ def startTraining(game):
         # Perform move and get new state
         # print('Final move is', final_move)
         game.play_step(final_move)
-        # time.sleep(0.2)
+        time.sleep(0.5)
         reward, done, score = game.getRewardDoneScore()
         state_new = agent.get_state(game)
 
