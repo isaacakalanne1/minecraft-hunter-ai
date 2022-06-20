@@ -23,7 +23,7 @@ class Hunter:
     self.createBot(host, port, username)
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
-    self.blocksInMemory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    self.blocksInMemory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     self.entitiesInMemory = {}
     self.currentHeldItem = [0, 0] # [Id, count]
     self.currentHealth = 0
@@ -67,7 +67,8 @@ class Hunter:
     # print("Inventory is", self.inventoryItems)
 
   def handleDeath(self, *args):
-    self.botHasDied = True
+    if self.rlIsActive == True:
+      self.botHasDied = True
     print('I died!')
 
   def handleMsg(self, this, sender, message, *args):
@@ -200,8 +201,8 @@ class Hunter:
     self.currentPosition = [position.x, position.y, position.z]
     return self.currentPosition
 
-  def getCurrentLookDirection(self):
-    return self.currentLookDirection
+  def getCurrentYawAndPitch(self):
+    return [self.currentYaw, self.currentPitch]
   
   def getCurrentHealth(self):
     return [float(self.bot.health)]
@@ -230,7 +231,7 @@ class Hunter:
 
   def getRewardDoneScore(self):
     if self.botHasDied == True:
-      self.botHasDied = False
+      # self.botHasDied = False
       print('Game ended from bot death!')
       return 0, 1, 0
     else:
@@ -260,7 +261,8 @@ class Hunter:
     randomZ = self.randomPositionChange(currentZ)
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
-    self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
+    self.bot.chat('/kill')
+    # self.bot.chat('/spreadplayers -9 -25 0 1 false @a')
     time.sleep(1)
     self.resetValues()
     
@@ -271,6 +273,7 @@ class Hunter:
     self.currentYaw = 0
     self.currentPitch = 0
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
+    self.botHasDied = False
 
   def randomPositionChange(self, initial):
     return int(round(random.uniform(initial, initial - 100), 0))

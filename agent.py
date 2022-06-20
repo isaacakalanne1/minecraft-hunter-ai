@@ -18,20 +18,19 @@ class Agent:
     def __init__(self):
         self.number_of_games = 0
         self.epsilon = 0 # Controls randomness
-        self.gamma = 0.5 # Discount rate
+        self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(23, 500, 500, 500, 500, 6)
+        self.model = Linear_QNet(37, 500, 500, 500, 500, 6)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
-        blocks = hunter.getBlocksInMemory() # 16 floats
+        blocks = hunter.getBlocksInMemory() # 32 floats
         position = hunter.getCurrentPosition() # 3 floats
-        lookDirection = hunter.getCurrentLookDirection() # 3 floats
-        currentHealth = hunter.getCurrentHealth() # 1 float
-        state = blocks + position + lookDirection + currentHealth
+        lookDirection = hunter.getCurrentYawAndPitch() # 2 floats
+        state = blocks + position + lookDirection
         
         stateArray = np.array(state, dtype=float)
-        # print('The stateArray is', stateArray)
+        print('The stateArray is', stateArray)
         return stateArray
 
     def remember(self, state, action, reward, next_state, done):
@@ -75,6 +74,10 @@ def checkIfReady(game):
     print('Checking!')
     if game.rlIsActive == False:
         if hasattr(game.bot.entity, 'position') and hasattr(game.bot, 'health'):
+            print('Killing!')
+            game.bot.chat('/kill')
+            # game.bot.chat('/spreadplayers -9 -25 0 1 false @a')
+            time.sleep(1)
             game.rlIsActive = True
             startTraining(game)
         else:
