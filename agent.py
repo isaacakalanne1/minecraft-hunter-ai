@@ -57,6 +57,7 @@ class Agent:
             moveValue = random.randint(0, 8)
             jumpValue = random.randint(0, 1)
             moveModifierValue = random.randint(0, 2)
+            final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
@@ -77,9 +78,9 @@ class Agent:
             moveModifierIndexesAll = torch.tensor([13, 14, 15])
             moveModifierTensor = torch.index_select(prediction, 0, moveModifierIndexesAll)
             moveModifierValue = torch.argmax(moveModifierTensor).item()
+            final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
+            print('Predicted final move is', final_move)
 
-        final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
-        # print('final_move is', final_move)
         return final_move
 
 def train(i):

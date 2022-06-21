@@ -12,10 +12,9 @@ class Linear_QNet(nn.Module):
         self.linear3 = nn.Linear(l2_dims, output_size)
 
     def forward(self, x):
-        x = F.relu(self.linear1(x))
+        x = self.linear1(x)
         x = F.relu(self.linear2(x))
-        x = F.relu(self.linear3(x))
-        x = torch.sigmoid(x) # Ensure values are always between 0 and 1
+        x = torch.sigmoid(self.linear3(x))
         return x
     
     def save(self, file_name='model.pth'):
