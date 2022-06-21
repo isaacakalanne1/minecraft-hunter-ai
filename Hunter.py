@@ -151,7 +151,7 @@ class Hunter:
           self.action.activateHeldItem(self.bot, False)
 
         case 'look':
-          self.runLook()
+          self.randomLook()
 
         case 'blocks':
           yaw = RandomGenerator.randomYaw()
@@ -189,7 +189,7 @@ class Hunter:
         case 'cuda':
           print('Current device is', torch.cuda.current_device())
 
-  def runLook(self):
+  def randomLook(self):
     yaw = RandomGenerator.randomYaw()
     pitch = RandomGenerator.randomPitch()
     self.action.look(self.bot, yaw, pitch)
