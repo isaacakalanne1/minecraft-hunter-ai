@@ -22,7 +22,7 @@ class Hunter:
     self.createBot(host, port, username)
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
-    self.blocksInMemory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    self.blocksInMemory = [0] * 16
     self.entitiesInMemory = {}
     self.currentHeldItem = [0, 0] # [Id, count]
     self.currentHealth = 0
@@ -31,6 +31,8 @@ class Hunter:
     self.currentTimeOfDay = 0
     self.currentPosition = [0,0,0]
     self.currentLookDirection = [0,0,0]
+    self.currentYaw = 0
+    self.currentPitch = 0
     self.initialX = 0
     self.currentScore = 0
     self.botHasDied = False
@@ -196,8 +198,8 @@ class Hunter:
     self.currentPosition = [position.x, position.y, position.z]
     return self.currentPosition
 
-  def getCurrentLookDirection(self):
-    return self.currentLookDirection
+  def getCurrentYawAndPitch(self):
+    return [self.currentYaw, self.currentPitch]
   
   def getCurrentHealth(self):
     return [float(self.bot.health)]
@@ -208,6 +210,8 @@ class Hunter:
 
     yaw = LookDirection.getYaw(lookYawMultiplier)
     pitch = LookDirection.getPitch(lookPitchMultiplier)
+    self.currentYaw = yaw
+    self.currentPitch = pitch
 
     movement = Movement.Direction(move)
     movementMod = MovementModifier.Type(moveMod)
@@ -244,20 +248,15 @@ class Hunter:
   def reset(self):
     # TODO: Reset the game when the bot dies
     currentPosition = self.bot.entity.position
-    currentX = currentPosition.x
-    currentZ = currentPosition.z
-    randomX = self.randomPositionChange(currentX)
-    randomZ = self.randomPositionChange(currentZ)
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
-    self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
-    time.sleep(2)
+    self.bot.chat('/gamerule spawnradius 10')
+    self.bot.chat('/spawnpoint @a ' + str(currentPosition.x) + ' ' + str(currentPosition.y) + ' ' + str(currentPosition.z))
+    self.bot.chat('/kill')
+    time.sleep(1)
     self.currentScore = 0
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.initialX = self.bot.entity.position.x
-
-  def randomPositionChange(self, initial):
-    return int(round(random.uniform(initial, initial - 100), 0))
 
 
 # hunter = Hunter('localHost', 25565, 'HelloThere')

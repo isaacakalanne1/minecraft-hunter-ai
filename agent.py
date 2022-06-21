@@ -7,7 +7,6 @@ from model import Linear_QNet, QTrainer
 from helper import plot
 from javascript import require, On
 import time
-import multiprocessing
 
 MAX_MEMORY = 10_000
 BATCH_SIZE = 100
@@ -20,15 +19,14 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.3 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(23, 250, 50, 17)
+        self.model = Linear_QNet(21, 250, 50, 17)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
-        blocks = hunter.getBlocksInMemory() # 32 floats
+        blocks = hunter.getBlocksInMemory() # 16 floats
         position = hunter.getCurrentPosition() # 3 floats
-        lookDirection = hunter.getCurrentLookDirection() # 3 floats
-        currentHealth = hunter.getCurrentHealth() # 1 float
-        state = blocks + position + lookDirection + currentHealth
+        lookDirection = hunter.getCurrentYawAndPitch() # 2 floats
+        state = blocks + position + lookDirection
         
         stateArray = np.array(state, dtype=float)
         # print('The stateArray is', stateArray)
