@@ -20,7 +20,6 @@ class Agent:
         self.gamma = 0.3 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
         self.model = Linear_QNet(21, 250, 50, 16)
-        # self.model.load_ryoshi_model()
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
@@ -49,7 +48,7 @@ class Agent:
 
     def get_action(self, state):
         # Random moves: tradeoff betwen exploration & exploitation
-        self.epsilon = 80 - self.number_of_games
+        self.epsilon = 0 - self.number_of_games
 
         if random.randint(0, 200) < self.epsilon:
             lookYawValue = random.random()

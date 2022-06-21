@@ -21,7 +21,7 @@ class Linear_QNet(nn.Module):
         file_name = self.getFilePath(file_name)
         torch.save(self.state_dict(), file_name)
 
-    def load_ryoshi_model(self, file_name='model-ryoshi-run-1.1.pth'):
+    def load_ryoshi_model(self, file_name='model-ryoshi-run-2.1.pth'):
         file_name = self.getFilePath(file_name)
         self.load_state_dict(torch.load(file_name))
         print('Loaded ryoshi model!')
@@ -38,6 +38,7 @@ class QTrainer:
         self.lr = lr
         self.gamma = gamma
         self.model = model
+        self.model.load_ryoshi_model()
         self.optimizer = optim.Adam(model.parameters(), lr=self.lr)
         self.criterion = nn.MSELoss()
 
