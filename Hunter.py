@@ -1,5 +1,3 @@
-from email.policy import default
-from typing_extensions import Self
 from javascript import require, On
 import Action.Movement as Movement
 import Action.MovementModifier as MovementModifier
@@ -7,9 +5,7 @@ import Action.Jump as Jump
 import Action.HunterAction as HunterAction
 import Generators.RandomGenerator as RandomGenerator
 import Generators.LookDirection as LookDirection
-import numpy as np
 import random
-import torch
 import time
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')

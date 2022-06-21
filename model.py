@@ -25,6 +25,7 @@ class Linear_QNet(nn.Module):
     def load_ryoshi_model(self, file_name='model-ryoshi-run-1.1.pth'):
         file_name = self.getFilePath(file_name)
         self.load_state_dict(file_name)
+        print('Loaded ryoshi model!')
 
     def getFilePath(file_to_load):
         model_folder_path = '/Users/iakalann/Documents/minecraft-hunter-ai/Plot'
