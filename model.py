@@ -14,14 +14,14 @@ class Linear_QNet(nn.Module):
     def forward(self, x):
         x = self.linear1(x)
         x = F.relu(self.linear2(x))
-        x = torch.sigmoid(self.linear3(x))
+        x = self.linear3(x)
         return x
     
     def save(self, file_name='model.pth'):
         file_name = self.getFilePath(file_name)
         torch.save(self.state_dict(), file_name)
 
-    def load_ryoshi_model(self, file_name='model-ryoshi-run-2.1.pth'):
+    def load_ryoshi_model(self, file_name='model-ryoshi-run-2.2.pth'):
         file_name = self.getFilePath(file_name)
         self.load_state_dict(torch.load(file_name))
         print('Loaded ryoshi model!')

@@ -245,7 +245,7 @@ class Hunter:
     self.rlIsActive = True
 
   def randomPositionChange(self, initial):
-    return int(round(random.uniform(initial, initial - 100), 0))
+    return int(round(random.uniform(initial - 100, initial - 200), 0))
 
   def respawnBot(self):
     currentPosition = self.bot.entity.position

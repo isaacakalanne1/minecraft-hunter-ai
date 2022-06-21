@@ -101,6 +101,8 @@ def startTraining(game):
     plot_mean_scores = []
     total_score = 0
     record = 0
+    looped_number_of_games = 0
+    loop_number = 0
     agent = Agent()
     print('Starting training!')
     while True:
@@ -128,7 +130,11 @@ def startTraining(game):
             game.reset()
             agent.number_of_games += 1
             agent.train_long_memory()
-
+            looped_number_of_games += 1
+            if looped_number_of_games == 99:
+                loop_number += 1
+                agent.model.save(file_name='model-ryoshi-run-2.0-game-' + str(loop_number*100) + '.pth')
+                looped_number_of_games = 0
             if score > record:
                 record = score
                 agent.model.save()
