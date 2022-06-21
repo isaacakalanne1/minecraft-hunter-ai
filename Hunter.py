@@ -235,14 +235,16 @@ class Hunter:
     Jump.jump(self.bot, jump)
 
   def getRewardDoneScore(self):
+    currentX = self.bot.entity.position.x
+
     if self.botHasDied == True and self.rlIsActive == True:
       self.botHasDied = False
       print('Game ended from bot death!')
       return 0, 1, self.currentScore
     else:
-      reward = self.bot.entity.position.x - self.initialX
+      reward = currentX - self.initialX
 
-    self.initialX = self.bot.entity.position.x
+    self.initialX = currentX
     currentTime = self.action.getTimeOfDay(self.bot)
     if self.initialTimeOfDay + 400 < currentTime:
       print('Game ended naturally!')
@@ -256,23 +258,30 @@ class Hunter:
 
   def reset(self):
     self.rlIsActive = False
+    self.respawnBot()
+    time.sleep(0.5)
+    self.moveBot()
+    time.sleep(1)
+    self.rlIsActive = True
+
+  def randomPositionChange(self, initial):
+    return int(round(random.uniform(initial, initial - 100), 0))
+
+  def respawnBot(self):
     currentPosition = self.bot.entity.position
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
     self.bot.chat('/gamerule spawnradius 0')
     self.bot.chat('/spawnpoint @a ' + str(currentPosition.x) + ' ' + str(currentPosition.y) + ' ' + str(currentPosition.z))
     self.bot.chat('/kill')
-    time.sleep(0.5)
+
+  def moveBot(self):
+    currentPosition = self.bot.entity.position
     currentX = currentPosition.x
     currentZ = currentPosition.z
     randomX = self.randomPositionChange(currentX)
     randomZ = self.randomPositionChange(currentZ)
     self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
-    time.sleep(1)
-    self.rlIsActive = True
-
-  def randomPositionChange(self, initial):
-    return int(round(random.uniform(initial, initial - 100), 0))
 
 hunter = Hunter('localHost', 25565, 'HelloThere')
 
