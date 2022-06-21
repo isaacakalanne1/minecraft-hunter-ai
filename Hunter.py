@@ -56,13 +56,18 @@ class Hunter:
                 
   def handle(self, *args):
     print("I spawned 👋")
+    self.resetValues()
+
+  def resetValues(self):
     self.inventoryItems = {}
     self.initialX = self.bot.entity.position.x
+    self.currentYaw = self.bot.entity.yaw
+    self.currentPitch = self.bot.entity.pitch
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
+    self.currentScore = 0
     items = self.action.updateInventory(self.bot)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
-    # print("Inventory is", self.inventoryItems)
 
   def handleDeath(self, *args):
     self.botHasDied = True
@@ -79,6 +84,9 @@ class Hunter:
           for item in items:
             self.inventoryItems[(item.type, item.slot)] = item.count
           print("Inventory is", self.inventoryItems)
+
+        case 'self':
+          print('Bot is', self.bot.entity)
 
         case "dig":
           block = self.bot.blockAtCursor()
@@ -246,7 +254,6 @@ class Hunter:
     return reward, done, score
 
   def reset(self):
-    # TODO: Reset the game when the bot dies
     currentPosition = self.bot.entity.position
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
@@ -254,15 +261,12 @@ class Hunter:
     self.bot.chat('/spawnpoint @a ' + str(currentPosition.x) + ' ' + str(currentPosition.y) + ' ' + str(currentPosition.z))
     self.bot.chat('/kill')
     time.sleep(1)
-    self.currentScore = 0
-    self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
-    self.initialX = self.bot.entity.position.x
 
 
-# hunter = Hunter('localHost', 25565, 'HelloThere')
+hunter = Hunter('localHost', 25565, 'HelloThere')
 
-# while True:
-#   time.sleep(1)
+while True:
+  time.sleep(1)
 
 # if __name__ == '__main__':
 #   for i in range(10):
