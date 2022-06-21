@@ -200,12 +200,11 @@ class Hunter:
 
     lookYawMultiplier, lookPitchMultiplier, move, jumpVal, moveMod = action
 
-    if lookYawMultiplier != -1:
-      yaw = LookDirection.getYaw(lookYawMultiplier)
-      pitch = LookDirection.getPitch(lookPitchMultiplier)
-      self.currentYaw = yaw
-      self.currentPitch = pitch
-
+    yaw = LookDirection.getYaw(lookYawMultiplier)
+    pitch = LookDirection.getPitch(lookPitchMultiplier)
+    self.currentYaw = yaw
+    self.currentPitch = pitch
+      
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
     self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
 

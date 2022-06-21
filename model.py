@@ -60,14 +60,15 @@ class QTrainer:
             Q_New = reward[i]
             if not done[i]:
                 Q_New = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
+                
             lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue = self.get_action(target[i])
-            if lookYawValue != -1:
-                target[i][1] = Q_New
-                target[i][2] = Q_New
 
-            moveArgmax = moveValue + 3
-            jumpArgmax = jumpValue + 12
-            moveModArgmax = moveModifierValue + 14
+            target[i][0] = Q_New
+            target[i][1] = Q_New
+
+            moveArgmax = moveValue + 2
+            jumpArgmax = jumpValue + 11
+            moveModArgmax = moveModifierValue + 13
 
             # print('actions length is', len(action))
             # print('actions is', action)
@@ -79,7 +80,6 @@ class QTrainer:
             target[i][moveArgmax] = Q_New
             target[i][jumpArgmax] = Q_New
             target[i][moveModArgmax] = Q_New
-            # target[i][torch.argmax(action[i]).item()] = Q_New
 
         # 2: Q_New = Reward + gamma * max(next_predicted_q_value)
         # pred.clone()
@@ -92,29 +92,20 @@ class QTrainer:
 
     def get_action(self, state):
 
-        # print('The prediction is', prediction)
-        noLookChangeIndex = torch.tensor([0])
-        lookYawIndex = torch.tensor([1])
-        lookPitchIndex = torch.tensor([2])
-        allLookTensor = torch.index_select(state, 0, noLookChangeIndex)
-        maxLook = torch.argmax(allLookTensor).item()
+        lookYawIndex = torch.tensor([0])
+        lookPitchIndex = torch.tensor([1])
+        lookYawValue = torch.index_select(state, 0, lookYawIndex).item()
+        lookPitchValue = torch.index_select(state, 0, lookPitchIndex).item()
 
-        if maxLook == 0:
-            lookYawValue = -1
-            lookPitchValue = -1
-        else:
-            lookYawValue = torch.index_select(state, 0, lookYawIndex).item()
-            lookPitchValue = torch.index_select(state, 0, lookPitchIndex).item()
-
-        moveIndexesAll = torch.tensor([3, 4, 5, 6, 7, 8, 9, 10, 11])
+        moveIndexesAll = torch.tensor([2, 3, 4, 5, 6, 7, 8, 9, 10])
         moveTensor = torch.index_select(state, 0, moveIndexesAll)
         moveValue = torch.argmax(moveTensor).item()
 
-        jumpIndexesAll = torch.tensor([12, 13])
+        jumpIndexesAll = torch.tensor([11, 12])
         jumpTensor = torch.index_select(state, 0, jumpIndexesAll)
         jumpValue = torch.argmax(jumpTensor).item()
 
-        moveModifierIndexesAll = torch.tensor([14, 15, 16])
+        moveModifierIndexesAll = torch.tensor([13, 14, 15])
         moveModifierTensor = torch.index_select(state, 0, moveModifierIndexesAll)
         moveModifierValue = torch.argmax(moveModifierTensor).item()
 

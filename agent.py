@@ -19,7 +19,7 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.3 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(21, 250, 50, 17)
+        self.model = Linear_QNet(21, 250, 50, 16)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
@@ -61,28 +61,20 @@ class Agent:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
             # print('The prediction is', prediction)
-            noLookChangeIndex = torch.tensor([0])
-            lookYawIndex = torch.tensor([1])
-            lookPitchIndex = torch.tensor([2])
-            allLookTensor = torch.index_select(prediction, 0, noLookChangeIndex)
-            maxLook = torch.argmax(allLookTensor).item()
+            lookYawIndex = torch.tensor([0])
+            lookPitchIndex = torch.tensor([1])
+            lookYawValue = torch.index_select(prediction, 0, lookYawIndex).item()
+            lookPitchValue = torch.index_select(prediction, 0, lookPitchIndex).item()
 
-            if maxLook == 0:
-                lookYawValue = -1
-                lookPitchValue = -1
-            else:
-                lookYawValue = torch.index_select(prediction, 0, lookYawIndex).item()
-                lookPitchValue = torch.index_select(prediction, 0, lookPitchIndex).item()
-
-            moveIndexesAll = torch.tensor([3, 4, 5, 6, 7, 8, 9, 10, 11])
+            moveIndexesAll = torch.tensor([2, 3, 4, 5, 6, 7, 8, 9, 10])
             moveTensor = torch.index_select(prediction, 0, moveIndexesAll)
             moveValue = torch.argmax(moveTensor).item()
 
-            jumpIndexesAll = torch.tensor([12, 13])
+            jumpIndexesAll = torch.tensor([11, 12])
             jumpTensor = torch.index_select(prediction, 0, jumpIndexesAll)
             jumpValue = torch.argmax(jumpTensor).item()
 
-            moveModifierIndexesAll = torch.tensor([14, 15, 16])
+            moveModifierIndexesAll = torch.tensor([13, 14, 15])
             moveModifierTensor = torch.index_select(prediction, 0, moveModifierIndexesAll)
             moveModifierValue = torch.argmax(moveModifierTensor).item()
 
