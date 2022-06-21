@@ -86,11 +86,11 @@ def getBlocksInFieldOfView(currentBot, yaw, pitch, fieldOfView, resolution):
         if block is not None:
             try:
                 distance = currentBot.entity.position.distanceTo(block.position)
-                blockData = [distance, block.type]
+                blockData = [round(distance, 2), round(block.type, 2)]
             except:
-                blockData = [0, 0]
+                blockData = [0.00] * 2
         else:
-            blockData = [0, 0]
+            blockData = [0.00] * 2
         blocksInMemory += blockData
     return blocksInMemory
 
