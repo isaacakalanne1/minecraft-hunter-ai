@@ -30,7 +30,6 @@ class Hunter:
     self.initialTimeOfDay = 0
     self.currentTimeOfDay = 0
     self.currentPosition = [0,0,0]
-    self.currentLookDirection = [0,0,0]
     self.currentYaw = 0
     self.currentPitch = 0
     self.initialX = 0
@@ -95,6 +94,7 @@ class Hunter:
             self.action.dig(self.bot, block, True, 'rayCast')
           except:
             self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
+
         case 'place':
           block = self.action.getCurrentlyLookedAtBlock(self.bot)
           face = Vec3(0,1,0)
@@ -157,7 +157,6 @@ class Hunter:
           yaw = RandomGenerator.randomYaw()
           pitch = RandomGenerator.randomPitch()
           self.action.look(self.bot, yaw, pitch)
-          self.currentLookDirection = LookDirection.getLookDirectionOf(yaw, pitch)
           blockss = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=0.9, resolution=3)
           print('Blocks are:', blockss)
 
@@ -167,27 +166,11 @@ class Hunter:
             item = self.inventoryItems[(index)]
             self.action.holdItem(self.bot, item)
 
-        case 'reset':
-          self.reset()
-
         case 'physics':
           # self.bot.physics.playerSpeed = 0.2
           entity = self.action.getNearestEntity(self.bot)
           print('Player physics is', entity)
           print('bot.physics is', self.bot.physics)
-
-        case 'tensor':
-          dist = torch.tensor([0,4,8,6])
-          # x = torch.sigmoid(dist)
-          # print('Dist is', x)
-          idx = torch.tensor([0,2])
-          testIdx = torch.index_select(dist, 0, idx)
-          # movementIndex = torch.argmax(dist).item()
-          print('testIdx is', testIdx)
-          # print('TestIdx is', testIdx)
-        
-        case 'cuda':
-          print('Current device is', torch.cuda.current_device())
 
   def randomLook(self):
     yaw = RandomGenerator.randomYaw()
@@ -217,51 +200,52 @@ class Hunter:
 
     lookYawMultiplier, lookPitchMultiplier, move, jumpVal, moveMod = action
 
-    yaw = LookDirection.getYaw(lookYawMultiplier)
-    pitch = LookDirection.getPitch(lookPitchMultiplier)
-    self.currentYaw = yaw
-    self.currentPitch = pitch
+    if lookYawMultiplier != -1:
+      yaw = LookDirection.getYaw(lookYawMultiplier)
+      pitch = LookDirection.getPitch(lookPitchMultiplier)
+      self.currentYaw = yaw
+      self.currentPitch = pitch
+
+    self.action.look(self.bot, self.currentYaw, self.currentPitch)
+    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
 
     movement = Movement.Direction(move)
     movementMod = MovementModifier.Type(moveMod)
     jump = Jump.Jump(jumpVal)
-
-    if lookYawMultiplier != -1:
-      self.action.look(self.bot, yaw, pitch)
-      self.currentLookDirection = LookDirection.getLookDirectionOf(yaw, pitch)
-      self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=0.9, resolution=2)
+      
     Movement.move(self.bot, movement)
     MovementModifier.modify(self.bot, movementMod)
     Jump.jump(self.bot, jump)
 
   def getRewardDoneScore(self):
-    currentX = self.bot.entity.position.x
 
     if self.botHasDied == True and self.rlIsActive == True:
       self.botHasDied = False
       print('Game ended from bot death!')
       return 0, 1, self.currentScore
     else:
-      reward = currentX - self.initialX
+      reward = self.bot.entity.position.x - self.initialX
 
-    self.initialX = currentX
+    self.initialX = self.bot.entity.position.x
+
     currentTime = self.action.getTimeOfDay(self.bot)
     if self.initialTimeOfDay + 400 < currentTime:
       print('Game ended naturally!')
       done = 1
     else:
       done = 0
+      
     self.currentScore += reward
-    score = self.currentScore
-
-    return reward, done, score
+    return reward, done, self.currentScore
 
   def reset(self):
     self.rlIsActive = False
     self.respawnBot()
     time.sleep(0.5)
     self.moveBot()
-    time.sleep(1)
+    time.sleep(2)
+    self.randomLook()
+    time.sleep(0.5)
     self.rlIsActive = True
 
   def randomPositionChange(self, initial):
