@@ -19,15 +19,19 @@ class Linear_QNet(nn.Module):
         return x
     
     def save(self, file_name='model.pth'):
-        model_folder_path = '/Users/iakalann/Documents/minecraft-hunter-ai/Plot'
-        print('Path is', os.path)
-        if not os.path.exists(model_folder_path):
-            print('Making directory!')
-            os.makedirs(model_folder_path)
-        
-        file_name = os.path.join(model_folder_path, file_name)
-        print('file_name is', file_name)
+        file_name = self.getFilePath(file_name)
         torch.save(self.state_dict(), file_name)
+
+    def load_ryoshi(self, file_name='model-ryoshi-run-1.1.pth'):
+        file_name = self.getFilePath(file_name)
+        self.load_state_dict(file_name)
+
+    def getFilePath(file_to_load):
+        model_folder_path = '/Users/iakalann/Documents/minecraft-hunter-ai/Plot'
+        if not os.path.exists(model_folder_path):
+            os.makedirs(model_folder_path)
+        file_name = os.path.join(model_folder_path, file_to_load)
+        return file_name
 
 class QTrainer:
     def __init__(self, model, lr, gamma):
@@ -70,13 +74,6 @@ class QTrainer:
             jumpArgmax = jumpValue + 11
             moveModArgmax = moveModifierValue + 13
 
-            # print('actions length is', len(action))
-            # print('actions is', action)
-            # print('done length is', len(done))
-            # print('target length is', len(target))
-            # print('target is', target)
-            # print('argmax is', torch.argmax(action).item())
-            # print('QNew is', Q_New)
             target[i][moveArgmax] = Q_New
             target[i][jumpArgmax] = Q_New
             target[i][moveModArgmax] = Q_New

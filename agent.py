@@ -20,6 +20,7 @@ class Agent:
         self.gamma = 0.3 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
         self.model = Linear_QNet(21, 250, 50, 16)
+        self.model.load_ryoshi_model()
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
@@ -29,7 +30,6 @@ class Agent:
         state = blocks + position + lookDirection
         
         stateArray = np.array(state, dtype=float)
-        # print('The stateArray is', stateArray)
         return stateArray
 
     def remember(self, state, action, reward, next_state, done):
@@ -88,7 +88,7 @@ def train(i):
 
 def checkIfReady(game):
     print('Checking!')
-    if game.rlIsActive == False:
+    if game.rlIsActive == False and game.botHasDied == False:
         if hasattr(game.bot.entity, 'position') and hasattr(game.bot, 'health'):
             game.rlIsActive = True
             startTraining(game)

@@ -22,14 +22,14 @@ class Hunter:
     self.createBot(host, port, username)
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
-    self.blocksInMemory = [0] * 16
+    self.blocksInMemory = [0.00] * 16
     self.entitiesInMemory = {}
     self.currentHeldItem = [0, 0] # [Id, count]
     self.currentHealth = 0
     self.currentHunger = 0
     self.initialTimeOfDay = 0
     self.currentTimeOfDay = 0
-    self.currentPosition = [0,0,0]
+    self.currentPosition = [0.00] * 3
     self.currentYaw = 0
     self.currentPitch = 0
     self.initialX = 0
@@ -187,14 +187,14 @@ class Hunter:
 
   def getCurrentPosition(self):
     position = self.bot.entity.position
-    self.currentPosition = [position.x, position.y, position.z]
+    self.currentPosition = [round(position.x, 2), round(position.y, 2), round(position.z, 2)]
     return self.currentPosition
 
   def getCurrentYawAndPitch(self):
-    return [self.currentYaw, self.currentPitch]
+    return [round(self.currentYaw, 2), round(self.currentPitch, 2)]
   
   def getCurrentHealth(self):
-    return [float(self.bot.health)]
+    return [round(float(self.bot.health), 2)]
 
   def play_step(self, action):
 
