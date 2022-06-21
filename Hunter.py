@@ -266,10 +266,10 @@ class Hunter:
     randomZ = self.randomPositionChange(currentZ)
     self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
 
-hunter = Hunter('localHost', 25565, 'HelloThere')
+# hunter = Hunter('localHost', 25565, 'HelloThere')
 
-while True:
-  time.sleep(1)
+# while True:
+#   time.sleep(1)
 
 # if __name__ == '__main__':
 #   for i in range(10):

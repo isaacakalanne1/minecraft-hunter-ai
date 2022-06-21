@@ -22,7 +22,7 @@ class Linear_QNet(nn.Module):
         file_name = self.getFilePath(file_name)
         torch.save(self.state_dict(), file_name)
 
-    def load_ryoshi(self, file_name='model-ryoshi-run-1.1.pth'):
+    def load_ryoshi_model(self, file_name='model-ryoshi-run-1.1.pth'):
         file_name = self.getFilePath(file_name)
         self.load_state_dict(file_name)
 
