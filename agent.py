@@ -20,7 +20,7 @@ class Agent:
         self.gamma = 0.3 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
         self.model = Linear_QNet(21, 250, 50, 16)
-        self.model.load_ryoshi_model()
+        # self.model.load_ryoshi_model()
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):

@@ -65,7 +65,8 @@ class Hunter:
       self.inventoryItems[(item.type, item.slot)] = item.count
 
   def handleDeath(self, *args):
-    self.botHasDied = True
+    if self.rlIsActive == True:
+      self.botHasDied = True
     print('I died!')
 
   def handleMsg(self, this, sender, message, *args):
@@ -223,7 +224,7 @@ class Hunter:
     self.initialX = self.bot.entity.position.x
 
     currentTime = self.action.getTimeOfDay(self.bot)
-    if self.initialTimeOfDay + 400 < currentTime:
+    if self.initialTimeOfDay + 200 < currentTime:
       print('Game ended naturally!')
       done = 1
     else:
@@ -240,6 +241,7 @@ class Hunter:
     time.sleep(2)
     self.randomLook()
     time.sleep(0.5)
+    self.resetValues()
     self.rlIsActive = True
 
   def randomPositionChange(self, initial):
