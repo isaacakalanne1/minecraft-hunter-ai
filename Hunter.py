@@ -180,7 +180,6 @@ class Hunter:
       self.inventoryItems = self.action.updateInventory(self.bot)
 
   def getBlocksInMemory(self):
-    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
     return self.blocksInMemory
 
   def getCurrentPosition(self):
@@ -204,6 +203,7 @@ class Hunter:
     self.currentPitch = pitch
 
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
+    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
 
     movement = Movement.Direction(move)
     jump = Jump.Jump(jumpVal)
