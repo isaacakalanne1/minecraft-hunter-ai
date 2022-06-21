@@ -54,7 +54,6 @@ class Hunter:
     self.resetValues()
 
   def resetValues(self):
-    self.rlIsActive = True
     self.inventoryItems = {}
     self.initialX = self.bot.entity.position.x
     self.currentYaw = self.bot.entity.yaw
