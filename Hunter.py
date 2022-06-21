@@ -59,6 +59,7 @@ class Hunter:
     self.resetValues()
 
   def resetValues(self):
+    self.rlIsActive = True
     self.inventoryItems = {}
     self.initialX = self.bot.entity.position.x
     self.currentYaw = self.bot.entity.yaw
@@ -234,7 +235,7 @@ class Hunter:
     Jump.jump(self.bot, jump)
 
   def getRewardDoneScore(self):
-    if self.botHasDied == True:
+    if self.botHasDied == True and self.rlIsActive == True:
       self.botHasDied = False
       print('Game ended from bot death!')
       return 0, 1, self.currentScore
@@ -254,14 +255,24 @@ class Hunter:
     return reward, done, score
 
   def reset(self):
+    self.rlIsActive = False
     currentPosition = self.bot.entity.position
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
-    self.bot.chat('/gamerule spawnradius 10')
+    self.bot.chat('/gamerule spawnradius 0')
     self.bot.chat('/spawnpoint @a ' + str(currentPosition.x) + ' ' + str(currentPosition.y) + ' ' + str(currentPosition.z))
     self.bot.chat('/kill')
+    time.sleep(0.5)
+    currentX = currentPosition.x
+    currentZ = currentPosition.z
+    randomX = self.randomPositionChange(currentX)
+    randomZ = self.randomPositionChange(currentZ)
+    self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
     time.sleep(1)
+    self.rlIsActive = True
 
+  def randomPositionChange(self, initial):
+    return int(round(random.uniform(initial, initial - 100), 0))
 
 hunter = Hunter('localHost', 25565, 'HelloThere')
 
