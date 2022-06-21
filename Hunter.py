@@ -61,6 +61,7 @@ class Hunter:
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.currentScore = 0
     items = self.action.updateInventory(self.bot)
+    MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
 
@@ -179,6 +180,7 @@ class Hunter:
       self.inventoryItems = self.action.updateInventory(self.bot)
 
   def getBlocksInMemory(self):
+    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
     return self.blocksInMemory
 
   def getCurrentPosition(self):
@@ -194,22 +196,19 @@ class Hunter:
 
   def play_step(self, action):
 
-    lookYawMultiplier, lookPitchMultiplier, move, jumpVal, moveMod = action
+    lookYawMultiplier, lookPitchMultiplier, move, jumpVal = action
 
     yaw = LookDirection.getYaw(lookYawMultiplier)
     pitch = LookDirection.getPitch(lookPitchMultiplier)
     self.currentYaw = yaw
     self.currentPitch = pitch
-      
+
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
-    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
 
     movement = Movement.Direction(move)
-    movementMod = MovementModifier.Type(moveMod)
     jump = Jump.Jump(jumpVal)
-      
+
     Movement.move(self.bot, movement)
-    MovementModifier.modify(self.bot, movementMod)
     Jump.jump(self.bot, jump)
 
   def getRewardDoneScore(self):
@@ -248,6 +247,8 @@ class Hunter:
     return int(round(random.uniform(initial - 100, initial - 200), 0))
 
   def respawnBot(self):
+    Movement.move(self.bot, Movement.Direction.none)
+    Jump.jump(self.bot, Jump.Jump.none)
     currentPosition = self.bot.entity.position
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')

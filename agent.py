@@ -19,7 +19,7 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.3 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(21, 250, 50, 16)
+        self.model = Linear_QNet(21, 250, 50, 7)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
@@ -53,10 +53,9 @@ class Agent:
         if random.randint(0, 200) < self.epsilon:
             lookYawValue = random.random()
             lookPitchValue = random.random()
-            moveValue = random.randint(0, 8)
+            moveValue = random.randint(0, 2)
             jumpValue = random.randint(0, 1)
-            moveModifierValue = random.randint(0, 2)
-            final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
+            final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue]
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
@@ -66,18 +65,15 @@ class Agent:
             lookYawValue = torch.index_select(prediction, 0, lookYawIndex).item()
             lookPitchValue = torch.index_select(prediction, 0, lookPitchIndex).item()
 
-            moveIndexesAll = torch.tensor([2, 3, 4, 5, 6, 7, 8, 9, 10])
+            moveIndexesAll = torch.tensor([2, 3, 4])
             moveTensor = torch.index_select(prediction, 0, moveIndexesAll)
             moveValue = torch.argmax(moveTensor).item()
 
-            jumpIndexesAll = torch.tensor([11, 12])
+            jumpIndexesAll = torch.tensor([5, 6])
             jumpTensor = torch.index_select(prediction, 0, jumpIndexesAll)
             jumpValue = torch.argmax(jumpTensor).item()
 
-            moveModifierIndexesAll = torch.tensor([13, 14, 15])
-            moveModifierTensor = torch.index_select(prediction, 0, moveModifierIndexesAll)
-            moveModifierValue = torch.argmax(moveModifierTensor).item()
-            final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
+            final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue]
             print('Predicted final move is', final_move)
 
         return final_move

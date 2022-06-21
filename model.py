@@ -38,7 +38,7 @@ class QTrainer:
         self.lr = lr
         self.gamma = gamma
         self.model = model
-        self.model.load_ryoshi_model()
+        # self.model.load_ryoshi_model()
         self.optimizer = optim.Adam(model.parameters(), lr=self.lr)
         self.criterion = nn.MSELoss()
 
@@ -66,18 +66,16 @@ class QTrainer:
             if not done[i]:
                 Q_New = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
                 
-            lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue = self.get_action(target[i])
+            lookYawValue, lookPitchValue, moveValue, jumpValue = self.get_action(target[i])
 
             target[i][0] = Q_New
             target[i][1] = Q_New
 
             moveArgmax = moveValue + 2
-            jumpArgmax = jumpValue + 11
-            moveModArgmax = moveModifierValue + 13
+            jumpArgmax = jumpValue + 5
 
             target[i][moveArgmax] = Q_New
             target[i][jumpArgmax] = Q_New
-            target[i][moveModArgmax] = Q_New
 
         # 2: Q_New = Reward + gamma * max(next_predicted_q_value)
         # pred.clone()
@@ -95,17 +93,13 @@ class QTrainer:
         lookYawValue = torch.index_select(state, 0, lookYawIndex).item()
         lookPitchValue = torch.index_select(state, 0, lookPitchIndex).item()
 
-        moveIndexesAll = torch.tensor([2, 3, 4, 5, 6, 7, 8, 9, 10])
+        moveIndexesAll = torch.tensor([2, 3, 4])
         moveTensor = torch.index_select(state, 0, moveIndexesAll)
         moveValue = torch.argmax(moveTensor).item()
 
-        jumpIndexesAll = torch.tensor([11, 12])
+        jumpIndexesAll = torch.tensor([5, 6])
         jumpTensor = torch.index_select(state, 0, jumpIndexesAll)
         jumpValue = torch.argmax(jumpTensor).item()
 
-        moveModifierIndexesAll = torch.tensor([13, 14, 15])
-        moveModifierTensor = torch.index_select(state, 0, moveModifierIndexesAll)
-        moveModifierValue = torch.argmax(moveModifierTensor).item()
-
-        final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue, moveModifierValue]
+        final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue]
         return final_move

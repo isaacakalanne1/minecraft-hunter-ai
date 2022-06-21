@@ -1,13 +1,13 @@
 from enum import Enum
 
 class Direction(Enum):
-  none = 0
-  forwards = 1
-  backwards = 2
-  left = 3
-  right = 4
-  forwardLeft = 5
-  forwardRight = 6
+  forwards = 0
+  forwardLeft = 1
+  forwardRight = 2
+  none = 3
+  backwards = 4
+  left = 5
+  right = 6
   backwardLeft = 7
   backwardRight = 8
 
