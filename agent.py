@@ -8,9 +8,9 @@ from helper import plot
 from javascript import require, On
 import time
 
-MAX_MEMORY = 10_000
-BATCH_SIZE = 100
-LR = 0.001
+MAX_MEMORY = 100_000
+BATCH_SIZE = 1000
+LR = 0.0001
 
 class Agent:
 
@@ -19,7 +19,7 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(13, 300, 200, 100, 4)
+        self.model = Linear_QNet(13, 300, 300, 300, 300, 300, 300, 4)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
@@ -48,7 +48,7 @@ class Agent:
 
     def get_action(self, state):
         # Random moves: tradeoff betwen exploration & exploitation
-        self.epsilon = 0 - self.number_of_games
+        self.epsilon = 80 - self.number_of_games
 
         if random.randint(0, 200) < self.epsilon:
             lookYawValue = random.random()
