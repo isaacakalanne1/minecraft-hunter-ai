@@ -64,12 +64,11 @@ class QTrainer:
             if not done[i]:
                 Q_New = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
                 
-            lookYawValue, lookPitchValue, jumpValue = self.get_action(target[i])
+            lookYawValue, jumpValue = self.get_action(target[i])
 
             target[i][0] = Q_New
-            target[i][1] = Q_New
 
-            jumpArgmax = jumpValue + 2
+            jumpArgmax = jumpValue + 1
             target[i][jumpArgmax] = Q_New
 
         # 2: Q_New = Reward + gamma * max(next_predicted_q_value)
