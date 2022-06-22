@@ -57,7 +57,7 @@ class Agent:
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
-            # print('The prediction is', prediction)
+            print('The prediction is', prediction)
             action_index = torch.argmax(prediction).item()
             final_move[action_index] = 1
             print('Predicted final move is', final_move)
