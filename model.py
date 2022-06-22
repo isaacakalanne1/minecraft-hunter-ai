@@ -5,24 +5,14 @@ import torch.nn.functional as F
 import os
 
 class Linear_QNet(nn.Module):
-    def __init__(self, input_size, l1_dims, l2_dims, l3_dims, l4_dims, l5_dims, l6_dims, output_size):
+    def __init__(self, input_size, l1_dims, output_size):
         super().__init__()
         self.linear1 = nn.Linear(input_size, l1_dims)
-        self.linear2 = nn.Linear(l1_dims, l2_dims)
-        self.linear3 = nn.Linear(l2_dims, l3_dims)
-        self.linear4 = nn.Linear(l3_dims, l4_dims)
-        self.linear5 = nn.Linear(l4_dims, l5_dims)
-        self.linear6 = nn.Linear(l5_dims, l6_dims)
-        self.linear7 = nn.Linear(l6_dims, output_size)
+        self.linear2 = nn.Linear(l1_dims, output_size)
 
     def forward(self, x):
-        x = self.linear1(x)
-        x = F.relu(self.linear2(x))
-        x = F.relu(self.linear3(x))
-        x = F.relu(self.linear4(x))
-        x = F.relu(self.linear5(x))
-        x = F.relu(self.linear6(x))
-        x = torch.sigmoid(self.linear7(x))
+        x = F.elu(self.linear1(x))
+        x = F.elu(self.linear2(x))
         return x
     
     def save(self, file_name='model.pth'):
