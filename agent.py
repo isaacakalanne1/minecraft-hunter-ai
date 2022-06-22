@@ -19,7 +19,7 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(13, 100, 4)
+        self.model = Linear_QNet(13, 100, 3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
@@ -52,23 +52,20 @@ class Agent:
 
         if random.randint(0, 200) < self.epsilon:
             lookYawValue = random.random()
-            lookPitchValue = random.random()
             jumpValue = random.randint(0, 1)
-            final_move = [lookYawValue, lookPitchValue, jumpValue]
+            final_move = [lookYawValue, jumpValue]
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
             # print('The prediction is', prediction)
             lookYawIndex = torch.tensor([0])
-            lookPitchIndex = torch.tensor([1])
             lookYawValue = torch.index_select(prediction, 0, lookYawIndex).item()
-            lookPitchValue = torch.index_select(prediction, 0, lookPitchIndex).item()
 
-            jumpIndexesAll = torch.tensor([2, 3])
+            jumpIndexesAll = torch.tensor([1, 2])
             jumpTensor = torch.index_select(prediction, 0, jumpIndexesAll)
             jumpValue = torch.argmax(jumpTensor).item()
 
-            final_move = [lookYawValue, lookPitchValue, jumpValue]
+            final_move = [lookYawValue, jumpValue]
             print('Predicted final move is', final_move)
 
         return final_move

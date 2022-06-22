@@ -57,7 +57,7 @@ class Hunter:
     self.inventoryItems = {}
     self.initialX = self.bot.entity.position.x
     self.currentYaw = self.bot.entity.yaw
-    self.currentPitch = self.bot.entity.pitch
+    self.currentPitch = 0
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.currentScore = 0
     items = self.action.updateInventory(self.bot)
@@ -196,12 +196,11 @@ class Hunter:
 
   def play_step(self, action):
 
-    lookYawMultiplier, lookPitchMultiplier, jumpVal = action
+    lookYawMultiplier, jumpVal = action
 
     yaw = LookDirection.getYaw(lookYawMultiplier)
-    pitch = LookDirection.getPitch(lookPitchMultiplier)
     self.currentYaw = yaw
-    self.currentPitch = pitch
+    self.currentPitch = 0
 
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 

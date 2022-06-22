@@ -84,13 +84,11 @@ class QTrainer:
     def get_action(self, state):
 
         lookYawIndex = torch.tensor([0])
-        lookPitchIndex = torch.tensor([1])
         lookYawValue = torch.index_select(state, 0, lookYawIndex).item()
-        lookPitchValue = torch.index_select(state, 0, lookPitchIndex).item()
 
-        jumpIndexesAll = torch.tensor([2, 3])
+        jumpIndexesAll = torch.tensor([1, 2])
         jumpTensor = torch.index_select(state, 0, jumpIndexesAll)
         jumpValue = torch.argmax(jumpTensor).item()
 
-        final_move = [lookYawValue, lookPitchValue, jumpValue]
+        final_move = [lookYawValue, jumpValue]
         return final_move
