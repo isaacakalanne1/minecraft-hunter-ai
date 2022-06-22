@@ -18,7 +18,7 @@ class Hunter:
     self.createBot(host, port, username)
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
-    self.blocksInMemory = [0.00] * 16
+    self.blocksInMemory = [0.00] * 8
     self.entitiesInMemory = {}
     self.currentHeldItem = [0, 0] # [Id, count]
     self.currentHealth = 0
