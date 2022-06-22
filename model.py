@@ -66,15 +66,12 @@ class QTrainer:
             if not done[i]:
                 Q_New = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
                 
-            lookYawValue, lookPitchValue, moveValue, jumpValue = self.get_action(target[i])
+            lookYawValue, lookPitchValue, jumpValue = self.get_action(target[i])
 
             target[i][0] = Q_New
             target[i][1] = Q_New
 
-            moveArgmax = moveValue + 2
-            jumpArgmax = jumpValue + 5
-
-            target[i][moveArgmax] = Q_New
+            jumpArgmax = jumpValue + 2
             target[i][jumpArgmax] = Q_New
 
         # 2: Q_New = Reward + gamma * max(next_predicted_q_value)
@@ -93,13 +90,9 @@ class QTrainer:
         lookYawValue = torch.index_select(state, 0, lookYawIndex).item()
         lookPitchValue = torch.index_select(state, 0, lookPitchIndex).item()
 
-        moveIndexesAll = torch.tensor([2, 3, 4])
-        moveTensor = torch.index_select(state, 0, moveIndexesAll)
-        moveValue = torch.argmax(moveTensor).item()
-
-        jumpIndexesAll = torch.tensor([5, 6])
+        jumpIndexesAll = torch.tensor([2, 3])
         jumpTensor = torch.index_select(state, 0, jumpIndexesAll)
         jumpValue = torch.argmax(jumpTensor).item()
 
-        final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue]
+        final_move = [lookYawValue, lookPitchValue, jumpValue]
         return final_move

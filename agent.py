@@ -19,11 +19,11 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.3 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(21, 250, 50, 7)
+        self.model = Linear_QNet(13, 250, 50, 4)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
-        blocks = hunter.getBlocksInMemory() # 16 floats
+        blocks = hunter.getBlocksInMemory() # 8 floats
         position = hunter.getCurrentPosition() # 3 floats
         lookDirection = hunter.getCurrentYawAndPitch() # 2 floats
         state = blocks + position + lookDirection
@@ -53,9 +53,8 @@ class Agent:
         if random.randint(0, 200) < self.epsilon:
             lookYawValue = random.random()
             lookPitchValue = random.random()
-            moveValue = random.randint(0, 2)
             jumpValue = random.randint(0, 1)
-            final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue]
+            final_move = [lookYawValue, lookPitchValue, jumpValue]
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
@@ -65,15 +64,11 @@ class Agent:
             lookYawValue = torch.index_select(prediction, 0, lookYawIndex).item()
             lookPitchValue = torch.index_select(prediction, 0, lookPitchIndex).item()
 
-            moveIndexesAll = torch.tensor([2, 3, 4])
-            moveTensor = torch.index_select(prediction, 0, moveIndexesAll)
-            moveValue = torch.argmax(moveTensor).item()
-
-            jumpIndexesAll = torch.tensor([5, 6])
+            jumpIndexesAll = torch.tensor([2, 3])
             jumpTensor = torch.index_select(prediction, 0, jumpIndexesAll)
             jumpValue = torch.argmax(jumpTensor).item()
 
-            final_move = [lookYawValue, lookPitchValue, moveValue, jumpValue]
+            final_move = [lookYawValue, lookPitchValue, jumpValue]
             print('Predicted final move is', final_move)
 
         return final_move
