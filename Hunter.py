@@ -7,6 +7,7 @@ import Generators.RandomGenerator as RandomGenerator
 import Generators.LookDirection as LookDirection
 import random
 import time
+import math
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
@@ -56,7 +57,7 @@ class Hunter:
   def resetValues(self):
     self.inventoryItems = {}
     self.initialX = self.bot.entity.position.x
-    self.currentYaw = 3.14
+    self.currentYaw = -math.pi/2
     self.currentPitch = 0
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
@@ -236,8 +237,6 @@ class Hunter:
     time.sleep(0.5)
     self.moveBot()
     time.sleep(2)
-    self.randomLook()
-    time.sleep(0.5)
     self.resetValues()
     Movement.move(self.bot, Movement.Direction.forwards)
     self.rlIsActive = True
