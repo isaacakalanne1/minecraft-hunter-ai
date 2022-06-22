@@ -48,7 +48,7 @@ class Agent:
 
     def get_action(self, state):
         # Random moves: tradeoff betwen exploration & exploitation
-        self.epsilon = 0 - self.number_of_games
+        self.epsilon = 80 - self.number_of_games
 
         if random.randint(0, 200) < self.epsilon:
             lookYawValue = random.random()
