@@ -103,7 +103,7 @@ def startTraining(game):
         # Perform move and get new state
         # print('Final move is', final_move)
         game.play_step(final_move)
-        time.sleep(0.2)
+        time.sleep(0.4)
         reward, done, score = game.getRewardDoneScore()
         state_new = agent.get_state(game)
 
