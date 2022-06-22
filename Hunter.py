@@ -56,8 +56,9 @@ class Hunter:
   def resetValues(self):
     self.inventoryItems = {}
     self.initialX = self.bot.entity.position.x
-    self.currentYaw = self.bot.entity.yaw
+    self.currentYaw = 3.14
     self.currentPitch = 0
+    self.action.look(self.bot, self.currentYaw, self.currentPitch)
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.currentScore = 0
     items = self.action.updateInventory(self.bot)
@@ -196,16 +197,17 @@ class Hunter:
 
   def play_step(self, action):
 
-    lookYawMultiplier, jumpVal = action
-
-    yaw = LookDirection.getYaw(lookYawMultiplier)
-    self.currentYaw = yaw
-    self.currentPitch = 0
-
+    if action[1] == 1:
+      yawChange = LookDirection.getYawChange()
+      self.currentYaw -= yawChange # Turn left
+    if action[2] == 1:
+      self.currentYaw += yawChange # Turn right
+    if action[3] == 1:
+      Jump.jump(self.bot, Jump.Jump.jump)
+    else:
+      Jump.jump(self.bot, Jump.Jump.none)
+      
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
-
-    jump = Jump.Jump(jumpVal)
-    Jump.jump(self.bot, jump)
 
   def getRewardDoneScore(self):
 
@@ -237,6 +239,7 @@ class Hunter:
     self.randomLook()
     time.sleep(0.5)
     self.resetValues()
+    Movement.move(self.bot, Movement.Direction.forwards)
     self.rlIsActive = True
 
   def randomPositionChange(self, initial):

@@ -12,6 +12,12 @@ def getLookDirectionOf(yaw, pitch):
     z = -csYaw * csPitch
     return [x,y,z]
 
+def getYawChange():
+    return 6.28 / 4
+
+def getPitchChange():
+    return math.pi / 4
+
 def getLookDirectionsAround(yaw, pitch, fieldOfView, resolution):
     lookDirection = getLookDirectionOf(yaw, pitch)
     x = lookDirection[0]

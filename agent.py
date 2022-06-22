@@ -10,7 +10,7 @@ import time
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
-LR = 0.0001
+LR = 0.1
 
 class Agent:
 
@@ -19,7 +19,7 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(13, 100, 3)
+        self.model = Linear_QNet(13, 300, 4)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
@@ -50,22 +50,16 @@ class Agent:
         # Random moves: tradeoff betwen exploration & exploitation
         self.epsilon = 80 - self.number_of_games
 
+        final_move = [0,0,0,0]
         if random.randint(0, 200) < self.epsilon:
-            lookYawValue = random.random()
-            jumpValue = random.randint(0, 1)
-            final_move = [lookYawValue, jumpValue]
+            action_index = random.randint(0, 3)
+            final_move[action_index] = 1
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
             # print('The prediction is', prediction)
-            lookYawIndex = torch.tensor([0])
-            lookYawValue = torch.index_select(prediction, 0, lookYawIndex).item()
-
-            jumpIndexesAll = torch.tensor([1, 2])
-            jumpTensor = torch.index_select(prediction, 0, jumpIndexesAll)
-            jumpValue = torch.argmax(jumpTensor).item()
-
-            final_move = [lookYawValue, jumpValue]
+            action_index = torch.argmax(prediction).item()
+            final_move[action_index] = 1
             print('Predicted final move is', final_move)
 
         return final_move

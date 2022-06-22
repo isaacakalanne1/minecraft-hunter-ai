@@ -11,8 +11,8 @@ class Linear_QNet(nn.Module):
         self.linear2 = nn.Linear(l1_dims, output_size)
 
     def forward(self, x):
-        x = F.elu(self.linear1(x))
-        x = F.elu(self.linear2(x))
+        x = torch.sigmoid(self.linear1(x))
+        x = torch.sigmoid(self.linear2(x))
         return x
     
     def save(self, file_name='model.pth'):
@@ -63,13 +63,8 @@ class QTrainer:
             Q_New = reward[i]
             if not done[i]:
                 Q_New = reward[i] + self.gamma * torch.max(self.model(next_state[i]))
-                
-            lookYawValue, jumpValue = self.get_action(target[i])
 
-            target[i][0] = Q_New
-
-            jumpArgmax = jumpValue + 1
-            target[i][jumpArgmax] = Q_New
+            target[i][torch.argmax(action).item()] = Q_New
 
         # 2: Q_New = Reward + gamma * max(next_predicted_q_value)
         # pred.clone()
