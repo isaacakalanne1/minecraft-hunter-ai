@@ -197,8 +197,8 @@ class Hunter:
 
   def play_step(self, action):
 
+    yawChange = LookDirection.getYawChange()
     if action[1] == 1:
-      yawChange = LookDirection.getYawChange()
       self.currentYaw -= yawChange # Turn left
     if action[2] == 1:
       self.currentYaw += yawChange # Turn right
@@ -206,7 +206,7 @@ class Hunter:
       Jump.jump(self.bot, Jump.Jump.jump)
     else:
       Jump.jump(self.bot, Jump.Jump.none)
-      
+
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
   def getRewardDoneScore(self):
