@@ -195,7 +195,7 @@ class Hunter:
 
   def play_step(self, action):
 
-    lookYawMultiplier, lookPitchMultiplier, move, jumpVal = action
+    lookYawMultiplier, lookPitchMultiplier, jumpVal = action
 
     yaw = LookDirection.getYaw(lookYawMultiplier)
     pitch = LookDirection.getPitch(lookPitchMultiplier)
@@ -205,10 +205,7 @@ class Hunter:
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
     self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
 
-    movement = Movement.Direction(move)
     jump = Jump.Jump(jumpVal)
-
-    Movement.move(self.bot, movement)
     Jump.jump(self.bot, jump)
 
   def getRewardDoneScore(self):
