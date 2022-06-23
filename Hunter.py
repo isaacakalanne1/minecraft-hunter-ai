@@ -32,6 +32,7 @@ class Hunter:
     self.initialX = 0
     self.currentScore = 0
     self.woodBlockCount = 0
+    self.isDigging = False
     self.botHasDied = False
     self.rlIsActive = False
     self.bot.on('spawn', self.handle)
@@ -46,6 +47,7 @@ class Hunter:
     self.currentHunger = self.bot.food
 
   def diggingCompleted(self, *args):
+    self.isDigging = False
     print('Dug block!')
 
   def createBot(self, host, port, username):
@@ -209,15 +211,30 @@ class Hunter:
 
   def play_step(self, action):
 
-    yawChange = LookDirection.getYawChange()
-    if action[1] == 1:
-      self.currentYaw -= yawChange # Turn left
-    if action[2] == 1:
-      self.currentYaw += yawChange # Turn right
-    if action[3] == 1:
-      Jump.jump(self.bot, Jump.Jump.jump)
-    else:
-      Jump.jump(self.bot, Jump.Jump.none)
+    if action[6] == 0:
+      yawChange = LookDirection.getYawChange()
+      pitchChange = LookDirection.getPitchChange()
+      if action[1] == 1:
+        self.currentYaw -= yawChange # Turn left
+      if action[2] == 1:
+        self.currentYaw += yawChange # Turn right
+      if action[3] == 1:
+        self.currentPitch -= pitchChange # Look down
+      if action[4] == 1:
+        self.currentPitch += pitchChange # Look up
+
+      if action[5] == 1:
+        Jump.jump(self.bot, Jump.Jump.jump)
+      else:
+        Jump.jump(self.bot, Jump.Jump.none)
+
+      if action[6] == 1:
+        block = self.bot.blockAtCursor()
+        try:
+          self.action.dig(self.bot, block, True, 'rayCast')
+          self.isDigging = True
+        except:
+          self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
 
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
