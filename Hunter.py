@@ -31,7 +31,8 @@ class Hunter:
     self.currentPitch = 0
     self.initialX = 0
     self.currentScore = 0
-    self.woodBlockCount = 0
+    self.initialWoodBlockCount = 0
+    self.newWoodBlockCount = 0
     self.isDigging = False
     self.botHasDied = False
     self.rlIsActive = False
@@ -188,8 +189,8 @@ class Hunter:
       self.bot.chat("I collected an item!")
       self.inventoryItems = self.action.updateInventory(self.bot)
       for item in self.inventoryItems:
-        if item.type == 15 and item.count - self.woodBlockCount < 2:
-          self.woodBlockCount = item.count
+        if item.type == 15 and item.count - self.initialWoodBlockCount < 2:
+          self.initialWoodBlockCount = item.count
       print('Inventory items is', self.inventoryItems)
 
   def getBlocksInMemory(self):
@@ -253,16 +254,14 @@ class Hunter:
     else:
       reward = self.bot.entity.position.x - self.initialX
 
-    self.initialX = self.bot.entity.position.x
-
     currentTime = self.action.getTimeOfDay(self.bot)
-    if self.initialTimeOfDay + 200 < currentTime:
+    if self.initialTimeOfDay + 600 < currentTime:
       print('Game ended naturally!')
       done = 1
     else:
       done = 0
       
-    self.currentScore += reward
+    self.currentScore = self.newWoodBlockCount - self.initialWoodBlockCount
     return reward, done, self.currentScore
 
   def reset(self):
