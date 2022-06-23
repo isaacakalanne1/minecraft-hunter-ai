@@ -209,6 +209,12 @@ class Hunter:
   def getCurrentHealth(self):
     return [round(float(self.bot.health), 2)]
 
+  def getIsDigging(self):
+    if self.isDigging == True:
+      return [1]
+    else:
+      return [0]
+
   def play_step(self, action):
 
     if action[6] == 0:
