@@ -31,6 +31,7 @@ class Hunter:
     self.currentPitch = 0
     self.initialX = 0
     self.currentScore = 0
+    self.woodBlockCount = 0
     self.botHasDied = False
     self.rlIsActive = False
     self.bot.on('spawn', self.handle)
@@ -38,10 +39,14 @@ class Hunter:
     self.bot.on('chat', self.handleMsg)
     self.bot.on('playerCollect', self.handlePlayerCollect)
     self.bot.on('health', self.healthUpdated)
+    self.bot.on('diggingCompleted', self.diggingCompleted)
 
   def healthUpdated(self, *args):
     self.currentHealth = self.bot.health
     self.currentHunger = self.bot.food
+
+  def diggingCompleted(self, *args):
+    print('Dug block!')
 
   def createBot(self, host, port, username):
     self.bot = mineflayer.createBot({
@@ -63,7 +68,7 @@ class Hunter:
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.currentScore = 0
     items = self.action.updateInventory(self.bot)
-    MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
+    MovementModifier.modify(self.bot, MovementModifier.Type.none)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
 
@@ -95,7 +100,7 @@ class Hunter:
             self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
 
         case 'place':
-          block = self.action.getCurrentlyLookedAtBlock(self.bot)
+          block = self.bot.blockAtCursor()
           face = Vec3(0,1,0)
           try:
             self.action.place(self.bot, block, face)
@@ -180,10 +185,16 @@ class Hunter:
     if collector.username == self.bot.username:
       self.bot.chat("I collected an item!")
       self.inventoryItems = self.action.updateInventory(self.bot)
+      for item in self.inventoryItems:
+        if item.type == 15 and item.count - self.woodBlockCount < 2:
+          self.woodBlockCount = item.count
+      print('Inventory items is', self.inventoryItems)
 
   def getBlocksInMemory(self):
+    block = self.action.getCurrentlyLookedAtBlock(self.bot)
+    distance = self.bot.entity.position.distanceTo(block.position)
     self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
-    return self.blocksInMemory
+    return [distance, block.type] + self.blocksInMemory
 
   def getCurrentPosition(self):
     position = self.bot.entity.position
@@ -242,7 +253,7 @@ class Hunter:
     self.rlIsActive = True
 
   def randomPositionChange(self, initial):
-    return int(round(random.uniform(initial - 100, initial - 200), 0))
+    return int(round(random.uniform(initial - 20, initial - 20), 0))
 
   def respawnBot(self):
     Movement.move(self.bot, Movement.Direction.none)
@@ -255,17 +266,12 @@ class Hunter:
     self.bot.chat('/kill')
 
   def moveBot(self):
-    currentPosition = self.bot.entity.position
-    currentX = currentPosition.x
-    currentZ = currentPosition.z
-    randomX = self.randomPositionChange(currentX)
-    randomZ = self.randomPositionChange(currentZ)
-    self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
+    self.bot.chat('/spreadplayers -31 -45 0 10 false @a')
 
-# hunter = Hunter('localHost', 25565, 'HelloThere')
+hunter = Hunter('localHost', 25565, 'HelloThere')
 
-# while True:
-#   time.sleep(1)
+while True:
+  time.sleep(1)
 
 # if __name__ == '__main__':
 #   for i in range(10):

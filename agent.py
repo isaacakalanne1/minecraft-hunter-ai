@@ -19,11 +19,11 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(13, 300, 200, 4)
+        self.model = Linear_QNet(23, 300, 200, 4)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
-        blocks = hunter.getBlocksInMemory() # 8 floats
+        blocks = hunter.getBlocksInMemory() # 18 floats - 2 for currently looked at block, and 16 for lidar blocks
         position = hunter.getCurrentPosition() # 3 floats
         lookDirection = hunter.getCurrentYawAndPitch() # 2 floats
         state = blocks + position + lookDirection
