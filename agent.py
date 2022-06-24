@@ -8,8 +8,8 @@ from helper import plot
 from javascript import require, On
 import time
 
-MAX_MEMORY = 100_000
-BATCH_SIZE = 1000
+MAX_MEMORY = 10_000
+BATCH_SIZE = 5
 LR = 0.0001
 
 class Agent:
@@ -28,8 +28,9 @@ class Agent:
         position = hunter.getCurrentPosition() # 3 floats
         lookDirection = hunter.getCurrentYawAndPitch() # 2 floats
         state = targetXAndZ + blocks + position + lookDirection
+        discretizedState = [element * 10 for element in state]
         
-        stateArray = np.array(state, dtype=float)
+        stateArray = np.array(discretizedState, dtype=float)
         return stateArray
 
     def remember(self, state, action, reward, next_state, done):
