@@ -216,8 +216,8 @@ class Hunter:
 
   def setTargetPosition(self):
     radius = 15
-    self.targetX = float(round(random.uniform(self.centerX - radius, self.centerX + radius), 0), 2)
-    self.targetZ = float(round(random.uniform(self.centerZ - radius, self.centerZ + radius), 0), 2)
+    self.targetX = float(round(random.uniform(self.centerX - radius, self.centerX + radius), 2))
+    self.targetZ = float(round(random.uniform(self.centerZ - radius, self.centerZ + radius), 2))
 
   def getRewardDoneScore(self):
 
