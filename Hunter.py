@@ -195,15 +195,30 @@ class Hunter:
   def getCurrentPositionData(self):
     position = self.bot.entity.position
     detectRadius = 1
-    if position.x > self.targetX - detectRadius:
-      isAboveTargetX = 1
-    else:
+
+    if position.x > self.targetX - detectRadius and position.x < self.targetX + detectRadius:
       isAboveTargetX = 0
-    if position.z > self.targetZ - detectRadius:
-      isAboveTargetZ = 1
+      isBelowTargetX = 0
     else:
+      if position.x > self.targetX - detectRadius:
+        isAboveTargetX = 1
+        isBelowTargetX = 0
+      if position.x < self.targetX + detectRadius:
+        isAboveTargetX = 0
+        isBelowTargetX = 1
+
+    if position.z > self.targetZ - detectRadius and position.z < self.targetZ + detectRadius:
       isAboveTargetZ = 0
-    return [int(isAboveTargetX), int(isAboveTargetZ)]
+      isBelowTargetZ = 0
+    else:
+      if position.z > self.targetZ - detectRadius:
+        isAboveTargetZ = 1
+        isBelowTargetZ = 0
+      if position.z < self.targetZ + detectRadius:
+        isAboveTargetZ = 0
+        isBelowTargetZ = 1
+
+    return [int(isAboveTargetX), int(isBelowTargetX), int(isAboveTargetZ), int(isBelowTargetZ), ]
 
   def getCurrentYawAndPitch(self):
     yaw = (round(self.currentYaw, 1) * 10)
@@ -241,8 +256,8 @@ class Hunter:
   def getRewardDoneScore(self):
 
     self.currentTimeOfDay = self.action.getTimeOfDay(self.bot)
-    print('current and target x is', self.bot.entity.position.x, self.targetX)
-    print('current and target z is', self.bot.entity.position.z, self.targetZ)
+    # print('current and target x is', self.bot.entity.position.x, self.targetX)
+    # print('current and target z is', self.bot.entity.position.z, self.targetZ)
 
     if (self.botHasDied == True and self.rlIsActive == True) or self.initialTimeOfDay + 400 < self.currentTimeOfDay:
       self.botHasDied = False
@@ -281,7 +296,7 @@ class Hunter:
     Jump.jump(self.bot, Jump.Jump.none)
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
-    self.bot.chat('/gamerule spawnRadius 0') # Spawnradius seems to default to 5 or so, even when set to 0
+    self.bot.chat('/gamerule spawnRadius 2') # Spawnradius seems to default to 5 or so, even when set to 0
     self.bot.chat('/spawnpoint ' + self.username + ' ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
     self.bot.chat('/kill')
 

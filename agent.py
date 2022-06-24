@@ -19,14 +19,17 @@ class Agent:
         self.epsilon = 0 # Controls randomness
         self.gamma = 0.9 # Discount rate
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(31, 300, 200, 4)
+        self.model = Linear_QNet(33, 300, 50, 4)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, hunter):
         blocks = hunter.getBlocksInMemory() # 27 floats
-        position = hunter.getCurrentPositionData() # 2 floats
         lookDirection = hunter.getCurrentYawAndPitch() # 2 floats
-        state = blocks + position + lookDirection
+        position = hunter.getCurrentPositionData() # 4 floats
+
+        state = blocks + lookDirection + position
+
+        # print('State is', state)
         
         stateArray = np.array(state, dtype=float)
         return stateArray
