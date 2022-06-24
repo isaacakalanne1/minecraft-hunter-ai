@@ -29,8 +29,8 @@ class Hunter:
     self.currentPosition = [0.00] * 3
     self.currentYaw = 0
     self.currentPitch = 0
-    self.centerX = -67
-    self.centerZ = -52
+    self.centerX = -53
+    self.centerZ = -40
     self.targetX = 0
     self.targetZ = 0
     self.currentScore = 0
@@ -222,6 +222,8 @@ class Hunter:
   def getRewardDoneScore(self):
 
     currentTime = self.action.getTimeOfDay(self.bot)
+    print('current and target x is', self.bot.entity.position.x, self.targetX)
+    print('current and target z is', self.bot.entity.position.z, self.targetZ)
 
     if (self.botHasDied == True and self.rlIsActive == True) or self.initialTimeOfDay + 400 < currentTime:
       self.botHasDied = False
@@ -256,7 +258,7 @@ class Hunter:
     Jump.jump(self.bot, Jump.Jump.none)
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
-    self.bot.chat('/gamerule spawnradius 5')
+    self.bot.chat('/gamerule spawnradius 0')
     self.bot.chat('/kill')
 
 # hunter = Hunter('localHost', 25565, 'HelloThere')
