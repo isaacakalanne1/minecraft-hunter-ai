@@ -222,7 +222,7 @@ class Hunter:
   def getRewardDoneScore(self):
 
     currentTime = self.action.getTimeOfDay(self.bot)
-    
+
     if (self.botHasDied == True and self.rlIsActive == True) or self.initialTimeOfDay + 400 < currentTime:
       self.botHasDied = False
       return 0, 1, 0
@@ -230,7 +230,7 @@ class Hunter:
     if self.botIsAtTargetPosition():
       timeDifference = currentTime - self.initialTimeOfDay
       maxScore = 200
-      scoreModifier = timeDifference / 10
+      scoreModifier = timeDifference / 20
       score = maxScore / scoreModifier
       return score, 1, score
       

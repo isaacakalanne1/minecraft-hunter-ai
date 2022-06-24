@@ -10,7 +10,7 @@ import time
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
-LR = 0.1
+LR = 0.0001
 
 class Agent:
 
