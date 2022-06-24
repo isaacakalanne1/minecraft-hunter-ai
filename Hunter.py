@@ -233,7 +233,10 @@ class Hunter:
       timeDifference = self.currentTimeOfDay - self.initialTimeOfDay
       maxScore = 200
       scoreModifier = timeDifference / 20
-      score = maxScore / scoreModifier
+      if timeDifference != 0:
+        score = maxScore / scoreModifier
+      else:
+        score = maxScore
       return score, 1, score
       
     return 0, 0, 0
