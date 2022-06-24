@@ -61,7 +61,7 @@ class Hunter:
   def resetValues(self):
     self.inventoryItems = {}
     self.setTargetPosition()
-    self.currentYaw = -math.pi/2
+    self.currentYaw = 0
     self.currentPitch = 0
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)

@@ -27,7 +27,6 @@ class Agent:
         position = hunter.getCurrentPositionData() # 2 floats
         lookDirection = hunter.getCurrentYawAndPitch() # 2 floats
         state = blocks + position + lookDirection
-        print('The state is', state)
         
         stateArray = np.array(state, dtype=float)
         return stateArray
