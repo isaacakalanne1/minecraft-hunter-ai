@@ -236,7 +236,7 @@ class Hunter:
   def botIsAtTargetPosition(self):
     xPos = self.bot.entity.position.x
     zPos = self.bot.entity.position.z
-    if xPos < self.centerX + 2 and xPos > self.centerX - 2 and zPos < self.centerZ + 2 and zPos > self.centerZ - 2:
+    if xPos < self.targetX + 2 and xPos > self.targetX - 2 and zPos < self.targetZ + 2 and zPos > self.targetZ - 2:
       return True
     else:
       return False
