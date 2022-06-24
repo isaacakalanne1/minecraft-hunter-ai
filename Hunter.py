@@ -29,7 +29,10 @@ class Hunter:
     self.currentPosition = [0.00] * 3
     self.currentYaw = 0
     self.currentPitch = 0
-    self.initialX = 0
+    self.centerX = -67
+    self.centerZ = -52
+    self.targetX = 0
+    self.targetZ = 0
     self.currentScore = 0
     self.botHasDied = False
     self.rlIsActive = False
@@ -56,13 +59,14 @@ class Hunter:
 
   def resetValues(self):
     self.inventoryItems = {}
-    self.initialX = self.bot.entity.position.x
+    self.setTargetPosition()
     self.currentYaw = -math.pi/2
     self.currentPitch = 0
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.currentScore = 0
     items = self.action.updateInventory(self.bot)
+    Movement.move(self.bot, Movement.Direction.forwards)
     MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
@@ -192,9 +196,6 @@ class Hunter:
 
   def getCurrentYawAndPitch(self):
     return [round(self.currentYaw, 2), round(self.currentPitch, 2)]
-  
-  def getCurrentHealth(self):
-    return [round(float(self.bot.health), 2)]
 
   def play_step(self, action):
 
@@ -210,35 +211,41 @@ class Hunter:
 
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
+  def setTargetPosition(self):
+    radius = 15
+    self.targetX = round(random.uniform(self.centerX - radius, self.centerX + radius), 0)
+    self.targetZ = round(random.uniform(self.centerZ - radius, self.centerZ + radius), 0)
+
   def getRewardDoneScore(self):
 
-    if self.botHasDied == True and self.rlIsActive == True:
+    if (self.botHasDied == True and self.rlIsActive == True) or self.initialTimeOfDay + 400 < currentTime:
       self.botHasDied = False
       print('Game ended from bot death!')
-      return 0, 1, self.currentScore
-    else:
-      reward = self.bot.entity.position.x - self.initialX
+      return 0, 1, 0
 
-    self.initialX = self.bot.entity.position.x
-
-    currentTime = self.action.getTimeOfDay(self.bot)
-    if self.initialTimeOfDay + 200 < currentTime:
-      print('Game ended naturally!')
-      done = 1
-    else:
-      done = 0
+    if self.botIsAtTargetPosition():
+      currentTime = self.action.getTimeOfDay(self.bot)
+      timeDifference = currentTime - self.initialTimeOfDay
+      maxScore = 200
+      scoreModifier = timeDifference / 10
+      score = maxScore / scoreModifier
+      return score, 1, score
       
-    self.currentScore += reward
-    return reward, done, self.currentScore
+    return 0, 1, 0
+
+  def botIsAtTargetPosition(self):
+    xPos = self.bot.entity.position.x
+    zPos = self.bot.entity.position.z
+    if xPos < self.centerX + 2 and xPos > self.centerX - 2 and zPos < self.centerZ + 2 and zPos > self.centerZ - 2:
+      return True
+    else:
+      return False
 
   def reset(self):
     self.rlIsActive = False
     self.respawnBot()
     time.sleep(0.5)
-    self.moveBot()
-    time.sleep(2)
     self.resetValues()
-    Movement.move(self.bot, Movement.Direction.forwards)
     self.rlIsActive = True
 
   def randomPositionChange(self, initial):
@@ -247,11 +254,9 @@ class Hunter:
   def respawnBot(self):
     Movement.move(self.bot, Movement.Direction.none)
     Jump.jump(self.bot, Jump.Jump.none)
-    currentPosition = self.bot.entity.position
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
-    self.bot.chat('/gamerule spawnradius 0')
-    self.bot.chat('/spawnpoint @a ' + str(currentPosition.x) + ' ' + str(currentPosition.y) + ' ' + str(currentPosition.z))
+    self.bot.chat('/gamerule spawnradius 5')
     self.bot.chat('/kill')
 
   def moveBot(self):

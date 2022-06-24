@@ -73,6 +73,7 @@ def checkIfReady(game):
     if game.rlIsActive == False and game.botHasDied == False:
         if hasattr(game.bot.entity, 'position') and hasattr(game.bot, 'health'):
             game.rlIsActive = True
+            game.resetValues()
             startTraining(game)
         else:
             time.sleep(1)
