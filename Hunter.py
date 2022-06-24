@@ -258,7 +258,7 @@ class Hunter:
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
     self.bot.chat('/gamerule spawnradius 0')
-    self.bot.chat('/spawnpoint ' + self.spawnX + ' ' + self.spawnY + ' ' + self.spawnZ)
+    self.bot.chat('/spawnpoint ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
     self.bot.chat('/kill')
 
 # hunter = Hunter('localHost', 25565, 'HelloThere')
