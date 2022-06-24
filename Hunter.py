@@ -203,12 +203,12 @@ class Hunter:
       isAboveTargetZ = 1
     else:
       isAboveTargetZ = 0
-    return [isAboveTargetX, isAboveTargetZ]
+    return [int(isAboveTargetX), int(isAboveTargetZ)]
 
   def getCurrentYawAndPitch(self):
     yaw = (round(self.currentYaw, 1) * 10)
     pitch = round(self.currentPitch + (math.pi /2), 1) * 10
-    return [yaw, pitch]
+    return [int(yaw), int(pitch)]
 
   def play_step(self, action):
 
