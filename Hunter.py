@@ -223,7 +223,6 @@ class Hunter:
 
     if (self.botHasDied == True and self.rlIsActive == True) or self.initialTimeOfDay + 400 < currentTime:
       self.botHasDied = False
-      print('Game ended from bot death!')
       return 0, 1, 0
 
     if self.botIsAtTargetPosition():
@@ -234,7 +233,7 @@ class Hunter:
       score = maxScore / scoreModifier
       return score, 1, score
       
-    return 0, 1, 0
+    return 0, 0, 0
 
   def botIsAtTargetPosition(self):
     xPos = self.bot.entity.position.x
