@@ -185,6 +185,9 @@ class Hunter:
       self.bot.chat("I collected an item!")
       self.inventoryItems = self.action.updateInventory(self.bot)
 
+  def getTargetXAndZ(self):
+    return [self.targetX, self.targetZ]
+
   def getBlocksInMemory(self):
     self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
     return self.blocksInMemory
@@ -213,8 +216,8 @@ class Hunter:
 
   def setTargetPosition(self):
     radius = 15
-    self.targetX = round(random.uniform(self.centerX - radius, self.centerX + radius), 0)
-    self.targetZ = round(random.uniform(self.centerZ - radius, self.centerZ + radius), 0)
+    self.targetX = float(round(random.uniform(self.centerX - radius, self.centerX + radius), 0), 2)
+    self.targetZ = float(round(random.uniform(self.centerZ - radius, self.centerZ + radius), 0), 2)
 
   def getRewardDoneScore(self):
 
@@ -248,9 +251,6 @@ class Hunter:
     self.resetValues()
     self.rlIsActive = True
 
-  def randomPositionChange(self, initial):
-    return int(round(random.uniform(initial - 100, initial - 200), 0))
-
   def respawnBot(self):
     Movement.move(self.bot, Movement.Direction.none)
     Jump.jump(self.bot, Jump.Jump.none)
@@ -258,14 +258,6 @@ class Hunter:
     self.bot.chat('/weather clear')
     self.bot.chat('/gamerule spawnradius 5')
     self.bot.chat('/kill')
-
-  def moveBot(self):
-    currentPosition = self.bot.entity.position
-    currentX = currentPosition.x
-    currentZ = currentPosition.z
-    randomX = self.randomPositionChange(currentX)
-    randomZ = self.randomPositionChange(currentZ)
-    self.bot.chat('/spreadplayers ' + str(randomX) + ' ' + str(randomZ) + ' 0 5 false @a')
 
 # hunter = Hunter('localHost', 25565, 'HelloThere')
 
