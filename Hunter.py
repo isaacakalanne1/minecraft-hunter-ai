@@ -17,6 +17,7 @@ class Hunter:
   def __init__(self, host, port, username):
     self.bot = ""
     self.createBot(host, port, username)
+    self.username = username
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
     self.blocksInMemory = [0.00] * 8
@@ -259,7 +260,7 @@ class Hunter:
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
     self.bot.chat('/gamerule spawnRadius 0')
-    self.bot.chat('/spawnpoint ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
+    self.bot.chat('/spawnpoint ' + self.username + ' ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
     self.bot.chat('/kill')
 
 # hunter = Hunter('localHost', 25565, 'HelloThere')
