@@ -214,7 +214,7 @@ class Hunter:
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
   def setTargetPosition(self):
-    radius = 5
+    radius = 0
     self.targetX = float(round(random.uniform(self.spawnX - radius, self.spawnX + radius), 2))
     self.targetZ = float(round(random.uniform(self.spawnZ - radius, self.spawnZ + radius), 2))
 
@@ -240,7 +240,8 @@ class Hunter:
   def botIsAtTargetPosition(self):
     xPos = self.bot.entity.position.x
     zPos = self.bot.entity.position.z
-    if xPos < self.targetX + 2 and xPos > self.targetX - 2 and zPos < self.targetZ + 2 and zPos > self.targetZ - 2:
+    zoneRadius = 2
+    if xPos < self.targetX + zoneRadius and xPos > self.targetX - zoneRadius and zPos < self.targetZ + zoneRadius and zPos > self.targetZ - zoneRadius:
       return True
     else:
       return False
@@ -257,7 +258,7 @@ class Hunter:
     Jump.jump(self.bot, Jump.Jump.none)
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
-    self.bot.chat('/gamerule spawnradius 0')
+    self.bot.chat('/gamerule spawnRadius 0')
     self.bot.chat('/spawnpoint ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
     self.bot.chat('/kill')
 
