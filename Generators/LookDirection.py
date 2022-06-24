@@ -92,7 +92,7 @@ def getBlocksInFieldOfView(currentBot, yaw, pitch, fieldOfView, resolution):
         if block is not None:
             try:
                 distance = round(currentBot.entity.position.distanceTo(block.position), 1) * 10
-                if distance <= 50:
+                if distance >= 50:
                     distance = 50
                 blockData = [distance]
             except:
