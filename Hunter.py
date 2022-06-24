@@ -189,24 +189,43 @@ class Hunter:
     return [self.targetX, self.targetZ]
 
   def getBlocksInMemory(self):
-    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
+    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=1.2, resolution=3)
     return self.blocksInMemory
 
-  def getCurrentPosition(self):
+  def getCurrentPositionData(self):
     position = self.bot.entity.position
-    self.currentPosition = [round(position.x, 2), round(position.y, 2), round(position.z, 2)]
-    return self.currentPosition
+    detectRadius = 1
+    if position.x > self.targetX - detectRadius:
+      isAboveTargetX = 1
+    else:
+      isAboveTargetX = 0
+    if position.z > self.targetZ - detectRadius:
+      isAboveTargetZ = 1
+    else:
+      isAboveTargetZ = 0
+    return [isAboveTargetX, isAboveTargetZ]
 
   def getCurrentYawAndPitch(self):
-    return [round(self.currentYaw, 2), round(self.currentPitch, 2)]
+    yaw = (round(self.currentYaw, 1) * 10)
+    pitch = round(self.currentPitch + (math.pi /2), 1) * 10
+    return [yaw, pitch]
 
   def play_step(self, action):
 
     yawChange = LookDirection.getYawChange()
+
     if action[1] == 1:
-      self.currentYaw -= yawChange # Turn left
+      if self.currentYaw - yawChange <= 0:
+        self.currentYaw = 0
+      else:
+        self.currentYaw -= yawChange # Turn left
+
     if action[2] == 1:
-      self.currentYaw += yawChange # Turn right
+      if self.currentYaw + yawChange >= 6.28:
+        self.currentYaw = 6.28
+      else:
+        self.currentYaw += yawChange # Turn right
+
     if action[3] == 1:
       Jump.jump(self.bot, Jump.Jump.jump)
     else:
