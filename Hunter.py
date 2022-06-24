@@ -29,11 +29,11 @@ class Hunter:
     self.currentPosition = [0.00] * 3
     self.currentYaw = 0
     self.currentPitch = 0
-    self.centerX = -53
-    self.centerZ = -40
     self.targetX = 0
     self.targetZ = 0
-    self.currentScore = 0
+    self.spawnX = -65
+    self.spawnY = 104
+    self.spawnZ = -20
     self.botHasDied = False
     self.rlIsActive = False
     self.bot.on('spawn', self.handle)
@@ -64,7 +64,6 @@ class Hunter:
     self.currentPitch = 0
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
-    self.currentScore = 0
     items = self.action.updateInventory(self.bot)
     Movement.move(self.bot, Movement.Direction.forwards)
     MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
@@ -215,22 +214,22 @@ class Hunter:
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
   def setTargetPosition(self):
-    radius = 15
-    self.targetX = float(round(random.uniform(self.centerX - radius, self.centerX + radius), 2))
-    self.targetZ = float(round(random.uniform(self.centerZ - radius, self.centerZ + radius), 2))
+    radius = 5
+    self.targetX = float(round(random.uniform(self.spawnX - radius, self.spawnX + radius), 2))
+    self.targetZ = float(round(random.uniform(self.spawnZ - radius, self.spawnZ + radius), 2))
 
   def getRewardDoneScore(self):
 
-    currentTime = self.action.getTimeOfDay(self.bot)
+    self.currentTimeOfDay = self.action.getTimeOfDay(self.bot)
     print('current and target x is', self.bot.entity.position.x, self.targetX)
     print('current and target z is', self.bot.entity.position.z, self.targetZ)
 
-    if (self.botHasDied == True and self.rlIsActive == True) or self.initialTimeOfDay + 400 < currentTime:
+    if (self.botHasDied == True and self.rlIsActive == True) or self.initialTimeOfDay + 400 < self.currentTimeOfDay:
       self.botHasDied = False
       return 0, 1, 0
 
     if self.botIsAtTargetPosition():
-      timeDifference = currentTime - self.initialTimeOfDay
+      timeDifference = self.currentTimeOfDay - self.initialTimeOfDay
       maxScore = 200
       scoreModifier = timeDifference / 20
       score = maxScore / scoreModifier
@@ -259,6 +258,7 @@ class Hunter:
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
     self.bot.chat('/gamerule spawnradius 0')
+    self.bot.chat('/spawnpoint ' + self.spawnX + ' ' + self.spawnY + ' ' + self.spawnZ)
     self.bot.chat('/kill')
 
 # hunter = Hunter('localHost', 25565, 'HelloThere')
