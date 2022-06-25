@@ -264,7 +264,6 @@ class Hunter:
     time.sleep(0.2)
 
     state = self.getState()
-    print('state is', state)
     reward, terminal = self.getRewardTerminal()
     return state, reward, terminal
 
