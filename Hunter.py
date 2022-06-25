@@ -249,7 +249,7 @@ class Hunter:
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
   def setTargetPosition(self):
-    radius = 0
+    radius = 10
     self.targetX = float(round(random.uniform(self.spawnX - radius, self.spawnX + radius), 2))
     self.targetZ = float(round(random.uniform(self.spawnZ - radius, self.spawnZ + radius), 2))
 
@@ -296,7 +296,7 @@ class Hunter:
     Jump.jump(self.bot, Jump.Jump.none)
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
-    self.bot.chat('/gamerule spawnRadius 2') # Spawnradius seems to default to 5 or so, even when set to 0
+    self.bot.chat('/gamerule spawnRadius 0') # Spawnradius seems to default to 5 or so, even when set to 0
     self.bot.chat('/spawnpoint ' + self.username + ' ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
     self.bot.chat('/kill')
 

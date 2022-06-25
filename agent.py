@@ -9,7 +9,7 @@ from javascript import require, On
 import time
 
 MAX_MEMORY = 10_000
-BATCH_SIZE = 5
+BATCH_SIZE = 100
 LR = 0.0001
 
 class Agent:
