@@ -225,35 +225,51 @@ class Hunter:
     pitch = round(self.currentPitch + (math.pi /2), 1) * 10
     return [int(yaw), int(pitch)]
 
+  def getState(self):
+    blocks = self.getBlocksInMemory() # 27 floats
+    lookDirection = self.getCurrentYawAndPitch() # 2 floats
+    position = self.getCurrentPositionData() # 4 floats
+    return blocks + lookDirection + position
+
+  def getEmptyActions(self):
+    return [0,0,0,0]
+
   def play_step(self, action):
 
     yawChange = LookDirection.getYawChange()
-
-    if action[1] == 1:
-      if self.currentYaw - yawChange <= 0:
-        self.currentYaw = 0
-      else:
-        self.currentYaw -= yawChange # Turn left
-
-    if action[2] == 1:
-      if self.currentYaw + yawChange >= 6.28:
-        self.currentYaw = 6.28
-      else:
-        self.currentYaw += yawChange # Turn right
-
-    if action[3] == 1:
+    print('action is', action)
+    match action:
+      case 1:
+        if self.currentYaw - yawChange <= 0:
+          self.currentYaw = 0
+        else:
+          self.currentYaw -= yawChange # Turn left
+      case 2:
+        if self.currentYaw + yawChange >= 6.28:
+          self.currentYaw = 6.28
+        else:
+          self.currentYaw += yawChange # Turn right
+      
+    if action == 3:
       Jump.jump(self.bot, Jump.Jump.jump)
     else:
       Jump.jump(self.bot, Jump.Jump.none)
 
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
+    time.sleep(0.2)
+
+    state = self.getState()
+    reward, terminal = self.getRewardTerminal()
+    return state, reward, terminal
+
+
   def setTargetPosition(self):
     radius = 10
     self.targetX = float(round(random.uniform(self.spawnX - radius, self.spawnX + radius), 2))
     self.targetZ = float(round(random.uniform(self.spawnZ - radius, self.spawnZ + radius), 2))
 
-  def getRewardDoneScore(self):
+  def getRewardTerminal(self):
 
     self.currentTimeOfDay = self.action.getTimeOfDay(self.bot)
     # print('current and target x is', self.bot.entity.position.x, self.targetX)
@@ -261,19 +277,19 @@ class Hunter:
 
     if (self.botHasDied == True and self.rlIsActive == True) or self.initialTimeOfDay + 400 < self.currentTimeOfDay:
       self.botHasDied = False
-      return 0, 1, 0
+      return 0, 1
 
     if self.botIsAtTargetPosition():
       timeDifference = self.currentTimeOfDay - self.initialTimeOfDay
       maxScore = 200
       scoreModifier = timeDifference / 20
-      if timeDifference != 0:
-        score = maxScore / scoreModifier
+      if timeDifference != 0 and scoreModifier > 1:
+        reward = maxScore / scoreModifier
       else:
-        score = maxScore
-      return score, 1, score
+        reward = maxScore
+      return reward, 1
       
-    return 0, 0, 0
+    return 0, 0
 
   def botIsAtTargetPosition(self):
     xPos = self.bot.entity.position.x
@@ -289,7 +305,9 @@ class Hunter:
     self.respawnBot()
     time.sleep(0.5)
     self.resetValues()
+    state = self.getState()
     self.rlIsActive = True
+    return state
 
   def respawnBot(self):
     Movement.move(self.bot, Movement.Direction.none)
