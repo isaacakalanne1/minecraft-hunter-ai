@@ -40,6 +40,10 @@ class DQN(torch.nn.Module):
     def forward(self, observation):
         return self.net(observation)
 
+    def save(self, file_name='model.pth'):
+        file_name = self.getFilePath(file_name)
+        torch.save(self.state_dict(), file_name)
+
 
 class GameSolver:
     def __init__(self, observation_space, action_space):
@@ -109,8 +113,11 @@ def startTraining(env):
     action_space = env.getEmptyActions().shape[0]
     gameSolver = GameSolver(observation_space, action_space)
     run = 0
+    loopedRun = 0
+    loopNumber = 0
     while True:
         run += 1
+        loopedRun += 1
         state = env.reset()
         state = torch.FloatTensor(np.reshape(state, [1, observation_space]))
         step = 0
@@ -129,11 +136,18 @@ def startTraining(env):
 
             if terminal:
                 print ("Run: " + str(run) + ", exploration: " + str(gameSolver.exploration_rate) + ", score: " + str(rewardValue) )
+
+                if loopedRun == 99:
+                    loopNumber += 1
+                    gameSolver.Q_policy.save(file_name='model-ryoshi-run-2.0-game-' + str(loopNumber*100) + '.pth')
+                    loopedRun = 0
+
                 plot_scores.append(rewardValue)
                 total_score += rewardValue
                 mean_score = total_score/run
                 plot_mean_scores.append(mean_score)
                 plot(plot_scores, plot_mean_scores)
+                
                 break
             gameSolver.experince_replay()
             if run % 3 == 0 or step % 100 == 0:
