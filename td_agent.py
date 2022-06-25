@@ -102,6 +102,9 @@ def checkIfReady(game):
             checkIfReady(game)
 
 def startTraining(env):
+    plot_scores = []
+    plot_mean_scores = []
+    total_score = 0
     observation_space = env.getState().shape[0]
     action_space = env.getEmptyActions().shape[0]
     gameSolver = GameSolver(observation_space, action_space)
@@ -117,7 +120,8 @@ def startTraining(env):
             action = gameSolver.predict(state)
             state_next, reward, terminal = env.play_step(action)
             # rewardValue = reward if not terminal else -reward * 10
-            reward = torch.tensor(float(reward))
+            rewardValue = reward
+            reward = torch.tensor(float(rewardValue))
             state_next = torch.FloatTensor(np.reshape(state_next, [1, observation_space]))
             gameSolver.remember(state, action, reward, state_next, terminal)
 
@@ -125,6 +129,11 @@ def startTraining(env):
 
             if terminal:
                 print ("Run: " + str(run) + ", exploration: " + str(gameSolver.exploration_rate) + ", score: " + str(rewardValue) )
+                plot_scores.append(rewardValue)
+                total_score += rewardValue
+                mean_score = total_score/run
+                plot_mean_scores.append(mean_score)
+                plot(plot_scores, plot_mean_scores)
                 break
             gameSolver.experince_replay()
             if run % 3 == 0 or step % 100 == 0:
