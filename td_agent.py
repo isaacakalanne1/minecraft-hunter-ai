@@ -28,13 +28,13 @@ class DQN(torch.nn.Module):
     def __init__(self, observation_space, action_space):
         super(DQN, self).__init__()
         self.net = nn.Sequential(
-            nn.Linear(observation_space, 20),
+            nn.Linear(observation_space, 200),
             nn.ReLU(inplace = True),
-            nn.Linear(20, 20),
+            nn.Linear(200, 200),
             nn.ReLU(inplace = True),
-            nn.Linear(20, 10),
+            nn.Linear(200, 100),
             nn.ReLU(inplace = True),
-            nn.Linear(10, action_space),
+            nn.Linear(100, action_space),
         )
 
     def forward(self, observation):
@@ -147,7 +147,7 @@ def startTraining(env):
                 mean_score = total_score/run
                 plot_mean_scores.append(mean_score)
                 plot(plot_scores, plot_mean_scores)
-                
+
                 break
             gameSolver.experince_replay()
             if run % 3 == 0 or step % 100 == 0:
