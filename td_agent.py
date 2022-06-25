@@ -11,6 +11,7 @@ import copy
 
 from Hunter import Hunter
 from helper import plot
+import os
 
 ENV_NAME = "CartPole-v1"
 
@@ -43,6 +44,13 @@ class DQN(torch.nn.Module):
     def save(self, file_name='model.pth'):
         file_name = self.getFilePath(file_name)
         torch.save(self.state_dict(), file_name)
+
+    def getFilePath(self, file_to_load):
+        model_folder_path = '/Users/iakalann/Documents/minecraft-hunter-ai/Plot'
+        if not os.path.exists(model_folder_path):
+            os.makedirs(model_folder_path)
+        file_name = os.path.join(model_folder_path, file_to_load)
+        return file_name
 
 
 class GameSolver:

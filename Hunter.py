@@ -273,7 +273,7 @@ class Hunter:
 
   def setTargetPosition(self):
     radius = 2
-    safeZone = 7
+    safeZone = 10
     randomX1 = random.uniform(self.spawnX - safeZone - radius, self.spawnX - safeZone + radius)
     randomX2 = random.uniform(self.spawnX + safeZone - radius, self.spawnX + safeZone + radius)
     self.targetX = random.choice([randomX1, randomX2])
@@ -307,7 +307,7 @@ class Hunter:
   def botIsAtTargetPosition(self):
     xPos = self.bot.entity.position.x
     zPos = self.bot.entity.position.z
-    zoneRadius = 2
+    zoneRadius = 1
     if xPos < self.targetX + zoneRadius and xPos > self.targetX - zoneRadius and zPos < self.targetZ + zoneRadius and zPos > self.targetZ - zoneRadius:
       return True
     else:
