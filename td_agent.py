@@ -139,7 +139,7 @@ def startTraining(env):
 
                 if loopedRun == 99:
                     loopNumber += 1
-                    gameSolver.Q_policy.save(file_name='model-ryoshi-run-2.0-game-' + str(loopNumber*100) + '.pth')
+                    gameSolver.Q_policy.save(file_name='model-ryoshi-run-3.0-game-' + str(loopNumber*100) + '.pth')
                     loopedRun = 0
 
                 plot_scores.append(rewardValue)

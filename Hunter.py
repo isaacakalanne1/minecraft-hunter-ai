@@ -267,11 +267,20 @@ class Hunter:
     reward, terminal = self.getRewardTerminal()
     return state, reward, terminal
 
+  def random_of_ranges(*ranges):
+    all_ranges = sum(ranges, [])
+    return random.choice(all_ranges)
 
   def setTargetPosition(self):
     radius = 10
-    self.targetX = float(round(random.uniform(self.spawnX - radius, self.spawnX + radius), 2))
-    self.targetZ = float(round(random.uniform(self.spawnZ - radius, self.spawnZ + radius), 2))
+    safeZone = 5
+    randomX1 = random.uniform(self.spawnX - safeZone - radius, self.spawnX - safeZone + radius)
+    randomX2 = random.uniform(self.spawnX + safeZone - radius, self.spawnX + safeZone + radius)
+    self.targetX = random.choice([randomX1, randomX2])
+
+    randomZ1 = random.uniform(self.spawnZ - safeZone - radius, self.spawnZ - safeZone + radius)
+    randomZ2 = random.uniform(self.spawnZ + safeZone - radius, self.spawnZ + safeZone + radius)
+    self.targetZ = random.choice([randomZ1, randomZ2])
 
   def getRewardTerminal(self):
 
