@@ -273,7 +273,7 @@ class Hunter:
 
   def setTargetPosition(self):
     radius = 10
-    safeZone = 5
+    safeZone = 10
     randomX1 = random.uniform(self.spawnX - safeZone - radius, self.spawnX - safeZone + radius)
     randomX2 = random.uniform(self.spawnX + safeZone - radius, self.spawnX + safeZone + radius)
     self.targetX = random.choice([randomX1, randomX2])
