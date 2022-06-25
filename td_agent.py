@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import copy
 
 from Hunter import Hunter
+from helper import plot
 
 ENV_NAME = "CartPole-v1"
 
@@ -79,9 +80,7 @@ class GameSolver:
             action_values = [0, 0, 0, 0]
             action_values[action] = 1.0
             real_state_action_values = torch.sum(state_values * torch.FloatTensor(action_values))
-            print('real_state_action_values is', real_state_action_values)
             loss = self.lossFuc(y, real_state_action_values)
-            print('loss is', loss)
             loss.backward()
             self.optimizer.step()
         self.exploration_rate *= EXPLORATION_DECAY
@@ -103,10 +102,8 @@ def checkIfReady(game):
             checkIfReady(game)
 
 def startTraining(env):
-    stateSpace = env.getState()
-    observation_space = np.array(stateSpace).shape[0]
-    emptyActions = env.getEmptyActions()
-    action_space = np.array(emptyActions).shape[0]
+    observation_space = env.getState().shape[0]
+    action_space = env.getEmptyActions().shape[0]
     gameSolver = GameSolver(observation_space, action_space)
     run = 0
     while True:
@@ -119,15 +116,15 @@ def startTraining(env):
           #  time.sleep(0.05)
             action = gameSolver.predict(state)
             state_next, reward, terminal = env.play_step(action)
-            reward = reward if not terminal else -reward * 10
-            reward = torch.tensor(reward)
+            # rewardValue = reward if not terminal else -reward * 10
+            reward = torch.tensor(float(reward))
             state_next = torch.FloatTensor(np.reshape(state_next, [1, observation_space]))
             gameSolver.remember(state, action, reward, state_next, terminal)
 
             state = state_next
 
             if terminal:
-                print ("Run: " + str(run) + ", exploration: " + str(gameSolver.exploration_rate) + ", score: " + str(step) )
+                print ("Run: " + str(run) + ", exploration: " + str(gameSolver.exploration_rate) + ", score: " + str(rewardValue) )
                 break
             gameSolver.experince_replay()
             if run % 3 == 0 or step % 100 == 0:

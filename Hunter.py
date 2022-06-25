@@ -8,6 +8,8 @@ import Generators.LookDirection as LookDirection
 import random
 import time
 import math
+import torch
+import numpy as np
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
@@ -229,10 +231,12 @@ class Hunter:
     blocks = self.getBlocksInMemory() # 27 floats
     lookDirection = self.getCurrentYawAndPitch() # 2 floats
     position = self.getCurrentPositionData() # 4 floats
-    return blocks + lookDirection + position
+    stateList = blocks + lookDirection + position
+    state = np.array(stateList, dtype=float)
+    return state
 
   def getEmptyActions(self):
-    return [0,0,0,0]
+    return np.array([0,0,0,0], dtype=float)
 
   def play_step(self, action):
 
@@ -260,6 +264,7 @@ class Hunter:
     time.sleep(0.2)
 
     state = self.getState()
+    print('state is', state)
     reward, terminal = self.getRewardTerminal()
     return state, reward, terminal
 
@@ -277,7 +282,7 @@ class Hunter:
 
     if (self.botHasDied == True and self.rlIsActive == True) or self.initialTimeOfDay + 400 < self.currentTimeOfDay:
       self.botHasDied = False
-      return 0, 1
+      return 0, True
 
     if self.botIsAtTargetPosition():
       timeDifference = self.currentTimeOfDay - self.initialTimeOfDay
@@ -287,9 +292,9 @@ class Hunter:
         reward = maxScore / scoreModifier
       else:
         reward = maxScore
-      return reward, 1
+      return reward, True
       
-    return 0, 0
+    return 0, False
 
   def botIsAtTargetPosition(self):
     xPos = self.bot.entity.position.x
