@@ -272,8 +272,8 @@ class Hunter:
     return random.choice(all_ranges)
 
   def setTargetPosition(self):
-    radius = 10
-    safeZone = 10
+    radius = 2
+    safeZone = 7
     randomX1 = random.uniform(self.spawnX - safeZone - radius, self.spawnX - safeZone + radius)
     randomX2 = random.uniform(self.spawnX + safeZone - radius, self.spawnX + safeZone + radius)
     self.targetX = random.choice([randomX1, randomX2])
