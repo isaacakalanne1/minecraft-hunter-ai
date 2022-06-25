@@ -45,6 +45,11 @@ class DQN(torch.nn.Module):
         file_name = self.getFilePath(file_name)
         torch.save(self.state_dict(), file_name)
 
+    def load_ryoshi_model(self, file_name='model-ryoshi-run-3.0-game-400.pth'):
+        file_name = self.getFilePath(file_name)
+        self.load_state_dict(torch.load(file_name))
+        print('Loaded ryoshi model!')
+
     def getFilePath(self, file_to_load):
         model_folder_path = '/Users/iakalann/Documents/minecraft-hunter-ai/Plot'
         if not os.path.exists(model_folder_path):
@@ -123,6 +128,7 @@ def startTraining(env):
     run = 0
     loopedRun = 0
     loopNumber = 0
+    gameSolver.Q_policy.load_ryoshi_model()
     while True:
         run += 1
         loopedRun += 1
