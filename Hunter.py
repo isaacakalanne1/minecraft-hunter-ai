@@ -32,6 +32,7 @@ class Hunter:
     self.currentPosition = [0.00] * 3
     self.currentYaw = 0
     self.currentPitch = 0
+    self.initialX = 0
     self.targetX = 0
     self.targetZ = 0
     self.spawnX = -65
@@ -69,6 +70,7 @@ class Hunter:
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     items = self.action.updateInventory(self.bot)
+    self.initialX = self.bot.entity.position.x
     Movement.move(self.bot, Movement.Direction.forwards)
     MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
     for item in items:
@@ -197,6 +199,7 @@ class Hunter:
 
   def getCurrentPositionData(self):
     position = self.bot.entity.position
+    return [round(position.x, 2), round(position.y, 2), round(position.z, 2)]
     detectRadius = self.zoneRadius
 
     if position.x > self.targetX - detectRadius and position.x < self.targetX + detectRadius:
@@ -231,7 +234,7 @@ class Hunter:
   def getState(self):
     blocks = self.getBlocksInMemory() # 27 floats
     lookDirection = self.getCurrentYawAndPitch() # 2 floats
-    position = self.getCurrentPositionData() # 4 floats
+    position = self.getCurrentPositionData() # 3 floats
     stateList = blocks + lookDirection + position
     state = np.array(stateList, dtype=float)
     return state
@@ -286,24 +289,18 @@ class Hunter:
   def getRewardTerminal(self):
 
     self.currentTimeOfDay = self.action.getTimeOfDay(self.bot)
-    # print('current and target x is', self.bot.entity.position.x, self.targetX)
-    # print('current and target z is', self.bot.entity.position.z, self.targetZ)
+    timeDifference = self.currentTimeOfDay - self.initialTimeOfDay
+    currentX = self.bot.entity.position.x
+    reward = currentX - self.initialX
+    self.initialX = currentX
 
-    if (self.botHasDied == True and self.rlIsActive == True) or self.initialTimeOfDay + 400 < self.currentTimeOfDay:
+    if (self.botHasDied == True and self.rlIsActive == True) or timeDifference > 200:
       self.botHasDied = False
-      return 0, True
-
-    if self.botIsAtTargetPosition():
-      timeDifference = self.currentTimeOfDay - self.initialTimeOfDay
-      maxScore = 200
-      scoreModifier = timeDifference / 20
-      if timeDifference > 20:
-        reward = maxScore / scoreModifier
-      else:
-        reward = maxScore
       return reward, True
-      
-    return 0, False
+    
+    if timeDifference > 200:
+      return reward, True
+    return reward, False
 
   def botIsAtTargetPosition(self):
     xPos = self.bot.entity.position.x
