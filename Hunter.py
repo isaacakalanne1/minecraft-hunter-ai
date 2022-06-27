@@ -331,10 +331,10 @@ class Hunter:
     self.bot.chat('/spawnpoint ' + self.username + ' ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
     self.bot.chat('/kill')
 
-# hunter = Hunter('localHost', 25565, 'HelloThere')
+hunter = Hunter('localHost', 25565, 'HelloThere')
 
-# while True:
-#   time.sleep(1)
+while True:
+  time.sleep(1)
 
 # if __name__ == '__main__':
 #   for i in range(10):

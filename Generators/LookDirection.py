@@ -84,24 +84,29 @@ def getBlockAt(currentBot, lookDirection):
     block = currentBot.world.raycast(eyePosition, lookDirection, 160, None)
     return block
 
+
 def getBlocksInFieldOfView(currentBot, yaw, pitch, fieldOfView, resolution):
-    directions = getLookDirectionsAround(yaw, pitch, fieldOfView, resolution)
+    directions = getLookDirectionsAround(yaw, pitch, fieldOfView, 3)
     blocksInMemory = []
     for direction in directions:
-        block = getBlockAt(currentBot, direction)
-        if block is not None:
-            try:
-                distance = round(currentBot.entity.position.distanceTo(block.position), 1) * 10
-                distanceInt = int(distance)
-                if distanceInt >= 50:
-                    distanceInt = 50
-                blockData = [distanceInt]
-            except:
-                blockData = [0]
-        else:
-            blockData = [0]
+        blockData = convertDirectionIntoBlockData(currentBot, direction)
         blocksInMemory += blockData
     return blocksInMemory
+
+def convertDirectionIntoBlockData(currentBot, direction):
+    block = getBlockAt(currentBot, direction)
+    if block is not None:
+        try:
+            distance = round(currentBot.entity.position.distanceTo(block.position), 1) * 10
+            distanceInt = int(distance)
+            if distanceInt >= 50:
+                distanceInt = 50
+            blockData = [distanceInt]
+        except:
+            blockData = [0]
+    else:
+        blockData = [0]
+    return blockData
 
 def getYaw(multiplier):
     return 6.28 * multiplier
