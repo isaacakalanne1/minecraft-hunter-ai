@@ -86,7 +86,7 @@ def getBlockAt(currentBot, lookDirection):
 
 
 def getBlocksInFieldOfView(currentBot, yaw, pitch, fieldOfView, resolution):
-    directions = getLookDirectionsAround(yaw, pitch, fieldOfView, 3)
+    directions = getLookDirectionsAround(yaw, pitch, fieldOfView, resolution)
     blocksInMemory = []
     for direction in directions:
         blockData = convertDirectionIntoBlockData(currentBot, direction)

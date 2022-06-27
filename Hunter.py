@@ -37,6 +37,7 @@ class Hunter:
     self.spawnX = -65
     self.spawnY = 104
     self.spawnZ = -20
+    self.zoneRadius = 4
     self.botHasDied = False
     self.rlIsActive = False
     self.bot.on('spawn', self.handle)
@@ -191,12 +192,12 @@ class Hunter:
     return [self.targetX, self.targetZ]
 
   def getBlocksInMemory(self):
-    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=1.2, resolution=3)
+    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=1.0, resolution=3)
     return self.blocksInMemory
 
   def getCurrentPositionData(self):
     position = self.bot.entity.position
-    detectRadius = 1
+    detectRadius = self.zoneRadius
 
     if position.x > self.targetX - detectRadius and position.x < self.targetX + detectRadius:
       isAboveTargetX = 0
@@ -272,8 +273,8 @@ class Hunter:
     return random.choice(all_ranges)
 
   def setTargetPosition(self):
-    radius = 2
-    safeZone = 10
+    radius = 1
+    safeZone = 4
     randomX1 = random.uniform(self.spawnX - safeZone - radius, self.spawnX - safeZone + radius)
     randomX2 = random.uniform(self.spawnX + safeZone - radius, self.spawnX + safeZone + radius)
     self.targetX = random.choice([randomX1, randomX2])
@@ -296,7 +297,7 @@ class Hunter:
       timeDifference = self.currentTimeOfDay - self.initialTimeOfDay
       maxScore = 200
       scoreModifier = timeDifference / 20
-      if timeDifference != 0 and scoreModifier > 1:
+      if timeDifference > 20:
         reward = maxScore / scoreModifier
       else:
         reward = maxScore
@@ -307,7 +308,7 @@ class Hunter:
   def botIsAtTargetPosition(self):
     xPos = self.bot.entity.position.x
     zPos = self.bot.entity.position.z
-    zoneRadius = 1
+    zoneRadius = self.zoneRadius
     if xPos < self.targetX + zoneRadius and xPos > self.targetX - zoneRadius and zPos < self.targetZ + zoneRadius and zPos > self.targetZ - zoneRadius:
       return True
     else:
