@@ -65,9 +65,7 @@ class Hunter:
   def resetValues(self):
     self.inventoryItems = {}
     self.setTargetPosition()
-    self.currentYaw = 0
-    self.currentPitch = 0
-    self.action.look(self.bot, self.currentYaw, self.currentPitch)
+    self.randomLook()
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     items = self.action.updateInventory(self.bot)
     self.initialX = self.bot.entity.position.x
@@ -182,7 +180,8 @@ class Hunter:
 
   def randomLook(self):
     self.yaw = RandomGenerator.randomYaw()
-    self.pitch = RandomGenerator.randomPitch()
+    print('Yaw is', self.yaw)
+    self.pitch = 0
     self.action.look(self.bot, self.yaw, self.pitch)
 
   def handlePlayerCollect(self, this, collector, collected, *args):
