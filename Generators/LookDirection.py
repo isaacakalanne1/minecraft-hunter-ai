@@ -13,10 +13,10 @@ def getLookDirectionOf(yaw, pitch):
     return [x,y,z]
 
 def getYawChange():
-    return 6.28 / 4
+    return 6.28 / 8
 
 def getPitchChange():
-    return math.pi / 4
+    return math.pi / 8
 
 def getLookDirectionsAround(yaw, pitch, fieldOfView, resolution):
     lookDirection = getLookDirectionOf(yaw, pitch)
@@ -99,8 +99,8 @@ def convertDirectionIntoBlockData(currentBot, direction):
         try:
             distance = round(currentBot.entity.position.distanceTo(block.position), 1) * 10
             distanceInt = int(distance)
-            if distanceInt >= 50:
-                distanceInt = 50
+            if distanceInt > 50:
+                distanceInt = 0
             blockData = [distanceInt]
         except:
             blockData = [0]

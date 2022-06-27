@@ -181,9 +181,9 @@ class Hunter:
           print('bot.physics is', self.bot.physics)
 
   def randomLook(self):
-    yaw = RandomGenerator.randomYaw()
-    pitch = RandomGenerator.randomPitch()
-    self.action.look(self.bot, yaw, pitch)
+    self.yaw = RandomGenerator.randomYaw()
+    self.pitch = RandomGenerator.randomPitch()
+    self.action.look(self.bot, self.yaw, self.pitch)
 
   def handlePlayerCollect(self, this, collector, collected, *args):
     if collector.username == self.bot.username:
@@ -245,16 +245,18 @@ class Hunter:
   def play_step(self, action):
 
     yawChange = LookDirection.getYawChange()
-    # print('action is', action)
+    print('action is', action)
     match action:
       case 1:
-        if self.currentYaw - yawChange <= 0:
-          self.currentYaw = 0
+        if self.currentYaw - yawChange < 0:
+          change = self.currentYaw - yawChange
+          self.currentYaw = 6.28 - change
         else:
           self.currentYaw -= yawChange # Turn left
       case 2:
-        if self.currentYaw + yawChange >= 6.28:
-          self.currentYaw = 6.28
+        if self.currentYaw + yawChange > 6.28:
+          change = self.currentYaw + yawChange
+          self.currentYaw = change - 6.28
         else:
           self.currentYaw += yawChange # Turn right
       
@@ -265,7 +267,7 @@ class Hunter:
 
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
-    time.sleep(0.2)
+    time.sleep(0.3)
 
     state = self.getState()
     reward, terminal = self.getRewardTerminal()
@@ -300,6 +302,7 @@ class Hunter:
     
     if timeDifference > 200:
       return reward, True
+    print('Reward is', reward)
     return reward, False
 
   def botIsAtTargetPosition(self):
@@ -321,7 +324,7 @@ class Hunter:
     return state
 
   def respawnBot(self):
-    Movement.move(self.bot, Movement.Direction.none)
+    # Movement.move(self.bot, Movement.Direction.none)
     Jump.jump(self.bot, Jump.Jump.none)
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')

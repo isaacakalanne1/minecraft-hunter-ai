@@ -1,7 +1,7 @@
 import numpy as np
 from ppo_agent import Agent
 # from utils import plot_learning_curve
-# from helper import plot
+from helper import plot
 from Hunter import Hunter
 import time
 
@@ -22,7 +22,7 @@ def checkIfReady(game):
 
 def startTraining(env):
     N = 20
-    batch_size = 5
+    batch_size = 10
     n_epochs = 4
     alpha = 0.0003
     agent = Agent(n_actions=len(env.getEmptyActions()), batch_size=batch_size,
@@ -34,6 +34,8 @@ def startTraining(env):
 
     best_score = 0
     score_history = []
+    plot_scores = []
+    plot_mean_scores = []
     
     learn_iters = 0
     avg_score = 0
@@ -54,6 +56,7 @@ def startTraining(env):
                 agent.learn()
                 learn_iters += 1
             observation = observation_
+            print('score is', score)
         score_history.append(score)
         avg_score = np.mean(score_history[-100:])
 
@@ -64,7 +67,9 @@ def startTraining(env):
         print('episode', i, 'score %.1f' % score, 'avg score %.1f' % avg_score,
                 'time_steps', n_steps, 'learning_steps', learn_iters)
         x = [i+1 for i in range(len(score_history))]
-        # plot_learning_curve(x, score_history, figure_file)
+        plot_scores.append(score)
+        plot_mean_scores.append(avg_score)
+        plot(plot_scores, plot_mean_scores)
 
 if __name__ == '__main__':
     train(1)
