@@ -80,8 +80,67 @@ class ActorNetwork(nn.Module):
 
 class CriticNetwork(nn.Module):
 
-    def __init__(self, input_dims, alpha, fc1dims=256, fc2dims=256,
+    def __init__(self, input_dims, alpha, fc1_dims=256, fc2_dims=256,
             chkpt_dir='tmp/ppo'):
         super(CriticNetwork, self).__init__()
 
-        
+        self.checkpoint_file = os.path.join(chkpt_dir, 'critic_torch_ppo')
+        self.critic = nn.Sequential(
+            nn.Linear(*input_dims, fc1_dims),
+            nn.ReLU(),
+            nn.Linear(fc1_dims, fc2_dims),
+            nn.ReLU(),
+            nn.Linear(fc2_dims, 1)
+        )
+
+        self.optimizer = optim.Adam(self.parameters(), lr=alpha)
+        self.device = T.device('cude:0' if T.cuda.is_available() else 'cpu')
+        self.to(self.device)
+
+    def forward(self, state):
+        value = self.critic(state)
+
+        return value
+
+    def save_checkpoint(self):
+        T.save(self.state_dict(), self.checkpoint_file)
+    
+    def load_checkpoint(self):
+        self.load_state_dict(T.load(self.checkpoint_file))
+
+class Agent:
+    def __init__(self, n_actions, gamma=0.99, alpha=0.0003, gae_lambda=0.95,
+            policy_clip=0.2, batch_size=64, N=2048, n_epochs=10):
+        self.gamma = gamma
+        self.policy_clip = policy_clip
+        self.n_epochs = n_epochs
+        self.gae_lambda = gae_lambda
+        self.actor = ActorNetwork(n_actions, input_dims, alpha)
+        self.critic = CriticNetwork(input_dims, alpha)
+        self.memory = PPOMemory(batch_size)
+
+    def remember(self, state, action, probs, vals, reward, done):
+        self.memory.store_memory(state, action, probs, vals, reward, done)
+
+    def save_models(self):
+        print('...saving movels...')
+        self.actor.save_checkpoint()
+        self.critic.save_checkpoint()
+
+    def load_models(self):
+        print('...loading movels...')
+        self.actor.load_checkpoint()
+        self.critic.load_checkpoint()
+
+    def choose_action(self, observation):
+        state = T.tensor([observation], dtype=T.float).to(self.actor.device)
+
+        dist = self.actor(state)
+        value = self.critic(state)
+        action = dist.sample()
+
+        probs = T.squeeze(dist.log_prob(action)).item()
+        action = T.squeeze(action).item()
+        value = T.squeeze(value).item()
+
+        return action, probs, value
