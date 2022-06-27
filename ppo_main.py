@@ -1,6 +1,6 @@
 import numpy as np
 from ppo_agent import Agent
-from utils import plot_learning_curve
+# from utils import plot_learning_curve
 from Hunter import Hunter
 import time
 
@@ -44,7 +44,7 @@ def startTraining(env):
         score = 0
         while not done:
             action, prob, val = agent.choose_action(observation)
-            observation_, reward, done = env.play_step()
+            observation_, reward, done = env.play_step(action)
 
             n_steps += 1
             score += reward
@@ -63,7 +63,7 @@ def startTraining(env):
         print('episode', i, 'score %.1f' % score, 'avg score %.1f' % avg_score,
                 'time_steps', n_steps, 'learning_steps', learn_iters)
         x = [i+1 for i in range(len(score_history))]
-        plot_learning_curve(x, score_history, figure_file)
+        # plot_learning_curve(x, score_history, figure_file)
 
 if __name__ == '__main__':
     train(1)
