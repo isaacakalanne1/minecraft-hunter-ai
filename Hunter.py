@@ -33,14 +33,13 @@ class Hunter:
     self.currentYaw = 0
     self.currentPitch = 0
     self.initialX = 0
-    self.targetX = 0
-    self.targetZ = 0
     self.spawnX = -65
     self.spawnY = 104
     self.spawnZ = -20
     self.zoneRadius = 4
     self.botHasDied = False
     self.rlIsActive = False
+    self.respawnResetDelay = 0.5
     self.bot.on('spawn', self.handle)
     self.bot.on('death', self.handleDeath)
     self.bot.on('chat', self.handleMsg)
@@ -63,8 +62,8 @@ class Hunter:
     self.resetValues()
 
   def resetValues(self):
+    time.sleep(self.respawnResetDelay)
     self.inventoryItems = {}
-    self.setTargetPosition()
     self.randomLook()
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     items = self.action.updateInventory(self.bot)
@@ -189,9 +188,6 @@ class Hunter:
       self.bot.chat("I collected an item!")
       self.inventoryItems = self.action.updateInventory(self.bot)
 
-  def getTargetXAndZ(self):
-    return [self.targetX, self.targetZ]
-
   def getBlocksInMemory(self):
     self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=1.0, resolution=3)
     return self.blocksInMemory
@@ -199,31 +195,6 @@ class Hunter:
   def getCurrentPositionData(self):
     position = self.bot.entity.position
     return [round(position.x, 2), round(position.y, 2), round(position.z, 2)]
-    detectRadius = self.zoneRadius
-
-    if position.x > self.targetX - detectRadius and position.x < self.targetX + detectRadius:
-      isAboveTargetX = 0
-      isBelowTargetX = 0
-    else:
-      if position.x > self.targetX - detectRadius:
-        isAboveTargetX = 1
-        isBelowTargetX = 0
-      if position.x < self.targetX + detectRadius:
-        isAboveTargetX = 0
-        isBelowTargetX = 1
-
-    if position.z > self.targetZ - detectRadius and position.z < self.targetZ + detectRadius:
-      isAboveTargetZ = 0
-      isBelowTargetZ = 0
-    else:
-      if position.z > self.targetZ - detectRadius:
-        isAboveTargetZ = 1
-        isBelowTargetZ = 0
-      if position.z < self.targetZ + detectRadius:
-        isAboveTargetZ = 0
-        isBelowTargetZ = 1
-
-    return [int(isAboveTargetX), int(isBelowTargetX), int(isAboveTargetZ), int(isBelowTargetZ), ]
 
   def getCurrentYawAndPitch(self):
     yaw = (round(self.currentYaw, 1) * 10)
@@ -276,17 +247,6 @@ class Hunter:
     all_ranges = sum(ranges, [])
     return random.choice(all_ranges)
 
-  def setTargetPosition(self):
-    radius = 1
-    safeZone = 4
-    randomX1 = random.uniform(self.spawnX - safeZone - radius, self.spawnX - safeZone + radius)
-    randomX2 = random.uniform(self.spawnX + safeZone - radius, self.spawnX + safeZone + radius)
-    self.targetX = random.choice([randomX1, randomX2])
-
-    randomZ1 = random.uniform(self.spawnZ - safeZone - radius, self.spawnZ - safeZone + radius)
-    randomZ2 = random.uniform(self.spawnZ + safeZone - radius, self.spawnZ + safeZone + radius)
-    self.targetZ = random.choice([randomZ1, randomZ2])
-
   def getRewardTerminal(self):
 
     self.currentTimeOfDay = self.action.getTimeOfDay(self.bot)
@@ -304,20 +264,10 @@ class Hunter:
     print('Reward is', reward)
     return reward, False
 
-  def botIsAtTargetPosition(self):
-    xPos = self.bot.entity.position.x
-    zPos = self.bot.entity.position.z
-    zoneRadius = self.zoneRadius
-    if xPos < self.targetX + zoneRadius and xPos > self.targetX - zoneRadius and zPos < self.targetZ + zoneRadius and zPos > self.targetZ - zoneRadius:
-      return True
-    else:
-      return False
-
   def reset(self):
     self.rlIsActive = False
     self.respawnBot()
-    time.sleep(0.5)
-    self.resetValues()
+    time.sleep(self.respawnResetDelay + 0.2)
     state = self.getState()
     self.rlIsActive = True
     return state
