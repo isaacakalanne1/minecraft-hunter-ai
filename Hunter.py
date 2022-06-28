@@ -144,6 +144,18 @@ class Hunter:
           # print('Entities in memory are:', self.entitiesInMemory)
           print('Entity is', entity)
 
+        case 'nearest id':
+          entity = self.action.getNearestEntity(self.bot)
+          id = entity.metadata[8].itemId
+          position = entity.position
+          selfPosition = self.bot.entity.position
+          relativeX = position.x - selfPosition.x
+          relativeY = position.y - selfPosition.y
+          relativeZ = position.z - selfPosition.z
+          relativePosition = Vec3(round(relativeX, 2), round(relativeY, 2), round(relativeZ, 2))
+          print('id is', id)
+          print('relative position is', relativePosition)
+
         case 'held':
           entity = self.action.getNearestEntity(self.bot)
           position = (entity.position.x, entity.position.y, entity.position.z)
@@ -285,10 +297,10 @@ class Hunter:
     self.bot.chat('/spawnpoint ' + self.username + ' ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
     self.bot.chat('/kill')
 
-# hunter = Hunter('localHost', 25565, 'HelloThere')
+hunter = Hunter('localHost', 25565, 'HelloThere')
 
-# while True:
-#   time.sleep(1)
+while True:
+  time.sleep(1)
 
 # if __name__ == '__main__':
 #   for i in range(10):
