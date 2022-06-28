@@ -22,14 +22,14 @@ def checkIfReady(game):
 
 def startTraining(env):
     N = 20
-    batch_size = 100
+    batch_size = 500
     n_epochs = 4
     alpha = 0.0003
     agent = Agent(n_actions=len(env.getEmptyActions()), batch_size=batch_size,
                     alpha=alpha, n_epochs=n_epochs,
                     input_dims=env.getState().shape)
 
-    n_games = 300
+    n_games = 30000
     figure_file = 'plots/cartpole.png'
 
     best_score = 0
