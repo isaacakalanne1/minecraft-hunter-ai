@@ -145,8 +145,8 @@ class Hunter:
           print('Entity is', entity)
 
         case 'nearest id':
-          entity = self.action.getNearestEntity(self.bot)
-
+          entity = self.action.getNearestEntity(self.bot, lambda entity: hasattr(entity.metadata[8], 'itemId'))
+          
           id = entity.metadata[8].itemId
 
           position = entity.position
