@@ -133,7 +133,7 @@ class Hunter:
             self.bot.chat('There\'s no entity in memory for me to attack!')
 
         case 'nearest':
-          entity = self.action.getNearestEntity(self.bot)
+          entity = self.action.getNearestEntity(self.bot, lambda entity: entity.name == 'RoyalCentaur')
           # print('Entity is', entity)
           position = (entity.position.x, entity.position.y, entity.position.z)
           if entity.heldItem is None:
@@ -146,15 +146,17 @@ class Hunter:
 
         case 'nearest id':
           entity = self.action.getNearestEntity(self.bot)
+
           id = entity.metadata[8].itemId
+
           position = entity.position
           selfPosition = self.bot.entity.position
+
           relativeX = position.x - selfPosition.x
           relativeY = position.y - selfPosition.y
           relativeZ = position.z - selfPosition.z
-          relativePosition = Vec3(round(relativeX, 2), round(relativeY, 2), round(relativeZ, 2))
-          print('id is', id)
-          print('relative position is', relativePosition)
+          blockData = [id, round(relativeX, 2), round(relativeY, 2), round(relativeZ, 2)]
+          print('dropped block data is', blockData)
 
         case 'held':
           entity = self.action.getNearestEntity(self.bot)
