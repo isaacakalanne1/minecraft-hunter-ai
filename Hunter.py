@@ -141,7 +141,8 @@ class Hunter:
           else:
             heldItem = entity.heldItem.type
           self.entitiesInMemory[entity.id] = [position, heldItem]
-          print('Entities in memory are:', self.entitiesInMemory)
+          # print('Entities in memory are:', self.entitiesInMemory)
+          print('Entity is', entity)
 
         case 'held':
           entity = self.action.getNearestEntity(self.bot)
