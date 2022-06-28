@@ -145,7 +145,8 @@ class Hunter:
           print('Entity is', entity)
 
         case 'nearest id':
-          entity = self.action.getNearestEntity(self.bot, lambda entity: hasattr(entity.metadata[8], 'itemId'))
+          isEntityDroppedBlock = lambda entity: hasattr(entity.metadata[8], 'itemId')
+          entity = self.action.getNearestEntity(self.bot, isEntityDroppedBlock)
           
           id = entity.metadata[8].itemId
 
