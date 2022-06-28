@@ -10,6 +10,7 @@ import time
 import math
 import torch
 import numpy as np
+import multiprocessing
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
@@ -33,9 +34,9 @@ class Hunter:
     self.currentYaw = 0
     self.currentPitch = 0
     self.initialX = 0
-    self.spawnX = -65
-    self.spawnY = 104
-    self.spawnZ = -20
+    self.spawnX = -58
+    self.spawnY = 101
+    self.spawnZ = -35
     self.zoneRadius = 4
     self.botHasDied = False
     self.rlIsActive = False
@@ -62,12 +63,11 @@ class Hunter:
     self.resetValues()
 
   def resetValues(self):
-    time.sleep(self.respawnResetDelay)
     self.inventoryItems = {}
-    self.randomLook()
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     items = self.action.updateInventory(self.bot)
     self.initialX = self.bot.entity.position.x
+    self.randomLook()
     Movement.move(self.bot, Movement.Direction.forwards)
     MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
     for item in items:
@@ -92,6 +92,12 @@ class Hunter:
 
         case 'self':
           print('Bot is', self.bot.entity)
+
+        case 'spin':
+          Movement.move(self.bot, Movement.Direction.forwards)
+          for i in range(50):
+            self.randomLook()
+            time.sleep(0.3)
 
         case "dig":
           block = self.bot.blockAtCursor()
@@ -178,10 +184,10 @@ class Hunter:
           print('bot.physics is', self.bot.physics)
 
   def randomLook(self):
-    self.yaw = RandomGenerator.randomYaw()
-    print('Yaw is', self.yaw)
-    self.pitch = 0
-    self.action.look(self.bot, self.yaw, self.pitch)
+    self.currentYaw = RandomGenerator.randomYaw()
+    print('Yaw is', self.currentYaw)
+    self.currentPitch = 0
+    self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
   def handlePlayerCollect(self, this, collector, collected, *args):
     if collector.username == self.bot.username:
@@ -229,13 +235,13 @@ class Hunter:
           self.currentYaw = change - 6.28
         else:
           self.currentYaw += yawChange # Turn right
+
+    self.action.look(self.bot, self.currentYaw, self.currentPitch)
       
     if action == 3:
       Jump.jump(self.bot, Jump.Jump.jump)
     else:
       Jump.jump(self.bot, Jump.Jump.none)
-
-    self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
     time.sleep(0.3)
 
@@ -257,7 +263,7 @@ class Hunter:
 
     if (self.botHasDied == True and self.rlIsActive == True) or timeDifference > 200:
       self.botHasDied = False
-      return reward, True
+      return 0, True
     
     if timeDifference > 200:
       return reward, True
@@ -267,14 +273,11 @@ class Hunter:
   def reset(self):
     self.rlIsActive = False
     self.respawnBot()
-    time.sleep(self.respawnResetDelay + 0.2)
     state = self.getState()
     self.rlIsActive = True
     return state
 
   def respawnBot(self):
-    # Movement.move(self.bot, Movement.Direction.none)
-    Jump.jump(self.bot, Jump.Jump.none)
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
     self.bot.chat('/gamerule spawnRadius 0') # Spawnradius seems to default to 5 or so, even when set to 0
