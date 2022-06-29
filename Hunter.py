@@ -140,58 +140,9 @@ class Hunter:
             self.bot.chat('There\'s no entity in memory for me to attack!')
 
         case 'nearest':
-          listOfAllEntities = self.getNearestEntities()
-          listOfLiveEntities = []
-          listOfDroppedItems = []
-          for id in listOfAllEntities:
-            entity = listOfAllEntities[id]
-            try:
-              if self.canSee(entity):
-                positionData = self.getRelativePositionDataOf(entity)
-                if self.isDroppedItem(entity):
-                  id = entity.metadata[8].itemId
-                  itemData = [id] + positionData
-                  listOfDroppedItems.append(itemData)
-                else:
-                  pass # Activate below code to save data for live entity, though may have to use a different identifier than id for players, as id changes on each session
-                  # entityData = [entity.id] + positionData
-                  # listOfLiveEntities.append(entityData)
-            except:
-              pass
+          listOfEntities = self.getVisibleEntities()
                 
-          print('Entities are ', listOfDroppedBlockEntities)
-
-        case 'nearest dropped':
-          isDroppedBlock = lambda entity: hasattr(entity.metadata[8], 'itemId')
-          entity = self.action.getNearestEntity(self.bot, isDroppedBlock)
-          
-          id = entity.metadata[8].itemId
-          uniqueId = entity.id
-          print('unique id is', uniqueId)
-
-          position = entity.position
-          selfPosition = self.bot.entity.position
-
-          xIsNegative = 0
-          yIsNegative = 0
-          zIsNegative = 0
-
-          relativeX = round(position.x - selfPosition.x, 1) * 10
-          relativeY = round(position.y - selfPosition.y, 1) * 10
-          relativeZ = round(position.z - selfPosition.z, 1) * 10
-
-          if relativeX < 0:
-            xIsNegative = 1
-            relativeX = -relativeX
-          if relativeY < 0:
-            yIsNegative = 1
-            relativeY = -relativeY
-          if relativeZ < 0:
-            zIsNegative = 1
-            relativeZ = -relativeZ
-
-          blockData = [id, xIsNegative, int(relativeX), yIsNegative, int(relativeY), zIsNegative, int(relativeZ)]
-          print('dropped block data is', blockData)
+          print('Entities are ', listOfEntities)
 
         case 'held':
           entity = self.action.getNearestEntity(self.bot)
@@ -241,6 +192,30 @@ class Hunter:
   def isDroppedItem(self, entity):
     return hasattr(entity.metadata[8], 'itemId')
 
+  def getVisibleEntities(self):
+    listOfAllEntities = self.bot.entities
+    listOfLiveEntities = []
+    listOfDroppedItems = []
+    for id in listOfAllEntities:
+      entity = listOfAllEntities[id]
+      try:
+        if self.canSee(entity):
+          positionData = self.getRelativePositionDataOf(entity)
+          if self.isDroppedItem(entity):
+            id = entity.metadata[8].itemId
+            itemData = [id] + positionData
+            if len(listOfDroppedItems) < 2:
+              listOfDroppedItems.append(itemData)
+          else:
+            pass # Activate below code to save data for live entity, though may have to use a different identifier than id for players, as id changes on each session
+            # entityData = [entity.id] + positionData
+            # if len(listOfDroppedItems) < 2:
+            #   listOfLiveEntities.append(entityData)
+      except:
+        pass
+    listOfVisibleEntities = listOfLiveEntities + listOfDroppedItems
+    return listOfVisibleEntities
+
   def getRelativePositionDataOf(self, entity):
     position = entity.position
     selfPosition = self.bot.entity.position
@@ -265,11 +240,6 @@ class Hunter:
 
     blockData = [xIsNegative, int(relativeX), yIsNegative, int(relativeY), zIsNegative, int(relativeZ)]
     return blockData
-
-  def getNearestEntities(self):
-    listOfEntities = {}
-    listOfEntities = self.bot.entities
-    return listOfEntities
 
   def randomLook(self):
     self.currentYaw = RandomGenerator.randomYaw()
