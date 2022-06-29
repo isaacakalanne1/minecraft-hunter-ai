@@ -106,7 +106,7 @@ def getEyePositionOfBot(currentBot):
 
 def getBlockAt(currentBot, lookDirection):
     eyePosition = getEyePositionOfBot(currentBot)
-    block = currentBot.world.raycast(eyePosition, lookDirection, 160, None)
+    block = currentBot.world.raycast(eyePosition, lookDirection, 10, None)
     return block
 
 
@@ -124,9 +124,7 @@ def convertDirectionIntoBlockData(currentBot, direction):
         try:
             distance = round(currentBot.entity.position.distanceTo(block.position), 1) * 10
             distanceInt = int(distance)
-            if distanceInt > 50:
-                distanceInt = 0
-            return [distanceInt, block.id]
+            return [distanceInt, block.type]
         except:
             return [0, 0]
     else:

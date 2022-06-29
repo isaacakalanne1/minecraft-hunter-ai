@@ -42,7 +42,7 @@ class Hunter:
     self.spawnY = 101
     self.spawnZ = -35
     self.entityListSize = 4
-    self.fieldOfView = 1.0
+    self.fieldOfView = 0.8
     self.resolution = 3
     self.isDigging = 0
     self.botHasDied = False
@@ -330,11 +330,10 @@ class Hunter:
     position = self.getCurrentPositionData()
     stateList = [self.isDigging] + entityData + cursorBlockData + blocks + lookDirection + position
     state = np.array(stateList, dtype=float)
-    print('state is', state)
     return state
 
   def getEmptyActions(self):
-    return np.array([0,0,0,0,0,0,0], dtype=float)
+    return np.array([0] * 8, dtype=float)
 
   def play_step(self, action):
 
@@ -342,7 +341,7 @@ class Hunter:
     pitchChange = LookDirection.getPitchChange()
     print('action is', action)
 
-    if action != 5:
+    if action != 6:
       Jump.jump(self.bot, Jump.Jump.none)
 
     if self.isDigging == False:
@@ -370,8 +369,11 @@ class Hunter:
           else:
             self.currentPitch += pitchChange # Look up
         case 5:
-          Jump.jump(self.bot, Jump.Jump.jump)
+          Movement.move(self.bot, Movement.Direction.forwards)
         case 6:
+          Movement.move(self.bot, Movement.Direction.forwards)
+          Jump.jump(self.bot, Jump.Jump.jump)
+        case 7:
           block = self.bot.blockAtCursor()
           try:
             self.action.dig(self.bot, block, True, 'rayCast')
@@ -380,8 +382,11 @@ class Hunter:
             # self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
             self.isDigging = False
 
-    if action != 6:
+    if action != 7:
       self.action.look(self.bot, self.currentYaw, self.currentPitch)
+
+    if action != 5 and action != 6:
+      Movement.move(self.bot, Movement.Direction.none)
 
     time.sleep(0.3)
 

@@ -56,7 +56,6 @@ def startTraining(env):
                 agent.learn()
                 learn_iters += 1
             observation = observation_
-            print('score is', score)
         score_history.append(score)
         avg_score = np.mean(score_history[-100:])
 
