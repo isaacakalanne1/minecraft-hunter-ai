@@ -66,9 +66,11 @@ class Hunter:
     self.resetValues()
 
   def diggingCompleted(self, block, *args):
+    self.isDigging = 0
     print('Completed digging!')
   
   def diggingAborted(self, block, *args):
+    self.isDigging = 0
     print('Aborted digging!')
 
   def resetValues(self):
@@ -402,6 +404,7 @@ class Hunter:
 
   def reset(self):
     self.rlIsActive = False
+    self.deleteInventory()
     self.respawnBot()
     state = self.getState()
     self.rlIsActive = True
