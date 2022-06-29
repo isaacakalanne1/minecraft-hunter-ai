@@ -235,6 +235,7 @@ class Hunter:
     listOfAllEntities = self.bot.entities
     listOfLiveEntities = []
     listOfDroppedItems = []
+    dataPerItem = 2
     for id in listOfAllEntities:
       entity = listOfAllEntities[id]
       try:
@@ -244,7 +245,7 @@ class Hunter:
             id = self.getItemIdOf(entity)
             itemData = [id] + positionData
             if len(listOfDroppedItems) < self.entityListSize:
-              listOfDroppedItems.append(itemData)
+              listOfDroppedItems += itemData
           else:
             pass # Activate below code to save data for live entity, though may have to use a different identifier than id for players, as id changes on each session
             # entityData = [entity.id] + positionData
@@ -252,6 +253,8 @@ class Hunter:
             #   listOfLiveEntities.append(entityData)
       except:
         pass
+    remainingEmptyData = len(listOfDroppedItems) % dataPerItem * self.entityListSize
+    listOfDroppedItems += [0] * remainingEmptyData
     listOfVisibleEntities = listOfLiveEntities + listOfDroppedItems
     return listOfVisibleEntities
 
@@ -327,6 +330,7 @@ class Hunter:
     position = self.getCurrentPositionData()
     stateList = [self.isDigging] + entityData + cursorBlockData + blocks + lookDirection + position
     state = np.array(stateList, dtype=float)
+    print('state is', state)
     return state
 
   def getEmptyActions(self):
@@ -417,10 +421,10 @@ class Hunter:
     self.bot.chat('/spawnpoint ' + self.username + ' ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
     self.bot.chat('/kill')
 
-hunter = Hunter('localHost', 25565, 'HelloThere')
+# hunter = Hunter('localHost', 25565, 'HelloThere')
 
-while True:
-  time.sleep(1)
+# while True:
+#   time.sleep(1)
 
 # if __name__ == '__main__':
 #   for i in range(10):
