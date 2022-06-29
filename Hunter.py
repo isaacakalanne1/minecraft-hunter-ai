@@ -139,20 +139,22 @@ class Hunter:
           else:
             self.bot.chat('There\'s no entity in memory for me to attack!')
 
-        case 'nearest':
+        case 'nearest live':
           listOfAllEntities = self.getNearestEntities()
           listOfEntities = []
           for id in listOfAllEntities:
             entity = listOfAllEntities[id]
-            if hasattr(entity, 'position') and hasattr(entity, 'name'):
+            try:
               if self.bot.entity.position.distanceTo(entity.position) <= self.seeDistance and \
                   self.bot.canSeeEntity(entity) and \
                   entity.username != self.username:
                 listOfEntities.append(entity)
+            except:
+              pass
                 
           print('Entities are ', listOfEntities)
 
-        case 'nearest id':
+        case 'nearest dropped':
           isDroppedBlock = lambda entity: hasattr(entity.metadata[8], 'itemId')
           entity = self.action.getNearestEntity(self.bot, isDroppedBlock)
           
