@@ -41,8 +41,10 @@ class Hunter:
     self.spawnX = -58
     self.spawnY = 101
     self.spawnZ = -35
+    self.entityListSize = 4
     self.fieldOfView = 1.0
     self.resolution = 3
+    self.isDigging = 0
     self.botHasDied = False
     self.rlIsActive = False
     self.respawnResetDelay = 0.5
@@ -121,7 +123,8 @@ class Hunter:
           
         case "current block":
           block = self.action.getCurrentlyLookedAtBlock(self.bot)
-          print('Block is', block)
+          blockData = self.getLidarDataOfBlock(block)
+          print('Block is', blockData)
 
         case 'current look':
           eyePos = LookDirection.getEyePositionOfBot(self.bot)
@@ -188,6 +191,14 @@ class Hunter:
         case 'ranges':
           self.isWithinFieldOfView()
 
+  def getLidarDataOfBlock(self, block):
+    try:
+      distance = self.bot.entity.position.distanceTo(block.position)
+      distance = round(block.distance, 1) * 10
+      return [block.id, int(distance)]
+    except:
+      return [0, 0]
+
   def canSee(self, entity):
     return self.bot.entity.position.distanceTo(entity.position) <= self.seeDistance and \
             self.bot.canSeeEntity(entity) and \
@@ -208,7 +219,7 @@ class Hunter:
           if self.isDroppedItem(entity):
             id = entity.metadata[8].itemId
             itemData = [id] + positionData
-            if len(listOfDroppedItems) < 3:
+            if len(listOfDroppedItems) < self.entityListSize:
               listOfDroppedItems.append(itemData)
           else:
             pass # Activate below code to save data for live entity, though may have to use a different identifier than id for players, as id changes on each session
@@ -275,10 +286,12 @@ class Hunter:
     return [int(yaw), int(pitch)]
 
   def getState(self):
-    blocks = self.getBlocksInMemory() # 27 floats
-    lookDirection = self.getCurrentYawAndPitch() # 2 floats
-    position = self.getCurrentPositionData() # 3 floats
-    stateList = blocks + lookDirection + position
+    cursorBlock = self.action.getCurrentlyLookedAtBlock(self.bot)
+    cursorBlockData = self.getLidarDataOfBlock(cursorBlock)
+    blocks = self.getBlocksInMemory()
+    lookDirection = self.getCurrentYawAndPitch()
+    position = self.getCurrentPositionData()
+    stateList = [self.isDigging] + cursorBlockData + blocks + lookDirection + position
     state = np.array(stateList, dtype=float)
     return state
 

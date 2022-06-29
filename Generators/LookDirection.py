@@ -126,12 +126,11 @@ def convertDirectionIntoBlockData(currentBot, direction):
             distanceInt = int(distance)
             if distanceInt > 50:
                 distanceInt = 0
-            blockData = [distanceInt]
+            return [distanceInt, block.id]
         except:
-            blockData = [0]
+            return [0, 0]
     else:
-        blockData = [0]
-    return blockData
+        return [0, 0]
 
 def getYaw(multiplier):
     return 6.28 * multiplier
