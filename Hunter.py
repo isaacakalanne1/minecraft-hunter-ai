@@ -139,20 +139,29 @@ class Hunter:
           else:
             self.bot.chat('There\'s no entity in memory for me to attack!')
 
-        case 'nearest live':
+        case 'nearest':
           listOfAllEntities = self.getNearestEntities()
-          listOfEntities = []
+          listOfLiveEntities = []
+          listOfDroppedBlockEntities = []
           for id in listOfAllEntities:
             entity = listOfAllEntities[id]
             try:
               if self.bot.entity.position.distanceTo(entity.position) <= self.seeDistance and \
                   self.bot.canSeeEntity(entity) and \
                   entity.username != self.username:
-                listOfEntities.append(entity)
+                positionData = self.getRelativePositionDataOf(entity)
+                if hasattr(entity.metadata[8], 'itemId'):
+                  id = entity.metadata[8].itemId
+                  entityData = [id] + positionData
+                  listOfDroppedBlockEntities.append(entityData)
+                else:
+                  pass # Activate below code to save data for live entity, though may have to use a different identifier than id for players, as id changes on each session
+                  # entityData = [entity.id] + positionData
+                  # listOfLiveEntities.append(entityData)
             except:
               pass
                 
-          print('Entities are ', listOfEntities)
+          print('Entities are ', listOfDroppedBlockEntities)
 
         case 'nearest dropped':
           isDroppedBlock = lambda entity: hasattr(entity.metadata[8], 'itemId')
@@ -225,6 +234,31 @@ class Hunter:
           entity = self.action.getNearestEntity(self.bot)
           print('Player physics is', entity)
           print('bot.physics is', self.bot.physics)
+
+  def getRelativePositionDataOf(self, entity):
+    position = entity.position
+    selfPosition = self.bot.entity.position
+
+    xIsNegative = 0
+    yIsNegative = 0
+    zIsNegative = 0
+
+    relativeX = round(position.x - selfPosition.x, 1) * 10
+    relativeY = round(position.y - selfPosition.y, 1) * 10
+    relativeZ = round(position.z - selfPosition.z, 1) * 10
+
+    if relativeX < 0:
+      xIsNegative = 1
+      relativeX = -relativeX
+    if relativeY < 0:
+      yIsNegative = 1
+      relativeY = -relativeY
+    if relativeZ < 0:
+      zIsNegative = 1
+      relativeZ = -relativeZ
+
+    blockData = [xIsNegative, int(relativeX), yIsNegative, int(relativeY), zIsNegative, int(relativeZ)]
+    return blockData
 
   def getNearestEntities(self):
     listOfEntities = {}
