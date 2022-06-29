@@ -142,18 +142,16 @@ class Hunter:
         case 'nearest':
           listOfAllEntities = self.getNearestEntities()
           listOfLiveEntities = []
-          listOfDroppedBlockEntities = []
+          listOfDroppedItems = []
           for id in listOfAllEntities:
             entity = listOfAllEntities[id]
             try:
-              if self.bot.entity.position.distanceTo(entity.position) <= self.seeDistance and \
-                  self.bot.canSeeEntity(entity) and \
-                  entity.username != self.username:
+              if self.canSee(entity):
                 positionData = self.getRelativePositionDataOf(entity)
-                if hasattr(entity.metadata[8], 'itemId'):
+                if self.isDroppedItem(entity):
                   id = entity.metadata[8].itemId
-                  entityData = [id] + positionData
-                  listOfDroppedBlockEntities.append(entityData)
+                  itemData = [id] + positionData
+                  listOfDroppedItems.append(itemData)
                 else:
                   pass # Activate below code to save data for live entity, though may have to use a different identifier than id for players, as id changes on each session
                   # entityData = [entity.id] + positionData
@@ -234,6 +232,14 @@ class Hunter:
           entity = self.action.getNearestEntity(self.bot)
           print('Player physics is', entity)
           print('bot.physics is', self.bot.physics)
+
+  def canSee(self, entity):
+    return self.bot.entity.position.distanceTo(entity.position) <= self.seeDistance and \
+            self.bot.canSeeEntity(entity) and \
+            entity.username != self.username
+
+  def isDroppedItem(self, entity):
+    return hasattr(entity.metadata[8], 'itemId')
 
   def getRelativePositionDataOf(self, entity):
     position = entity.position
