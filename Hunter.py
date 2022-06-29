@@ -48,11 +48,14 @@ class Hunter:
     self.botHasDied = False
     self.rlIsActive = False
     self.respawnResetDelay = 0.5
+    self.newlyCollectedBlocks = 0
     self.bot.on('spawn', self.handle)
     self.bot.on('death', self.handleDeath)
     self.bot.on('chat', self.handleMsg)
     self.bot.on('playerCollect', self.handlePlayerCollect)
     self.bot.on('health', self.healthUpdated)
+    self.bot.on('diggingCompleted', self.diggingCompleted)
+    self.bot.on('diggingAborted', self.diggingAborted)
 
   def healthUpdated(self, *args):
     self.currentHealth = self.bot.health
@@ -62,16 +65,29 @@ class Hunter:
     print("I spawned 👋")
     self.resetValues()
 
+  def diggingCompleted(self, block, *args):
+    print('Completed digging!')
+  
+  def diggingAborted(self, block, *args):
+    print('Aborted digging!')
+
   def resetValues(self):
     self.inventoryItems = {}
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
+    self.deleteInventory()
     items = self.action.updateInventory(self.bot)
+    print('Inventory items are', items)
     self.initialX = self.bot.entity.position.x
     self.randomLook()
-    # Movement.move(self.bot, Movement.Direction.forwards)
-    # MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
+    Movement.move(self.bot, Movement.Direction.none)
+    Jump.jump(self.bot, Jump.Jump.none)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
+
+  def deleteInventory(self):
+    self.bot.chat('/gamemode creative')
+    self.bot.creative.clearInventory()
+    self.bot.chat('/gamemode survival')
 
   def handleDeath(self, *args):
     if self.rlIsActive == True:
@@ -82,6 +98,12 @@ class Hunter:
     print('Received message:', message)
     if sender and (sender != 'HelloThere'):
       match message:
+
+        case 'run':
+          Movement.move(self.bot, Movement.Direction.forwards)
+
+        case 'stop':
+          Movement.move(self.bot, Movement.Direction.none)
 
         case "inventory":
           self.inventoryItems = {}
@@ -207,7 +229,7 @@ class Hunter:
   def isDroppedItem(self, entity):
     return hasattr(entity.metadata[8], 'itemId')
 
-  def getVisibleEntities(self):
+  def getVisibleEntityData(self):
     listOfAllEntities = self.bot.entities
     listOfLiveEntities = []
     listOfDroppedItems = []
@@ -217,7 +239,7 @@ class Hunter:
         if self.canSee(entity):
           positionData = self.getRelativePositionDataOf(entity)
           if self.isDroppedItem(entity):
-            id = entity.metadata[8].itemId
+            id = self.getItemIdOf(entity)
             itemData = [id] + positionData
             if len(listOfDroppedItems) < self.entityListSize:
               listOfDroppedItems.append(itemData)
@@ -230,6 +252,9 @@ class Hunter:
         pass
     listOfVisibleEntities = listOfLiveEntities + listOfDroppedItems
     return listOfVisibleEntities
+
+  def getItemIdOf(entity):
+    return entity.metadata[8].itemId
 
   def getRelativePositionDataOf(self, entity):
     position = entity.position
@@ -268,9 +293,13 @@ class Hunter:
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
   def handlePlayerCollect(self, this, collector, collected, *args):
-    if collector.username == self.bot.username:
-      self.bot.chat("I collected an item!")
-      self.inventoryItems = self.action.updateInventory(self.bot)
+    if collector.username == self.bot.username and \
+        self.isDroppedItem(collected):
+      # itemId = self.getItemIdOf(collected)
+      # if itemId == 101: # For now, just train bot to collect blocks
+      self.newlyCollectedBlocks += 1
+      print('Bot collected an item!')
+      # self.inventoryItems = self.action.updateInventory(self.bot)
 
   def getBlocksInMemory(self):
     self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=self.fieldOfView, resolution=self.resolution)
@@ -286,42 +315,67 @@ class Hunter:
     return [int(yaw), int(pitch)]
 
   def getState(self):
+    entityData = self.getVisibleEntityData()
+
     cursorBlock = self.action.getCurrentlyLookedAtBlock(self.bot)
     cursorBlockData = self.getLidarDataOfBlock(cursorBlock)
+
     blocks = self.getBlocksInMemory()
     lookDirection = self.getCurrentYawAndPitch()
     position = self.getCurrentPositionData()
-    stateList = [self.isDigging] + cursorBlockData + blocks + lookDirection + position
+    stateList = [self.isDigging] + entityData + cursorBlockData + blocks + lookDirection + position
     state = np.array(stateList, dtype=float)
     return state
 
   def getEmptyActions(self):
-    return np.array([0,0,0,0], dtype=float)
+    return np.array([0,0,0,0,0,0,0], dtype=float)
 
   def play_step(self, action):
 
     yawChange = LookDirection.getYawChange()
+    pitchChange = LookDirection.getPitchChange()
     print('action is', action)
-    match action:
-      case 1:
-        if self.currentYaw - yawChange < 0:
-          change = self.currentYaw - yawChange
-          self.currentYaw = 6.28 - change
-        else:
-          self.currentYaw -= yawChange # Turn left
-      case 2:
-        if self.currentYaw + yawChange > 6.28:
-          change = self.currentYaw + yawChange
-          self.currentYaw = change - 6.28
-        else:
-          self.currentYaw += yawChange # Turn right
 
-    self.action.look(self.bot, self.currentYaw, self.currentPitch)
-      
-    if action == 3:
-      Jump.jump(self.bot, Jump.Jump.jump)
-    else:
+    if action != 5:
       Jump.jump(self.bot, Jump.Jump.none)
+
+    if self.isDigging == False:
+      match action:
+        case 1:
+          if self.currentYaw - yawChange < 0:
+            change = self.currentYaw - yawChange
+            self.currentYaw = 6.28 - change
+          else:
+            self.currentYaw -= yawChange # Turn left
+        case 2:
+          if self.currentYaw + yawChange > 6.28:
+            change = self.currentYaw + yawChange
+            self.currentYaw = change - 6.28
+          else:
+            self.currentYaw += yawChange # Turn right
+        case 3:
+          if self.currentPitch - pitchChange < -math.pi/2:
+            self.currentPitch = -math.pi/2
+          else:
+            self.currentPitch -= pitchChange # Look down
+        case 4:
+          if self.currentPitch + pitchChange > math.pi/2:
+            self.currentPitch = math.pi/2
+          else:
+            self.currentPitch += pitchChange # Look up
+        case 5:
+          Jump.jump(self.bot, Jump.Jump.jump)
+        case 6:
+          block = self.bot.blockAtCursor()
+          try:
+            self.action.dig(self.bot, block, True, 'rayCast')
+            self.isDigging = True
+          except:
+            # self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
+            self.isDigging = False
+
+    if action != 6:
+      self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
     time.sleep(0.3)
 
@@ -337,18 +391,14 @@ class Hunter:
 
     self.currentTimeOfDay = self.action.getTimeOfDay(self.bot)
     timeDifference = self.currentTimeOfDay - self.initialTimeOfDay
-    currentX = self.bot.entity.position.x
-    reward = currentX - self.initialX
-    self.initialX = currentX
+    reward = self.newlyCollectedBlocks
+    self.newlyCollectedBlocks = 0
 
-    if (self.botHasDied == True and self.rlIsActive == True) or timeDifference > 200:
+    if self.botHasDied == True and self.rlIsActive == True:
       self.botHasDied = False
       return 0, True
     
-    if timeDifference > 200:
-      return reward, True
-    print('Reward is', reward)
-    return reward, False
+    return reward, timeDifference > 400
 
   def reset(self):
     self.rlIsActive = False
