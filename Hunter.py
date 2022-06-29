@@ -10,7 +10,7 @@ import time
 import math
 import torch
 import numpy as np
-import multiprocessing
+import asyncio
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
@@ -44,7 +44,6 @@ class Hunter:
     self.entityListSize = 4
     self.fieldOfView = 0.8
     self.resolution = 3
-    self.isDigging = 0
     self.botHasDied = False
     self.rlIsActive = False
     self.respawnResetDelay = 0.5
@@ -54,8 +53,6 @@ class Hunter:
     self.bot.on('chat', self.handleMsg)
     self.bot.on('playerCollect', self.handlePlayerCollect)
     self.bot.on('health', self.healthUpdated)
-    self.bot.on('diggingCompleted', self.diggingCompleted)
-    self.bot.on('diggingAborted', self.diggingAborted)
 
   def healthUpdated(self, *args):
     self.currentHealth = self.bot.health
@@ -64,14 +61,6 @@ class Hunter:
   def handle(self, *args):
     print("I spawned 👋")
     self.resetValues()
-
-  def diggingCompleted(self, block, *args):
-    self.isDigging = 0
-    print('Completed digging!')
-  
-  def diggingAborted(self, block, *args):
-    self.isDigging = 0
-    print('Aborted digging!')
 
   def resetValues(self):
     self.inventoryItems = {}
@@ -328,7 +317,11 @@ class Hunter:
     blocks = self.getBlocksInMemory()
     lookDirection = self.getCurrentYawAndPitch()
     position = self.getCurrentPositionData()
-    stateList = [self.isDigging] + entityData + cursorBlockData + blocks + lookDirection + position
+    if self.bot.targetDigBlock is not None:
+      isDigging = [1]
+    else:
+      isDigging = [0]
+    stateList = isDigging + entityData + cursorBlockData + blocks + lookDirection + position
     state = np.array(stateList, dtype=float)
     return state
 
@@ -341,52 +334,54 @@ class Hunter:
     pitchChange = LookDirection.getPitchChange()
     print('action is', action)
 
+    print('target dig block is', self.bot.targetDigBlock)
+
+    if action != 5 and action != 6:
+      Movement.move(self.bot, Movement.Direction.none)
+      
     if action != 6:
       Jump.jump(self.bot, Jump.Jump.none)
 
-    if self.isDigging == False:
-      match action:
-        case 1:
-          if self.currentYaw - yawChange < 0:
-            change = self.currentYaw - yawChange
-            self.currentYaw = 6.28 - change
-          else:
-            self.currentYaw -= yawChange # Turn left
-        case 2:
-          if self.currentYaw + yawChange > 6.28:
-            change = self.currentYaw + yawChange
-            self.currentYaw = change - 6.28
-          else:
-            self.currentYaw += yawChange # Turn right
-        case 3:
-          if self.currentPitch - pitchChange < -math.pi/2:
-            self.currentPitch = -math.pi/2
-          else:
-            self.currentPitch -= pitchChange # Look down
-        case 4:
-          if self.currentPitch + pitchChange > math.pi/2:
-            self.currentPitch = math.pi/2
-          else:
-            self.currentPitch += pitchChange # Look up
-        case 5:
-          Movement.move(self.bot, Movement.Direction.forwards)
-        case 6:
-          Movement.move(self.bot, Movement.Direction.forwards)
-          Jump.jump(self.bot, Jump.Jump.jump)
-        case 7:
-          block = self.bot.blockAtCursor()
-          try:
-            self.action.dig(self.bot, block, True, 'rayCast')
-            self.isDigging = True
-          except:
-            # self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
-            self.isDigging = False
+    match action:
+      case 1:
+        if self.currentYaw - yawChange < 0:
+          change = self.currentYaw - yawChange
+          self.currentYaw = 6.28 - change
+        else:
+          self.currentYaw -= yawChange # Turn left
+      case 2:
+        if self.currentYaw + yawChange > 6.28:
+          change = self.currentYaw + yawChange
+          self.currentYaw = change - 6.28
+        else:
+          self.currentYaw += yawChange # Turn right
+      case 3:
+        if self.currentPitch - pitchChange < -math.pi/2:
+          self.currentPitch = -math.pi/2
+        else:
+          self.currentPitch -= pitchChange # Look down
+      case 4:
+        if self.currentPitch + pitchChange > math.pi/2:
+          self.currentPitch = math.pi/2
+        else:
+          self.currentPitch += pitchChange # Look up
+      case 5:
+        Movement.move(self.bot, Movement.Direction.forwards)
+      case 6:
+        Movement.move(self.bot, Movement.Direction.forwards)
+        Jump.jump(self.bot, Jump.Jump.jump)
+      case 7:
+        block = self.bot.blockAtCursor()
+        try:
+          self.action.dig(self.bot, block, True, 'rayCast') # Currently digging blocks other functions from running, which isn't perfect, but is partially what I was going to implement anyway
+        except:
+          print('No block to dig!')
+          # self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
 
     if action != 7:
       self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
-    if action != 5 and action != 6:
-      Movement.move(self.bot, Movement.Direction.none)
+    
 
     time.sleep(0.3)
 
@@ -422,7 +417,7 @@ class Hunter:
   def respawnBot(self):
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
-    self.bot.chat('/gamerule spawnRadius 0') # Spawnradius seems to default to 5 or so, even when set to 0
+    self.bot.chat('/gamerule spawnRadius 10') # Spawnradius seems to default to 5 or so, even when set to 0
     self.bot.chat('/spawnpoint ' + self.username + ' ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
     self.bot.chat('/kill')
 
