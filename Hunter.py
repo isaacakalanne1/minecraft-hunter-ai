@@ -18,8 +18,11 @@ Vec3 = require('vec3')
 class Hunter:
 
   def __init__(self, host, port, username):
-    self.bot = ""
-    self.createBot(host, port, username)
+    self.bot = mineflayer.createBot({
+                  'host': host,
+                  'port': port,
+                  'username': username
+                })
     self.username = username
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
@@ -31,6 +34,7 @@ class Hunter:
     self.initialTimeOfDay = 0
     self.currentTimeOfDay = 0
     self.currentPosition = [0.00] * 3
+    self.seeDistance = 10
     self.currentYaw = 0
     self.currentPitch = 0
     self.initialX = 0
@@ -50,13 +54,6 @@ class Hunter:
   def healthUpdated(self, *args):
     self.currentHealth = self.bot.health
     self.currentHunger = self.bot.food
-
-  def createBot(self, host, port, username):
-    self.bot = mineflayer.createBot({
-                  'host': host,
-                  'port': port,
-                  'username': username
-                })
                 
   def handle(self, *args):
     print("I spawned 👋")
@@ -68,8 +65,8 @@ class Hunter:
     items = self.action.updateInventory(self.bot)
     self.initialX = self.bot.entity.position.x
     self.randomLook()
-    Movement.move(self.bot, Movement.Direction.forwards)
-    MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
+    # Movement.move(self.bot, Movement.Direction.forwards)
+    # MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
 
@@ -125,6 +122,16 @@ class Hunter:
           block = self.action.getCurrentlyLookedAtBlock(self.bot)
           print('Block is', block)
 
+        case 'current look':
+          eyePos = LookDirection.getEyePositionOfBot(self.bot)
+          direction = LookDirection.getLookDirectionOf(self.currentYaw, self.currentPitch)
+          x = direction[0]
+          y = direction[1]
+          z = direction[2]
+          vecDirection = Vec3(x, y, z)
+          seen = self.bot.world.raycast(eyePos, vecDirection, 10, None)
+          print('seen is', seen)
+
         case 'attack':
           entity = self.action.getNearestEntity(self.bot)
           if entity is not None:
@@ -133,16 +140,17 @@ class Hunter:
             self.bot.chat('There\'s no entity in memory for me to attack!')
 
         case 'nearest':
-          entity = self.action.getNearestEntity(self.bot, lambda entity: entity.name == 'RoyalCentaur')
-          # print('Entity is', entity)
-          position = (entity.position.x, entity.position.y, entity.position.z)
-          if entity.heldItem is None:
-            heldItem = None
-          else:
-            heldItem = entity.heldItem.type
-          self.entitiesInMemory[entity.id] = [position, heldItem]
-          # print('Entities in memory are:', self.entitiesInMemory)
-          print('Entity is', entity)
+          listOfAllEntities = self.getNearestEntities()
+          listOfEntities = []
+          for id in listOfAllEntities:
+            entity = listOfAllEntities[id]
+            if hasattr(entity, 'position') and hasattr(entity, 'name'):
+              if self.bot.entity.position.distanceTo(entity.position) <= self.seeDistance and \
+                  self.bot.canSeeEntity(entity) and \
+                  entity.username != self.username:
+                listOfEntities.append(entity)
+                
+          print('Entities are ', listOfEntities)
 
         case 'nearest id':
           isDroppedBlock = lambda entity: hasattr(entity.metadata[8], 'itemId')
@@ -215,6 +223,11 @@ class Hunter:
           entity = self.action.getNearestEntity(self.bot)
           print('Player physics is', entity)
           print('bot.physics is', self.bot.physics)
+
+  def getNearestEntities(self):
+    listOfEntities = {}
+    listOfEntities = self.bot.entities
+    return listOfEntities
 
   def randomLook(self):
     self.currentYaw = RandomGenerator.randomYaw()
