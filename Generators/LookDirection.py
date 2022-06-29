@@ -26,6 +26,27 @@ def getLookDirectionsAround(yaw, pitch, fieldOfView, resolution):
     directions = getLookDirectionsAroundDirection(x, y, z, fieldOfView, resolution)
     return directions
 
+def getMinAndMaxValuesForLookDirection(yaw, pitch, fieldOfView, resolution):
+
+    lookDirection = getLookDirectionOf(yaw, pitch)
+
+    x = lookDirection[0]
+    y = lookDirection[1]
+    z = lookDirection[2]
+
+    lowerX = getLowerBoundOf(x, fieldOfView)
+    lowerY = getLowerBoundOf(y, fieldOfView)
+    lowerZ = getLowerBoundOf(z, fieldOfView)
+
+    xValues, yValues, zValues = getRangeOfDirectionValues(lowerX, lowerY, lowerZ, fieldOfView, resolution)
+    minX = min(xValues)
+    maxX = max(xValues)
+    minY = min(yValues)
+    maxY = max(yValues)
+    minZ = min(zValues)
+    maxZ = max(zValues)
+    return minX, maxX, minY, maxY, minZ, maxZ
+
 def getLookDirectionsAroundDirection(lookX, lookY, lookZ, fieldOfView, resolution):
     lowerX = getLowerBoundOf(lookX, fieldOfView)
     lowerY = getLowerBoundOf(lookY, fieldOfView)
@@ -47,12 +68,16 @@ def getUpperBoundOf(val, fieldOfView):
         upper = 1 - diff
     return upper
 
-def getLookDirections(lowerX, lowerY, lowerZ, fieldOfView, resolution):
-    points = []
-
+def getRangeOfDirectionValues(lowerX, lowerY, lowerZ, fieldOfView, resolution):
     xValues = getRangeOfPointValues(lowerX, fieldOfView, resolution)
     yValues = getRangeOfPointValues(lowerY, fieldOfView, resolution)
     zValues = getRangeOfPointValues(lowerZ, fieldOfView, resolution)
+    return xValues, yValues, zValues
+
+def getLookDirections(lowerX, lowerY, lowerZ, fieldOfView, resolution):
+    points = []
+
+    xValues, yValues, zValues = getRangeOfDirectionValues(lowerX, lowerY, lowerZ, fieldOfView, resolution)
 
     for x in xValues:
         for y in yValues:

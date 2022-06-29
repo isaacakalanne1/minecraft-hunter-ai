@@ -34,14 +34,15 @@ class Hunter:
     self.initialTimeOfDay = 0
     self.currentTimeOfDay = 0
     self.currentPosition = [0.00] * 3
-    self.seeDistance = 10
+    self.seeDistance = 5
     self.currentYaw = 0
     self.currentPitch = 0
     self.initialX = 0
     self.spawnX = -58
     self.spawnY = 101
     self.spawnZ = -35
-    self.zoneRadius = 4
+    self.fieldOfView = 1.0
+    self.resolution = 3
     self.botHasDied = False
     self.rlIsActive = False
     self.respawnResetDelay = 0.5
@@ -169,7 +170,7 @@ class Hunter:
           yaw = RandomGenerator.randomYaw()
           pitch = RandomGenerator.randomPitch()
           self.action.look(self.bot, yaw, pitch)
-          blockss = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=0.9, resolution=3)
+          blockss = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=self.fieldOfView, resolution=self.resolution)
           print('Blocks are:', blockss)
 
         case 'hold':
@@ -183,6 +184,9 @@ class Hunter:
           entity = self.action.getNearestEntity(self.bot)
           print('Player physics is', entity)
           print('bot.physics is', self.bot.physics)
+
+        case 'ranges':
+          self.isWithinFieldOfView()
 
   def canSee(self, entity):
     return self.bot.entity.position.distanceTo(entity.position) <= self.seeDistance and \
@@ -204,7 +208,7 @@ class Hunter:
           if self.isDroppedItem(entity):
             id = entity.metadata[8].itemId
             itemData = [id] + positionData
-            if len(listOfDroppedItems) < 2:
+            if len(listOfDroppedItems) < 3:
               listOfDroppedItems.append(itemData)
           else:
             pass # Activate below code to save data for live entity, though may have to use a different identifier than id for players, as id changes on each session
@@ -240,6 +244,11 @@ class Hunter:
 
     blockData = [xIsNegative, int(relativeX), yIsNegative, int(relativeY), zIsNegative, int(relativeZ)]
     return blockData
+  
+  def isWithinFieldOfView(self):
+    minX, maxX, minY, maxY, minZ, maxZ = LookDirection.getMinAndMaxValuesForLookDirection(self.currentYaw, self.currentPitch, self.fieldOfView, self.resolution)
+    print('values are', minX, maxX, minY, maxY, minZ, maxZ)
+
 
   def randomLook(self):
     self.currentYaw = RandomGenerator.randomYaw()
@@ -253,7 +262,7 @@ class Hunter:
       self.inventoryItems = self.action.updateInventory(self.bot)
 
   def getBlocksInMemory(self):
-    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=1.0, resolution=3)
+    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=self.fieldOfView, resolution=self.resolution)
     return self.blocksInMemory
 
   def getCurrentPositionData(self):
