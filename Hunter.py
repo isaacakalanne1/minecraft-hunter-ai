@@ -149,14 +149,16 @@ class Hunter:
           entity = self.action.getNearestEntity(self.bot, isEntityDroppedBlock)
           
           id = entity.metadata[8].itemId
+          uniqueId = entity.id
+          print('unique id is', uniqueId)
 
           position = entity.position
           selfPosition = self.bot.entity.position
 
-          relativeX = position.x - selfPosition.x
-          relativeY = position.y - selfPosition.y
-          relativeZ = position.z - selfPosition.z
-          blockData = [id, round(relativeX, 2), round(relativeY, 2), round(relativeZ, 2)]
+          relativeX = round(position.x - selfPosition.x, 1) * 10
+          relativeY = round(position.y - selfPosition.y, 1) * 10
+          relativeZ = round(position.z - selfPosition.z, 1) * 10
+          blockData = [id, int(relativeX), int(relativeY), int(relativeZ)]
           print('dropped block data is', blockData)
 
         case 'held':
