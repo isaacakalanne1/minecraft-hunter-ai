@@ -2,9 +2,6 @@ import math
 from javascript import require, On
 Vec3 = require('vec3')
 
-maxYaw = 6.28
-maxPitch = math.pi/2
-
 def getLookDirectionOf(yaw, pitch):
     csYaw = math.cos(yaw)
     snYaw = math.sin(yaw)
@@ -15,6 +12,12 @@ def getLookDirectionOf(yaw, pitch):
     z = -csYaw * csPitch
     return [x,y,z]
 
+def getYawChange():
+    return 6.28 / 8
+
+def getPitchChange():
+    return math.pi / 8
+
 def getLookDirectionsAround(yaw, pitch, fieldOfView, resolution):
     lookDirection = getLookDirectionOf(yaw, pitch)
     x = lookDirection[0]
@@ -22,6 +25,27 @@ def getLookDirectionsAround(yaw, pitch, fieldOfView, resolution):
     z = lookDirection[2]
     directions = getLookDirectionsAroundDirection(x, y, z, fieldOfView, resolution)
     return directions
+
+def getMinAndMaxValuesForLookDirection(yaw, pitch, fieldOfView, resolution):
+
+    lookDirection = getLookDirectionOf(yaw, pitch)
+
+    x = lookDirection[0]
+    y = lookDirection[1]
+    z = lookDirection[2]
+
+    lowerX = getLowerBoundOf(x, fieldOfView)
+    lowerY = getLowerBoundOf(y, fieldOfView)
+    lowerZ = getLowerBoundOf(z, fieldOfView)
+
+    xValues, yValues, zValues = getRangeOfDirectionValues(lowerX, lowerY, lowerZ, fieldOfView, resolution)
+    minX = min(xValues)
+    maxX = max(xValues)
+    minY = min(yValues)
+    maxY = max(yValues)
+    minZ = min(zValues)
+    maxZ = max(zValues)
+    return minX, maxX, minY, maxY, minZ, maxZ
 
 def getLookDirectionsAroundDirection(lookX, lookY, lookZ, fieldOfView, resolution):
     lowerX = getLowerBoundOf(lookX, fieldOfView)
@@ -44,12 +68,16 @@ def getUpperBoundOf(val, fieldOfView):
         upper = 1 - diff
     return upper
 
-def getLookDirections(lowerX, lowerY, lowerZ, fieldOfView, resolution):
-    points = []
-
+def getRangeOfDirectionValues(lowerX, lowerY, lowerZ, fieldOfView, resolution):
     xValues = getRangeOfPointValues(lowerX, fieldOfView, resolution)
     yValues = getRangeOfPointValues(lowerY, fieldOfView, resolution)
     zValues = getRangeOfPointValues(lowerZ, fieldOfView, resolution)
+    return xValues, yValues, zValues
+
+def getLookDirections(lowerX, lowerY, lowerZ, fieldOfView, resolution):
+    points = []
+
+    xValues, yValues, zValues = getRangeOfDirectionValues(lowerX, lowerY, lowerZ, fieldOfView, resolution)
 
     for x in xValues:
         for y in yValues:
@@ -78,36 +106,33 @@ def getEyePositionOfBot(currentBot):
 
 def getBlockAt(currentBot, lookDirection):
     eyePosition = getEyePositionOfBot(currentBot)
-    block = currentBot.world.raycast(eyePosition, lookDirection, 160, None)
+    block = currentBot.world.raycast(eyePosition, lookDirection, 10, None)
     return block
+
 
 def getBlocksInFieldOfView(currentBot, yaw, pitch, fieldOfView, resolution):
     directions = getLookDirectionsAround(yaw, pitch, fieldOfView, resolution)
     blocksInMemory = []
     for direction in directions:
-        block = getBlockAt(currentBot, direction)
-        if block is not None:
-            # blockData = [round(block.position.x, 2), round(block.position.y, 2), round(block.position.z, 2), block.type]
-            try:
-                distance = currentBot.entity.position.distanceTo(block.position)
-                blockData = [distance, block.type]
-            except:
-                blockData = [0, 0]
-        else:
-            blockData = [0, 0]
-            # blockData = [0.00, 0.00, 0.00, 0.00]
+        blockData = convertDirectionIntoBlockData(currentBot, direction)
         blocksInMemory += blockData
     return blocksInMemory
 
-def getYaw(multiplier):
-    return maxYaw * multiplier
+def convertDirectionIntoBlockData(currentBot, direction):
+    block = getBlockAt(currentBot, direction)
+    if block is not None:
+        try:
+            distance = round(currentBot.entity.position.distanceTo(block.position), 1) * 10
+            distanceInt = int(distance)
+            return [distanceInt, block.type]
+        except:
+            return [0, 0]
+    else:
+        return [0, 0]
 
-def getYawChange():
-    return maxYaw/8
+def getYaw(multiplier):
+    return 6.28 * multiplier
 
 def getPitch(multiplier):
-    pitch = (maxPitch*2) * multiplier
-    return pitch - (maxPitch)
-
-def getPitchChange():
-    return maxPitch/8
+    pitch = math.pi * multiplier
+    return pitch - (math.pi/2)

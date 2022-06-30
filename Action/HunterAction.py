@@ -4,9 +4,9 @@ mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 class HunterAction:
 
   def getNearestEntity(self, currentBot):
-    entity = currentBot.nearestEntity(lambda entity: entity.name == 'RoyalCentaur')
-    return entity
-
+    foundEntity = currentBot.nearestEntity(lambda entity: entity.name != 'player')
+    return foundEntity
+    
   def holdItem(self, currentBot, item):
     currentBot.equip(item)
 

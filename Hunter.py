@@ -6,8 +6,11 @@ import Action.HunterAction as HunterAction
 import Generators.RandomGenerator as RandomGenerator
 import Generators.LookDirection as LookDirection
 import random
-import torch
 import time
+import math
+import torch
+import numpy as np
+import asyncio
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
@@ -15,25 +18,34 @@ Vec3 = require('vec3')
 class Hunter:
 
   def __init__(self, host, port, username):
-    self.bot = ""
-    self.createBot(host, port, username)
+    self.bot = mineflayer.createBot({
+                  'host': host,
+                  'port': port,
+                  'username': username
+                })
+    self.username = username
     self.action = HunterAction.HunterAction()
     self.inventoryItems = {}
-    self.blocksInMemory = [0.00] * 16
+    self.blocksInMemory = [0.00] * 8
     self.entitiesInMemory = {}
     self.currentHeldItem = [0, 0] # [Id, count]
-    self.currentHealth = 0.00
+    self.currentHealth = 0
     self.currentHunger = 0
     self.initialTimeOfDay = 0
     self.currentTimeOfDay = 0
-    self.currentPosition = [0.00,0.00,0.00]
-    self.currentLookDirection = [0,0,0]
-    self.currentPitch = 0.00
-    self.currentYaw = 0.00
-    self.initialX = 0
-    self.currentScore = 0
+    self.currentPosition = [0.00] * 3
+    self.seeDistance = 5
+    self.currentYaw = 0
+    self.currentPitch = 0
+    self.spawnX = -58
+    self.spawnY = 101
+    self.spawnZ = -35
+    self.entityListSize = 4
+    self.fieldOfView = 0.8
+    self.resolution = 3
     self.botHasDied = False
     self.rlIsActive = False
+    self.newlyCollectedBlocks = 0
     self.bot.on('spawn', self.handle)
     self.bot.on('death', self.handleDeath)
     self.bot.on('chat', self.handleMsg)
@@ -43,24 +55,27 @@ class Hunter:
   def healthUpdated(self, *args):
     self.currentHealth = self.bot.health
     self.currentHunger = self.bot.food
-
-  def createBot(self, host, port, username):
-    self.bot = mineflayer.createBot({
-                  'host': host,
-                  'port': port,
-                  'username': username
-                })
                 
   def handle(self, *args):
     print("I spawned 👋")
     self.resetValues()
+
+  def resetValues(self):
     self.inventoryItems = {}
+    self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
+    self.deleteInventory()
     items = self.action.updateInventory(self.bot)
+    print('Inventory items are', items)
+    self.currentYaw = 0
+    self.currentPitch = 0
+    self.action.look(self.bot, self.currentYaw, self.currentPitch)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
-    Movement.move(self.bot, Movement.Direction.forwards)
-    MovementModifier.modify(self.bot, MovementModifier.Type.sprint)
-    # print("Inventory is", self.inventoryItems)
+
+  def deleteInventory(self):
+    self.bot.chat('/gamemode creative')
+    self.bot.creative.clearInventory()
+    self.bot.chat('/gamemode survival')
 
   def handleDeath(self, *args):
     if self.rlIsActive == True:
@@ -72,6 +87,12 @@ class Hunter:
     if sender and (sender != 'HelloThere'):
       match message:
 
+        case 'run':
+          Movement.move(self.bot, Movement.Direction.forwards)
+
+        case 'stop':
+          Movement.move(self.bot, Movement.Direction.none)
+
         case "inventory":
           self.inventoryItems = {}
           items = self.action.updateInventory(self.bot)
@@ -79,12 +100,22 @@ class Hunter:
             self.inventoryItems[(item.type, item.slot)] = item.count
           print("Inventory is", self.inventoryItems)
 
+        case 'self':
+          print('Bot is', self.bot.entity)
+
+        case 'spin':
+          Movement.move(self.bot, Movement.Direction.forwards)
+          for i in range(50):
+            self.randomLook()
+            time.sleep(0.3)
+
         case "dig":
-          block = self.bot.blockAtCursor()
           try:
+            block = self.bot.blockAtCursor()
             self.action.dig(self.bot, block, True, 'rayCast')
           except:
             self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
+
         case 'place':
           block = self.action.getCurrentlyLookedAtBlock(self.bot)
           face = Vec3(0,1,0)
@@ -102,7 +133,18 @@ class Hunter:
           
         case "current block":
           block = self.action.getCurrentlyLookedAtBlock(self.bot)
-          print('Block is', block)
+          blockData = self.getLidarDataOfBlock(block)
+          print('Block is', blockData)
+
+        case 'current look':
+          eyePos = LookDirection.getEyePositionOfBot(self.bot)
+          direction = LookDirection.getLookDirectionOf(self.currentYaw, self.currentPitch)
+          x = direction[0]
+          y = direction[1]
+          z = direction[2]
+          vecDirection = Vec3(x, y, z)
+          seen = self.bot.world.raycast(eyePos, vecDirection, 10, None)
+          print('seen is', seen)
 
         case 'attack':
           entity = self.action.getNearestEntity(self.bot)
@@ -112,15 +154,9 @@ class Hunter:
             self.bot.chat('There\'s no entity in memory for me to attack!')
 
         case 'nearest':
-          entity = self.action.getNearestEntity(self.bot)
-          # print('Entity is', entity)
-          position = (entity.position.x, entity.position.y, entity.position.z)
-          if entity.heldItem is None:
-            heldItem = None
-          else:
-            heldItem = entity.heldItem.type
-          self.entitiesInMemory[entity.id] = [position, heldItem]
-          print('Entities in memory are:', self.entitiesInMemory)
+          listOfEntities = self.getVisibleEntities()
+                
+          print('Entities are ', listOfEntities)
 
         case 'held':
           entity = self.action.getNearestEntity(self.bot)
@@ -141,14 +177,13 @@ class Hunter:
           self.action.activateHeldItem(self.bot, False)
 
         case 'look':
-          self.runLook()
+          self.randomLook()
 
         case 'blocks':
           yaw = RandomGenerator.randomYaw()
           pitch = RandomGenerator.randomPitch()
           self.action.look(self.bot, yaw, pitch)
-          self.currentLookDirection = LookDirection.getLookDirectionOf(yaw, pitch)
-          blockss = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=0.9, resolution=3)
+          blockss = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=self.fieldOfView, resolution=self.resolution)
           print('Blocks are:', blockss)
 
         case 'hold':
@@ -157,121 +192,237 @@ class Hunter:
             item = self.inventoryItems[(index)]
             self.action.holdItem(self.bot, item)
 
-        case 'reset':
-          self.reset()
-
         case 'physics':
           # self.bot.physics.playerSpeed = 0.2
           entity = self.action.getNearestEntity(self.bot)
           print('Player physics is', entity)
           print('bot.physics is', self.bot.physics)
 
-        case 'tensor':
-          dist = torch.tensor([0,4,8,6])
-          # x = torch.sigmoid(dist)
-          # print('Dist is', x)
-          idx = torch.tensor([0,2])
-          testIdx = torch.index_select(dist, 0, idx)
-          # movementIndex = torch.argmax(dist).item()
-          print('testIdx is', testIdx)
-          # print('TestIdx is', testIdx)
-        
-        case 'cuda':
-          print('Current device is', torch.cuda.current_device())
+        case 'ranges':
+          self.isWithinFieldOfView()
 
-  def runLook(self):
-    yaw = RandomGenerator.randomYaw()
-    pitch = RandomGenerator.randomPitch()
-    self.action.look(self.bot, yaw, pitch)
+  def getLidarDataOfBlock(self, block):
+    distance = self.bot.entity.position.distanceTo(block.position)
+    distance = round(block.distance, 1) * 10
+    return [block.id, int(distance)]
 
-  def handlePlayerCollect(self, this, collector, collected, *args):
-    if collector.username == self.bot.username:
-      self.bot.chat("I collected an item!")
-      self.inventoryItems = self.action.updateInventory(self.bot)
+  def canSee(self, entity):
+    return self.bot.entity.position.distanceTo(entity.position) <= self.seeDistance and \
+            self.bot.canSeeEntity(entity) and \
+            entity.username != self.username
 
-  def getBlocksInMemory(self):
-    return LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=0.9, resolution=2)
+  def isDroppedItem(self, entity):
+    return hasattr(entity.metadata[8], 'itemId')
 
-  def getCurrentPosition(self):
-    position = self.bot.entity.position
-    self.currentPosition = [round(position.x, 2), round(position.y, 2), round(position.z, 2)]
-    return self.currentPosition
+  def getVisibleEntityData(self):
+    dataPerItem = 2
 
-  def getCurrentYawAndPitch(self):
-    return [round(self.currentYaw, 2), round(self.currentPitch, 2)]
+    try:
+      listOfAllEntities = self.bot.entities
+    except:
+      print('Couldn\'t get bot entities!')
+      return [0] * dataPerItem * self.entityListSize
+
+    listOfLiveEntities = []
+    listOfDroppedItems = []
+    for id in listOfAllEntities:
+      entity = listOfAllEntities[id]
+      try:
+        if self.canSee(entity):
+          positionData = self.getRelativePositionDataOf(entity)
+          if self.isDroppedItem(entity):
+            id = self.getItemIdOf(entity)
+            itemData = [id] + positionData
+            if len(listOfDroppedItems) < self.entityListSize:
+              listOfDroppedItems += itemData
+          else:
+            pass # Activate below code to save data for live entity, though may have to use a different identifier than id for players, as id changes on each session
+            # entityData = [entity.id] + positionData
+            # if len(listOfDroppedItems) < 2:
+            #   listOfLiveEntities.append(entityData)
+      except:
+        pass
+    remainingEmptyData = len(listOfDroppedItems) % dataPerItem * self.entityListSize
+    listOfDroppedItems += [0] * remainingEmptyData
+    listOfVisibleEntities = listOfLiveEntities + listOfDroppedItems
+    return listOfVisibleEntities
+
+  def getItemIdOf(entity):
+    return entity.metadata[8].itemId
+
+  def getRelativePositionDataOf(self, entity):
+    position = entity.position
+    selfPosition = self.bot.entity.position
+
+    xIsNegative = 0
+    yIsNegative = 0
+    zIsNegative = 0
+
+    relativeX = round(position.x - selfPosition.x, 1) * 10
+    relativeY = round(position.y - selfPosition.y, 1) * 10
+    relativeZ = round(position.z - selfPosition.z, 1) * 10
+
+    if relativeX < 0:
+      xIsNegative = 1
+      relativeX = -relativeX
+    if relativeY < 0:
+      yIsNegative = 1
+      relativeY = -relativeY
+    if relativeZ < 0:
+      zIsNegative = 1
+      relativeZ = -relativeZ
+
+    blockData = [xIsNegative, int(relativeX), yIsNegative, int(relativeY), zIsNegative, int(relativeZ)]
+    return blockData
   
-  def getCurrentHealth(self):
-    return [round(float(self.bot.health), 2)]
+  def isWithinFieldOfView(self):
+    minX, maxX, minY, maxY, minZ, maxZ = LookDirection.getMinAndMaxValuesForLookDirection(self.currentYaw, self.currentPitch, self.fieldOfView, self.resolution)
+    print('values are', minX, maxX, minY, maxY, minZ, maxZ)
 
-  def play_step(self, action):
-    
-    noChange, yawLeft, yawRight, pitchUp, pitchDown, jump = action
-    
-    yawChange = LookDirection.getYawChange()
-    pitchChange = LookDirection.getPitchChange()
 
-    if yawLeft == 1:
-      self.currentYaw -= yawChange
-    if yawRight == 1:
-      self.currentYaw += yawChange
-    if pitchUp == 1:
-      self.currentPitch += pitchChange
-    if pitchDown == 1:
-      self.currentPitch -= pitchChange
-      
-    jumpType = Jump.Jump(jump)
-    Jump.jump(self.bot, jumpType)
+  def randomLook(self):
+    self.currentYaw = RandomGenerator.randomYaw()
+    print('Yaw is', self.currentYaw)
+    self.currentPitch = 0
     self.action.look(self.bot, self.currentYaw, self.currentPitch)
 
-  def getRewardDoneScore(self):
-    if self.botHasDied == True:
-      # self.botHasDied = False
-      print('Game ended from bot death!')
-      return 0, 1, 0
-    else:
-      reward = self.bot.entity.position.x - self.initialX
+  def handlePlayerCollect(self, this, collector, collected, *args):
+    if collector.username == self.bot.username and \
+        self.isDroppedItem(collected):
+      # itemId = self.getItemIdOf(collected)
+      # if itemId == 101: # For now, just train bot to collect blocks
+      self.newlyCollectedBlocks += 1
+      print('Bot collected an item!')
+      # self.inventoryItems = self.action.updateInventory(self.bot)
 
-    self.initialX = self.bot.entity.position.x
-    currentTime = self.action.getTimeOfDay(self.bot)
-    if self.initialTimeOfDay + 200 < currentTime:
-      print('Game ended naturally!')
-      done = 1
-    else:
-      done = 0
-    self.currentScore += reward
-    if self.currentScore < 0:
-      score = 0
-    else:
-      score = self.currentScore
+  def getBlocksInMemory(self):
+    self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=self.fieldOfView, resolution=self.resolution)
+    return self.blocksInMemory
 
-    return reward, done, score
+  def getCurrentPositionData(self):
+    position = self.bot.entity.position
+    return [round(position.x, 2), round(position.y, 2), round(position.z, 2)]
+
+  def getCurrentYawAndPitch(self):
+    yaw = (round(self.currentYaw, 1) * 10)
+    pitch = round(self.currentPitch + (math.pi /2), 1) * 10
+    return [int(yaw), int(pitch)]
+
+  def getState(self):
+    
+    entityData = self.getVisibleEntityData()
+
+    try:
+      cursorBlock = self.action.getCurrentlyLookedAtBlock(self.bot)
+      cursorBlockData = self.getLidarDataOfBlock(cursorBlock)
+    except:
+      cursorBlockData = [0,0]
+
+    try:
+      blocks = self.getBlocksInMemory()
+    except:
+      blocks = [0, 0] * self.resolution * self.resolution * self.resolution
+
+    lookDirection = self.getCurrentYawAndPitch()
+
+    stateList = entityData + cursorBlockData + blocks + lookDirection
+    state = np.array(stateList, dtype=float)
+    return state
+
+  def getEmptyActions(self):
+    return np.array([0] * 8, dtype=float)
+
+  def play_step(self, action):
+
+    yawChange = LookDirection.getYawChange()
+    pitchChange = LookDirection.getPitchChange()
+    print('action is', action)
+
+    # print('target dig block is', self.bot.targetDigBlock)
+
+    if action == 5:
+      Movement.move(self.bot, Movement.Direction.forwards)
+    else:
+      Movement.move(self.bot, Movement.Direction.none)
+      
+    if action == 6:
+      Movement.move(self.bot, Movement.Direction.forwards)
+      Jump.jump(self.bot, Jump.Jump.jump)
+    else:
+      Jump.jump(self.bot, Jump.Jump.none)
+      
+
+    match action:
+      case 1:
+        if self.currentYaw - yawChange < 0:
+          change = self.currentYaw - yawChange
+          self.currentYaw = 6.28 - change
+        else:
+          self.currentYaw -= yawChange # Turn left
+      case 2:
+        if self.currentYaw + yawChange > 6.28:
+          change = self.currentYaw + yawChange
+          self.currentYaw = change - 6.28
+        else:
+          self.currentYaw += yawChange # Turn right
+      case 3:
+        if self.currentPitch - pitchChange < -math.pi/2:
+          self.currentPitch = -math.pi/2
+        else:
+          self.currentPitch -= pitchChange # Look down
+      case 4:
+        if self.currentPitch + pitchChange > math.pi/2:
+          self.currentPitch = math.pi/2
+        else:
+          self.currentPitch += pitchChange # Look up
+      case 7:
+        try:
+          block = self.bot.blockAtCursor()
+          self.action.dig(self.bot, block, True, 'rayCast') # Currently digging blocks other functions from running, which isn't perfect, but is partially what I was going to implement anyway
+        except:
+          print('No block to dig!')
+          # self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
+
+    if action != 7:
+      self.action.look(self.bot, self.currentYaw, self.currentPitch)
+
+    
+
+    time.sleep(0.3)
+
+    state = self.getState()
+    reward, terminal = self.getRewardTerminal()
+    return state, reward, terminal
+
+  def random_of_ranges(*ranges):
+    all_ranges = sum(ranges, [])
+    return random.choice(all_ranges)
+
+  def getRewardTerminal(self):
+
+    self.currentTimeOfDay = self.action.getTimeOfDay(self.bot)
+    timeDifference = self.currentTimeOfDay - self.initialTimeOfDay
+    reward = self.newlyCollectedBlocks
+    self.newlyCollectedBlocks = 0
+
+    if self.botHasDied == True and self.rlIsActive == True:
+      self.botHasDied = False
+      return 0, True
+    
+    return reward, timeDifference > 400
 
   def reset(self):
-    # TODO: Reset the game when the bot dies
-    currentPosition = self.bot.entity.position
-    currentX = currentPosition.x
-    currentZ = currentPosition.z
-    randomX = self.randomPositionChange(currentX)
-    randomZ = self.randomPositionChange(currentZ)
+    self.rlIsActive = False
+    self.deleteInventory()
+    self.respawnBot()
+    state = self.getState()
+    self.rlIsActive = True
+    return state
+
+  def respawnBot(self):
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
     self.bot.chat('/kill')
-    # self.bot.chat('/spreadplayers -9 -25 0 1 false @a')
-    time.sleep(1)
-    self.resetValues()
-    
-  def resetValues(self):
-    self.currentScore = 0
-    self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
-    self.initialX = self.bot.entity.position.x
-    self.currentYaw = 0
-    self.currentPitch = 0
-    self.action.look(self.bot, self.currentYaw, self.currentPitch)
-    self.botHasDied = False
-
-  def randomPositionChange(self, initial):
-    return int(round(random.uniform(initial, initial - 100), 0))
-
 
 # hunter = Hunter('localHost', 25565, 'HelloThere')
 
