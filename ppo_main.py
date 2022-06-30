@@ -22,7 +22,7 @@ def checkIfReady(game):
 
 def startTraining(env):
     N = 20
-    batch_size = 500
+    batch_size = 5
     n_epochs = 4
     alpha = 0.0003
     agent = Agent(n_actions=len(env.getEmptyActions()), batch_size=batch_size,

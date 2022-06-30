@@ -66,7 +66,9 @@ class Hunter:
     self.deleteInventory()
     items = self.action.updateInventory(self.bot)
     print('Inventory items are', items)
-    self.randomLook()
+    self.currentYaw = 0
+    self.currentPitch = 0
+    self.action.look(self.bot, self.currentYaw, self.currentPitch)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
 
@@ -200,12 +202,9 @@ class Hunter:
           self.isWithinFieldOfView()
 
   def getLidarDataOfBlock(self, block):
-    try:
-      distance = self.bot.entity.position.distanceTo(block.position)
-      distance = round(block.distance, 1) * 10
-      return [block.id, int(distance)]
-    except:
-      return [0, 0]
+    distance = self.bot.entity.position.distanceTo(block.position)
+    distance = round(block.distance, 1) * 10
+    return [block.id, int(distance)]
 
   def canSee(self, entity):
     return self.bot.entity.position.distanceTo(entity.position) <= self.seeDistance and \
@@ -216,14 +215,16 @@ class Hunter:
     return hasattr(entity.metadata[8], 'itemId')
 
   def getVisibleEntityData(self):
+    dataPerItem = 2
+
     try:
       listOfAllEntities = self.bot.entities
     except:
       print('Couldn\'t get bot entities!')
-      return []
+      return [0] * dataPerItem * self.entityListSize
+
     listOfLiveEntities = []
     listOfDroppedItems = []
-    dataPerItem = 2
     for id in listOfAllEntities:
       entity = listOfAllEntities[id]
       try:
@@ -308,19 +309,23 @@ class Hunter:
     return [int(yaw), int(pitch)]
 
   def getState(self):
+    
     entityData = self.getVisibleEntityData()
 
-    cursorBlock = self.action.getCurrentlyLookedAtBlock(self.bot)
-    cursorBlockData = self.getLidarDataOfBlock(cursorBlock)
+    try:
+      cursorBlock = self.action.getCurrentlyLookedAtBlock(self.bot)
+      cursorBlockData = self.getLidarDataOfBlock(cursorBlock)
+    except:
+      cursorBlockData = [0,0]
 
-    blocks = self.getBlocksInMemory()
+    try:
+      blocks = self.getBlocksInMemory()
+    except:
+      blocks = [0, 0] * self.resolution * self.resolution * self.resolution
+
     lookDirection = self.getCurrentYawAndPitch()
-    position = self.getCurrentPositionData()
-    if self.bot.targetDigBlock is not None:
-      isDigging = [1]
-    else:
-      isDigging = [0]
-    stateList = isDigging + entityData + cursorBlockData + blocks + lookDirection + position
+
+    stateList = entityData + cursorBlockData + blocks + lookDirection
     state = np.array(stateList, dtype=float)
     return state
 
