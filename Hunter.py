@@ -10,7 +10,7 @@ import time
 import math
 import torch
 import numpy as np
-import asyncio
+from threading import Thread
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 Vec3 = require('vec3')
@@ -112,7 +112,10 @@ class Hunter:
         case "dig":
           try:
             block = self.bot.blockAtCursor()
-            self.action.dig(self.bot, block, True, 'rayCast')
+            print('b!')
+            thread = Thread(target=self.dig, args=(block, ))
+            thread.start()
+            print('c!')
           except:
             self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
 
@@ -200,6 +203,9 @@ class Hunter:
 
         case 'ranges':
           self.isWithinFieldOfView()
+
+  def dig(self, block):
+    self.action.dig(self.bot, block, True, 'rayCast')
 
   def getLidarDataOfBlock(self, block):
     distance = self.bot.entity.position.distanceTo(block.position)
@@ -424,10 +430,10 @@ class Hunter:
     self.bot.chat('/weather clear')
     self.bot.chat('/kill')
 
-# hunter = Hunter('localHost', 25565, 'HelloThere')
+hunter = Hunter('localHost', 25565, 'HelloThere')
 
-# while True:
-#   time.sleep(1)
+while True:
+  time.sleep(1)
 
 # if __name__ == '__main__':
 #   for i in range(10):
