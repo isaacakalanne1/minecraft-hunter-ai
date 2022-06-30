@@ -8,14 +8,15 @@ import Generators.LookDirection as LookDirection
 import random
 import time
 import math
-import torch
 import numpy as np
 from threading import Thread
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
+pvp = require('/Users/iakalann/node_modules/mineflayer-pvp').plugin
+pathfinder = require('/Users/iakalann/node_modules/mineflayer-pathfinder').pathfinder
 Vec3 = require('vec3')
 
-class Hunter:
+class Kratos:
 
   def __init__(self, host, port, username):
     self.bot = mineflayer.createBot({
@@ -25,7 +26,6 @@ class Hunter:
                 })
     self.username = username
     self.action = HunterAction.HunterAction()
-    self.inventoryItems = {}
     self.blocksInMemory = [0.00] * 8
     self.entitiesInMemory = {}
     self.currentHeldItem = [0, 0] # [Id, count]
@@ -35,8 +35,6 @@ class Hunter:
     self.currentTimeOfDay = 0
     self.currentPosition = [0.00] * 3
     self.seeDistance = 5
-    self.currentYaw = 0
-    self.currentPitch = 0
     self.spawnX = -58
     self.spawnY = 101
     self.spawnZ = -35
@@ -61,16 +59,12 @@ class Hunter:
     self.resetValues()
 
   def resetValues(self):
-    self.inventoryItems = {}
     self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
     self.deleteInventory()
-    items = self.action.updateInventory(self.bot)
-    print('Inventory items are', items)
-    self.currentYaw = 0
-    self.currentPitch = 0
-    self.action.look(self.bot, self.currentYaw, self.currentPitch)
-    for item in items:
-      self.inventoryItems[(item.type, item.slot)] = item.count
+    self.bot.loadPlugin(pathfinder)
+    self.bot.loadPlugin(pvp)
+    self.bot.pvp.viewDistance = 1_000_000_000
+    self.bot.pvp.atackRange = 3
 
   def deleteInventory(self):
     self.bot.chat('/gamemode creative')
@@ -87,37 +81,16 @@ class Hunter:
     if sender and (sender != 'HelloThere'):
       match message:
 
-        case 'run':
-          Movement.move(self.bot, Movement.Direction.forwards)
+        case 'fight me':
+          player = self.bot.players['RoyalCentaur']
 
-        case 'stop':
-          Movement.move(self.bot, Movement.Direction.none)
-
-        case "inventory":
-          self.inventoryItems = {}
-          items = self.action.updateInventory(self.bot)
-          for item in items:
-            self.inventoryItems[(item.type, item.slot)] = item.count
-          print("Inventory is", self.inventoryItems)
+          if player is None:
+            self.bot.chat('I can\'t see you!')
+          else:
+            self.bot.pvp.attack(player.entity)
 
         case 'self':
           print('Bot is', self.bot.entity)
-
-        case 'spin':
-          Movement.move(self.bot, Movement.Direction.forwards)
-          for i in range(50):
-            self.randomLook()
-            time.sleep(0.3)
-
-        case "dig":
-          try:
-            block = self.bot.blockAtCursor()
-            print('b!')
-            thread = Thread(target=self.dig, args=(block, ))
-            thread.start()
-            print('c!')
-          except:
-            self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
 
         case 'place':
           block = self.action.getCurrentlyLookedAtBlock(self.bot)
@@ -133,21 +106,6 @@ class Hunter:
         case 'activate':
           block = self.action.getCurrentlyLookedAtBlock(self.bot)
           self.bot.activateBlock(block)
-          
-        case "current block":
-          block = self.action.getCurrentlyLookedAtBlock(self.bot)
-          blockData = self.getLidarDataOfBlock(block)
-          print('Block is', blockData)
-
-        case 'current look':
-          eyePos = LookDirection.getEyePositionOfBot(self.bot)
-          direction = LookDirection.getLookDirectionOf(self.currentYaw, self.currentPitch)
-          x = direction[0]
-          y = direction[1]
-          z = direction[2]
-          vecDirection = Vec3(x, y, z)
-          seen = self.bot.world.raycast(eyePos, vecDirection, 10, None)
-          print('seen is', seen)
 
         case 'attack':
           entity = self.action.getNearestEntity(self.bot)
@@ -189,12 +147,6 @@ class Hunter:
           blockss = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=yaw, pitch=pitch, fieldOfView=self.fieldOfView, resolution=self.resolution)
           print('Blocks are:', blockss)
 
-        case 'hold':
-          if RandomGenerator.randomIndexOf(self.inventoryItems) is not None:
-            index = RandomGenerator.randomIndexOf(self.inventoryItems)
-            item = self.inventoryItems[(index)]
-            self.action.holdItem(self.bot, item)
-
         case 'physics':
           # self.bot.physics.playerSpeed = 0.2
           entity = self.action.getNearestEntity(self.bot)
@@ -203,6 +155,13 @@ class Hunter:
 
         case 'ranges':
           self.isWithinFieldOfView()
+
+  def attackPlayer(self):
+    player = self.bot.players['RoyalCentaur']
+    if player is None:
+      self.bot.chat('I can\'t see you!')
+    else:
+      self.bot.pvp.attack(player.entity)
 
   def dig(self, block):
     self.action.dig(self.bot, block, True, 'rayCast')
@@ -299,7 +258,6 @@ class Hunter:
       # if itemId == 101: # For now, just train bot to collect blocks
       self.newlyCollectedBlocks += 1
       print('Bot collected an item!')
-      # self.inventoryItems = self.action.updateInventory(self.bot)
 
   def getBlocksInMemory(self):
     self.blocksInMemory = LookDirection.getBlocksInFieldOfView(currentBot=self.bot, yaw=self.currentYaw, pitch=self.currentPitch, fieldOfView=self.fieldOfView, resolution=self.resolution)
@@ -430,7 +388,7 @@ class Hunter:
     self.bot.chat('/weather clear')
     self.bot.chat('/kill')
 
-hunter = Hunter('localHost', 25565, 'HelloThere')
+kratos = Kratos('localHost', 25565, 'Kratos')
 
 while True:
   time.sleep(1)
