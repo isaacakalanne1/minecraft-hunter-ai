@@ -37,7 +37,6 @@ class Hunter:
     self.seeDistance = 5
     self.currentYaw = 0
     self.currentPitch = 0
-    self.initialX = 0
     self.spawnX = -58
     self.spawnY = 101
     self.spawnZ = -35
@@ -46,7 +45,6 @@ class Hunter:
     self.resolution = 3
     self.botHasDied = False
     self.rlIsActive = False
-    self.respawnResetDelay = 0.5
     self.newlyCollectedBlocks = 0
     self.bot.on('spawn', self.handle)
     self.bot.on('death', self.handleDeath)
@@ -68,10 +66,7 @@ class Hunter:
     self.deleteInventory()
     items = self.action.updateInventory(self.bot)
     print('Inventory items are', items)
-    self.initialX = self.bot.entity.position.x
     self.randomLook()
-    Movement.move(self.bot, Movement.Direction.none)
-    Jump.jump(self.bot, Jump.Jump.none)
     for item in items:
       self.inventoryItems[(item.type, item.slot)] = item.count
 
@@ -113,8 +108,8 @@ class Hunter:
             time.sleep(0.3)
 
         case "dig":
-          block = self.bot.blockAtCursor()
           try:
+            block = self.bot.blockAtCursor()
             self.action.dig(self.bot, block, True, 'rayCast')
           except:
             self.bot.chat('Couldn\'t dig block, there\'s no block to dig')
@@ -221,7 +216,11 @@ class Hunter:
     return hasattr(entity.metadata[8], 'itemId')
 
   def getVisibleEntityData(self):
-    listOfAllEntities = self.bot.entities
+    try:
+      listOfAllEntities = self.bot.entities
+    except:
+      print('Couldn\'t get bot entities!')
+      return []
     listOfLiveEntities = []
     listOfDroppedItems = []
     dataPerItem = 2
@@ -334,13 +333,19 @@ class Hunter:
     pitchChange = LookDirection.getPitchChange()
     print('action is', action)
 
-    print('target dig block is', self.bot.targetDigBlock)
+    # print('target dig block is', self.bot.targetDigBlock)
 
-    if action != 5 and action != 6:
+    if action == 5:
+      Movement.move(self.bot, Movement.Direction.forwards)
+    else:
       Movement.move(self.bot, Movement.Direction.none)
       
-    if action != 6:
+    if action == 6:
+      Movement.move(self.bot, Movement.Direction.forwards)
+      Jump.jump(self.bot, Jump.Jump.jump)
+    else:
       Jump.jump(self.bot, Jump.Jump.none)
+      
 
     match action:
       case 1:
@@ -365,14 +370,9 @@ class Hunter:
           self.currentPitch = math.pi/2
         else:
           self.currentPitch += pitchChange # Look up
-      case 5:
-        Movement.move(self.bot, Movement.Direction.forwards)
-      case 6:
-        Movement.move(self.bot, Movement.Direction.forwards)
-        Jump.jump(self.bot, Jump.Jump.jump)
       case 7:
-        block = self.bot.blockAtCursor()
         try:
+          block = self.bot.blockAtCursor()
           self.action.dig(self.bot, block, True, 'rayCast') # Currently digging blocks other functions from running, which isn't perfect, but is partially what I was going to implement anyway
         except:
           print('No block to dig!')
@@ -417,8 +417,6 @@ class Hunter:
   def respawnBot(self):
     self.bot.chat('/time set 300')
     self.bot.chat('/weather clear')
-    self.bot.chat('/gamerule spawnRadius 10') # Spawnradius seems to default to 5 or so, even when set to 0
-    self.bot.chat('/spawnpoint ' + self.username + ' ' + str(self.spawnX) + ' ' + str(self.spawnY) + ' ' + str(self.spawnZ))
     self.bot.chat('/kill')
 
 # hunter = Hunter('localHost', 25565, 'HelloThere')
