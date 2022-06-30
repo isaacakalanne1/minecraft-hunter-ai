@@ -12,6 +12,3 @@ class HunterAction:
     for item in currentBot.inventory.items():
       items.append(item)
     return items
-  
-  def getTimeOfDay(self, currentBot):
-    return currentBot.time.timeOfDay

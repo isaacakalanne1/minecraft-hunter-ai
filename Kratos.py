@@ -14,7 +14,7 @@ from threading import Thread
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 pvp = require('/Users/iakalann/node_modules/mineflayer-pvp').plugin
 pathfinder = require('/Users/iakalann/node_modules/mineflayer-pathfinder').pathfinder
-movements = require('/Users/iakalann/node_modules/mineflayer-pathfinder').Movements
+collectBlock = require('/Users/iakalann/node_modules/mineflayer-collectblock').plugin
 Vec3 = require('vec3')
 
 class Kratos:
@@ -33,6 +33,7 @@ class Kratos:
     self.currentTimeOfDay = 0
     self.botHasDied = False
     self.rlIsActive = False
+    self.mcData = ""
     self.bot.on('spawn', self.handle)
     self.bot.on('death', self.handleDeath)
     self.bot.on('chat', self.handleMsg)
@@ -47,18 +48,15 @@ class Kratos:
     self.resetValues()
 
   def resetValues(self):
-    self.initialTimeOfDay = self.action.getTimeOfDay(self.bot)
+    self.initialTimeOfDay = self.bot.time.timeOfDay
+    self.mcData = require('/Users/iakalann/node_modules/minecraft-data')(self.bot.version)
     self.bot.loadPlugin(pathfinder)
     self.bot.loadPlugin(pvp)
+    self.bot.loadPlugin(collectBlock)
     self.bot.pathfinder.allowSprinting = True
     self.bot.pvp.viewDistance = 1_000_000_000
     self.bot.pvp.attackRange = 3
     self.bot.pvp.followRange = 0
-    mcData = require('minecraft-data')(self.bot.version)
-
-    move = movements(self.bot, mcData)
-    move.canDig = True
-    self.bot.pathfinder.setMovements(move)
 
   def deleteInventory(self):
     self.bot.chat('/gamemode creative')
@@ -76,6 +74,21 @@ class Kratos:
     if sender and (sender != 'HelloThere'):
       match message:
 
+        case 'find':
+
+          block = self.bot.findBlock({
+            'matching' : self.mcData.blocksByName.grass_block.id,
+            'maxDistance' : 64
+          })
+
+          if block is not None:
+            try:
+              self.bot.collectBlock.collect(block)
+            except:
+              print('Couldn\'t collect block!')
+          else:
+            print('Couldn\'t find a block!')
+
         case 'fight me':
           self.attackPlayer()
 
@@ -92,11 +105,15 @@ class Kratos:
           print('bot.physics is', self.bot.physics)
 
   def attackPlayer(self):
-    player = self.bot.players['RoyalCentaur']
-    if player is None:
-      self.bot.chat('I can\'t see you!')
-    else:
+    try:
+      player = self.bot.players['RoyalCentaur']
       self.bot.pvp.attack(player.entity)
+    except:
+      if player is None:
+        self.bot.chat('I can\'t see you!')
+      else:
+        self.bot.chat('I can\'t attack you!')
+      
 
   def getState(self):
     
@@ -123,7 +140,7 @@ class Kratos:
 
   def getRewardTerminal(self):
 
-    self.currentTimeOfDay = self.action.getTimeOfDay(self.bot)
+    self.currentTimeOfDay = self.bot.time.timeOfDay
     timeDifference = self.currentTimeOfDay - self.initialTimeOfDay
     reward = 1
 
