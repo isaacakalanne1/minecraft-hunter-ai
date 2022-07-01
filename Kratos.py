@@ -1,3 +1,4 @@
+from turtle import pos
 from javascript import require, On
 import Action.Movement as Movement
 import Action.MovementModifier as MovementModifier
@@ -10,10 +11,14 @@ import time
 import math
 import numpy as np
 from threading import Thread
+import re
+import ast
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 pvp = require('/Users/iakalann/node_modules/mineflayer-pvp').plugin
 pathfinder = require('/Users/iakalann/node_modules/mineflayer-pathfinder').pathfinder
+movements = require('/Users/iakalann/node_modules/mineflayer-pathfinder').Movements
+goals = require('/Users/iakalann/node_modules/mineflayer-pathfinder').goals
 collectBlock = require('/Users/iakalann/node_modules/mineflayer-collectblock').plugin
 Vec3 = require('vec3')
 
@@ -38,6 +43,27 @@ class Kratos:
     self.bot.on('death', self.handleDeath)
     self.bot.on('chat', self.handleMsg)
     self.bot.on('health', self.healthUpdated)
+    self.bot.on('path_stop', self.pathStopped)
+    self.bot.on('goal_reached', self.goalReached)
+    self.bot.on('path_update', self.noPathListener)
+    self.bot.on('goal_updated', self.goalChangedListener)
+    self.bot.on('playerCollect', self.handlePlayerCollect)
+
+  def handlePlayerCollect(self, *args):
+    print('Collected item!')
+
+  def pathStopped(self, *args):
+    self.bot.chat('Path stopped!')
+
+  def goalReached(self, *args):
+    self.bot.chat('Goal reached!')
+
+  def noPathListener(self, *args):
+    pass
+    # self.bot.chat('No path!')
+
+  def goalChangedListener(self, *args):
+    self.bot.chat('Goal changed!')
 
   def healthUpdated(self, *args):
     self.currentHealth = self.bot.health
@@ -50,11 +76,16 @@ class Kratos:
   def resetValues(self):
     self.initialTimeOfDay = self.bot.time.timeOfDay
     self.mcData = require('/Users/iakalann/node_modules/minecraft-data')(self.bot.version)
+    print('World is', self.bot.world)
     self.bot.loadPlugin(pathfinder)
+    move = movements(self.bot, self.mcData)
+    move.canDig = True
+    move.allowFreeMotion = True
+    self.bot.pathfinder.setMovements(move)
     self.bot.loadPlugin(pvp)
     self.bot.loadPlugin(collectBlock)
     self.bot.pathfinder.allowSprinting = True
-    self.bot.pvp.viewDistance = 1_000_000_000
+    self.bot.pvp.viewDistance = 100000000000000000
     self.bot.pvp.attackRange = 3
     self.bot.pvp.followRange = 0
 
@@ -69,28 +100,53 @@ class Kratos:
       self.botHasDied = True
     print('I died!')
 
+  def find_between(self, s, first, last ):
+    try:
+        start = s.index( first ) + len( first )
+        end = s.index( last, start )
+        return s[start:end]
+    except ValueError:
+        return None
+
+  def getPositionFrom(self, message):
+    try:
+      position = self.find_between(message, 'Pos: ', ', Health:')
+      position = re.sub('d', '', position)
+      positionList = ast.literal_eval(position)
+      return positionList
+    except:
+      return None
+
   def handleMsg(self, this, sender, message, *args):
-    print('Received message:', message)
-    if sender and (sender != 'HelloThere'):
+    if sender and (sender == self.username or sender == 'data'):
+      position = self.getPositionFrom(message)
+      if position is not None:
+        print('position is', position)
+        x = int(position[0])
+        y = int(position[1])
+        z = int(position[2])
+        print('x y z is', x, y, z)
+        goal = goals.GoalNear(int(position[0]), int(position[1]), int(position[2]), 0)
+        self.bot.pathfinder.setGoal(goal)
+
+    if sender and (sender != 'Kratos'):
+      print('Received message:', message)
       match message:
 
-        case 'find':
+        case 'collect':
+          self.collectLog()
 
-          block = self.bot.findBlock({
-            'matching' : self.mcData.blocksByName.grass_block.id,
-            'maxDistance' : 64
-          })
-
-          if block is not None:
-            try:
-              self.bot.collectBlock.collect(block)
-            except:
-              print('Couldn\'t collect block!')
-          else:
-            print('Couldn\'t find a block!')
+        case 'go':
+          self.bot.chat('/data get entity RoyalCentaur')
 
         case 'fight me':
           self.attackPlayer()
+
+        case 'stop':
+          self.bot.pathfinder.stop()
+
+        case 'inventory':
+          pass
 
         case 'self':
           print('Bot is', self.bot.entity)
@@ -105,15 +161,27 @@ class Kratos:
           print('bot.physics is', self.bot.physics)
 
   def attackPlayer(self):
-    try:
-      player = self.bot.players['RoyalCentaur']
+    player = self.bot.players['RoyalCentaur']
+    if player is None:
+      self.bot.chat('I can\'t see you!')
+    else:
       self.bot.pvp.attack(player.entity)
-    except:
-      if player is None:
-        self.bot.chat('I can\'t see you!')
-      else:
-        self.bot.chat('I can\'t attack you!')
+      self.bot.chat('I can\'t attack you!')
       
+  def collectLog(self):
+    block = self.bot.findBlock({
+      'matching' : self.mcData.blocksByName.oak_log.id,
+      'maxDistance' : 64
+    })
+
+    if block is not None:
+      try:
+        self.bot.collectBlock.collect(block)
+        self.collectBlock()
+      except:
+        print('Couldn\'t collect block!')
+    else:
+      print('Couldn\'t find a block!')
 
   def getState(self):
     
