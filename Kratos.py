@@ -57,6 +57,7 @@ class Kratos:
 
   def goalReached(self, *args):
     self.bot.chat('Goal reached!')
+    self.attackPlayer()
 
   def noPathListener(self, *args):
     pass
@@ -79,7 +80,6 @@ class Kratos:
     self.bot.loadPlugin(pathfinder)
     move = movements(self.bot, self.mcData)
     move.canDig = True
-    move.allowFreeMotion = True
     self.bot.pathfinder.setMovements(move)
     self.bot.loadPlugin(pvp)
     self.bot.loadPlugin(collectBlock)
@@ -129,6 +129,16 @@ class Kratos:
         case 'collect':
           self.collectLog()
 
+        case 'craft':
+          recipe = self.getCraftingTableRecipe()
+          if recipe is not None:
+            self.craft(recipe)
+          else:
+            self.collectLog()
+
+        case 'items':
+          print('items are', self.mcData.itemsByName.wooden_axe.id)
+
         case 'go':
           self.bot.chat('/data get entity RoyalCentaur')
 
@@ -140,6 +150,10 @@ class Kratos:
 
         case 'inventory':
           pass
+
+        case 'player':
+          player = self.bot.players['RoyalCentaur']
+          print('player is', player)
 
         case 'self':
           print('Bot is', self.bot.entity)
@@ -156,43 +170,50 @@ class Kratos:
   def attackPlayer(self):
     player = self.bot.players['RoyalCentaur']
     if player.entity is not None:
-      self.bot.pvp.attack(player.entity)
       print('Attacking player', player)
+      self.bot.pvp.attack(player.entity)
     else:
-      self.bot.pathfinder.setGoal(None)
-      time.sleep(1)
+      print('I can\'t find you!')
+      pass
+      # if self.bot.pathfinder.isMoving() == False:
+      #   print('Going to player!')
+      #   self.bot.pathfinder.setGoal(None)
       self.triggerGoToPlayer()
 
   def triggerGoToPlayer(self):
     self.bot.chat('/data get entity RoyalCentaur')
   
+  def getDistanceTo(self, x, y, z):
+    kratosX = self.bot.entity.position.x
+    kratosY = self.bot.entity.position.y
+    kratosZ = self.bot.entity.position.z
+    diffX = abs(x - kratosX)
+    diffY = abs(y - kratosY)
+    diffZ = abs(z - kratosZ)
+    return diffX, diffY, diffZ
+
   def goto(self, position):
     playerX = int(position[0])
     playerY = int(position[1])
     playerZ = int(position[2])
-    kratosX = self.bot.entity.position.x
-    kratosY = self.bot.entity.position.y
-    kratosZ = self.bot.entity.position.z
-    diffX = abs(playerX - kratosX)
-    diffY = abs(playerY - kratosY)
-    diffZ = abs(playerZ - kratosZ)
-    x, y, z = self.convertDiffToInRange(diffX, diffY, diffZ)
+    x, y, z = self.getDistanceTo(playerX, playerY, playerZ)
     print('x y z is', x, y, z)
-    goal = goals.GoalNear(x, y, z, 0)
+    x, y, z = self.convertDistanceToInRange(x, y, z)
+    goal = goals.GoalNearXZ(x, z, 1)
     try:
       self.bot.pathfinder.setGoal(goal)
       print('Set goal!')
     except:
       print('Couldn\'t set goal!')
         
-  def convertDiffToInRange(self, x, y, z):
-    maxDistance = 100
+  def convertDistanceToInRange(self, x, y, z):
+    maxDistance = 15
     if x > maxDistance or y > maxDistance or z > maxDistance:
       x /= 2
       y /= 2
       z /= 2
     if x > maxDistance or y > maxDistance or z > maxDistance:
-      return self.convertDiffToInRange(x, y, z)
+      return self.convertDistanceToInRange(x, y, z)
     else:
       return x, y, z
       
@@ -205,11 +226,20 @@ class Kratos:
     if block is not None:
       try:
         self.bot.collectBlock.collect(block)
-        self.collectBlock()
+        self.collectLog()
       except:
         print('Couldn\'t collect block!')
     else:
       print('Couldn\'t find a block!')
+
+  def getCraftingTableRecipe(self):
+    return self.bot.recipesFor(self.mcData.itemsByName.crafting_table.id)
+
+  def getAxeRecipe(self, craftingTable):
+    return self.bot.recipesFor(self.mcData.itemsByName.wooden_axe.id, craftingTable)
+
+  def craft(self, recipe, craftingTable=None):
+    self.bot.craft(recipe, None, craftingTable)
 
   def getState(self):
     
