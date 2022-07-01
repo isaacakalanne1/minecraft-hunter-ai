@@ -130,11 +130,7 @@ class Kratos:
           self.collectLog()
 
         case 'craft':
-          recipe = self.getCraftingTableRecipe()
-          if recipe is not None:
-            self.craft(recipe)
-          else:
-            self.collectLog()
+          self.attemptToCraftCraftingTable()
 
         case 'items':
           print('items are', self.mcData.itemsByName.wooden_axe.id)
@@ -144,6 +140,9 @@ class Kratos:
 
         case 'fight me':
           self.attackPlayer()
+
+        case 'reset':
+          self.bot.resetPath()
 
         case 'stop':
           self.bot.pathfinder.stop()
@@ -166,6 +165,15 @@ class Kratos:
           entity = self.action.getNearestEntity(self.bot)
           print('Player physics is', entity)
           print('bot.physics is', self.bot.physics)
+
+  def attemptToCraftCraftingTable(self):
+    recipe = self.getCraftingTableRecipe()
+    if recipe is not None:
+      self.craft(recipe)
+    else:
+      self.collectLog()
+      self.getOakPlanksRecipe()
+      self.attemptToCraftCraftingTable()
 
   def attackPlayer(self):
     player = self.bot.players['RoyalCentaur']
@@ -210,7 +218,7 @@ class Kratos:
     self.attackPlayer()
         
   def convertToGhostWalkDistance(self, x, z):
-    ghostWalkDistance = 15
+    ghostWalkDistance = 40
     if x > ghostWalkDistance or x < -ghostWalkDistance:
       mult = abs(ghostWalkDistance / x)
       x *= mult
@@ -235,6 +243,9 @@ class Kratos:
         print('Couldn\'t collect block!')
     else:
       print('Couldn\'t find a block!')
+
+  def getOakPlanksRecipe(self):
+    return self.bot.recipesFor(self.mcData.itemsByName.oak_planks.id)
 
   def getCraftingTableRecipe(self):
     return self.bot.recipesFor(self.mcData.itemsByName.crafting_table.id)
