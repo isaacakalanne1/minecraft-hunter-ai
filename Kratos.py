@@ -183,39 +183,43 @@ class Kratos:
   def triggerGoToPlayer(self):
     self.bot.chat('/data get entity RoyalCentaur')
   
-  def getDistanceTo(self, x, y, z):
+  def getDistanceTo(self, playerX, playerZ):
     kratosX = self.bot.entity.position.x
-    kratosY = self.bot.entity.position.y
     kratosZ = self.bot.entity.position.z
-    diffX = abs(x - kratosX)
-    diffY = abs(y - kratosY)
-    diffZ = abs(z - kratosZ)
-    return diffX, diffY, diffZ
+    diffX = playerX - kratosX
+    diffZ = playerZ - kratosZ
+    return diffX, diffZ
 
   def goto(self, position):
     playerX = int(position[0])
-    playerY = int(position[1])
     playerZ = int(position[2])
-    x, y, z = self.getDistanceTo(playerX, playerY, playerZ)
-    print('x y z is', x, y, z)
-    x, y, z = self.convertDistanceToInRange(x, y, z)
-    goal = goals.GoalNearXZ(x, z, 1)
-    try:
-      self.bot.pathfinder.setGoal(goal)
-      print('Set goal!')
-    except:
-      print('Couldn\'t set goal!')
+    x, z = self.getDistanceTo(playerX, playerZ)
+    print('total distance x z is', x, z)
+    x, z = self.convertToGhostWalkDistance(x, z)
+    print('ghost distance x z is', x, z)
+    kratosX = self.bot.entity.position.x
+    kratosZ = self.bot.entity.position.z
+    ghostWalkX = kratosX + x
+    ghostWalkZ = kratosZ + z
+    self.ghostWalkTo(ghostWalkX, ghostWalkZ)
+
+  def ghostWalkTo(self, x, z):
+    time.sleep(3)
+    self.bot.chat('/spreadplayers ' + str(x) + ' ' + str(z) + ' 0 10 false Kratos')
+    time.sleep(1)
+    self.attackPlayer()
         
-  def convertDistanceToInRange(self, x, y, z):
-    maxDistance = 15
-    if x > maxDistance or y > maxDistance or z > maxDistance:
-      x /= 2
-      y /= 2
-      z /= 2
-    if x > maxDistance or y > maxDistance or z > maxDistance:
-      return self.convertDistanceToInRange(x, y, z)
-    else:
-      return x, y, z
+  def convertToGhostWalkDistance(self, x, z):
+    ghostWalkDistance = 15
+    if x > ghostWalkDistance or x < -ghostWalkDistance:
+      mult = abs(ghostWalkDistance / x)
+      x *= mult
+      z *= mult
+    if z > ghostWalkDistance or z < -ghostWalkDistance:
+      mult = abs(ghostWalkDistance / z)
+      x *= mult
+      z *= mult
+    return x, z
       
   def collectLog(self):
     block = self.bot.findBlock({
