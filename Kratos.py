@@ -76,7 +76,6 @@ class Kratos:
   def resetValues(self):
     self.initialTimeOfDay = self.bot.time.timeOfDay
     self.mcData = require('/Users/iakalann/node_modules/minecraft-data')(self.bot.version)
-    print('World is', self.bot.world)
     self.bot.loadPlugin(pathfinder)
     move = movements(self.bot, self.mcData)
     move.canDig = True
@@ -121,15 +120,9 @@ class Kratos:
     if sender and (sender == self.username or sender == 'data'):
       position = self.getPositionFrom(message)
       if position is not None:
-        print('position is', position)
-        x = int(position[0])
-        y = int(position[1])
-        z = int(position[2])
-        print('x y z is', x, y, z)
-        goal = goals.GoalNear(int(position[0]), int(position[1]), int(position[2]), 0)
-        self.bot.pathfinder.setGoal(goal)
+        self.goto(position)
 
-    if sender and (sender != 'Kratos'):
+    if sender and (sender != 'Kratos') and (sender != 'data'):
       print('Received message:', message)
       match message:
 
@@ -162,11 +155,46 @@ class Kratos:
 
   def attackPlayer(self):
     player = self.bot.players['RoyalCentaur']
-    if player is None:
-      self.bot.chat('I can\'t see you!')
-    else:
+    if player.entity is not None:
       self.bot.pvp.attack(player.entity)
-      self.bot.chat('I can\'t attack you!')
+      print('Attacking player', player)
+    else:
+      self.bot.pathfinder.setGoal(None)
+      time.sleep(1)
+      self.triggerGoToPlayer()
+
+  def triggerGoToPlayer(self):
+    self.bot.chat('/data get entity RoyalCentaur')
+  
+  def goto(self, position):
+    playerX = int(position[0])
+    playerY = int(position[1])
+    playerZ = int(position[2])
+    kratosX = self.bot.entity.position.x
+    kratosY = self.bot.entity.position.y
+    kratosZ = self.bot.entity.position.z
+    diffX = abs(playerX - kratosX)
+    diffY = abs(playerY - kratosY)
+    diffZ = abs(playerZ - kratosZ)
+    x, y, z = self.convertDiffToInRange(diffX, diffY, diffZ)
+    print('x y z is', x, y, z)
+    goal = goals.GoalNear(x, y, z, 0)
+    try:
+      self.bot.pathfinder.setGoal(goal)
+      print('Set goal!')
+    except:
+      print('Couldn\'t set goal!')
+        
+  def convertDiffToInRange(self, x, y, z):
+    maxDistance = 100
+    if x > maxDistance or y > maxDistance or z > maxDistance:
+      x /= 2
+      y /= 2
+      z /= 2
+    if x > maxDistance or y > maxDistance or z > maxDistance:
+      return self.convertDiffToInRange(x, y, z)
+    else:
+      return x, y, z
       
   def collectLog(self):
     block = self.bot.findBlock({
