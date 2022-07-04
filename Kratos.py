@@ -13,6 +13,7 @@ import numpy as np
 from threading import Thread
 import re
 import ast
+from enum import Enum
 
 mineflayer = require('/Users/iakalann/node_modules/mineflayer')
 pvp = require('/Users/iakalann/node_modules/mineflayer-pvp').plugin
@@ -21,6 +22,16 @@ movements = require('/Users/iakalann/node_modules/mineflayer-pathfinder').Moveme
 goals = require('/Users/iakalann/node_modules/mineflayer-pathfinder').goals
 collectBlock = require('/Users/iakalann/node_modules/mineflayer-collectblock').plugin
 Vec3 = require('vec3')
+
+class Block(Enum):
+  oakLog = 'oak_log'
+
+class CustomGoal(Enum):
+  noGoal = 'no_goal'
+  attackPlayer = 'attack_player'
+  collectLog = 'collect_log'
+  craftPlanks = 'craft_planks'
+  craftCraftingTable = 'craft_crafting_table'
 
 class Kratos:
 
@@ -36,9 +47,11 @@ class Kratos:
     self.currentHunger = 0
     self.initialTimeOfDay = 0
     self.currentTimeOfDay = 0
+    self.inventory = {}
     self.botHasDied = False
     self.rlIsActive = False
     self.mcData = ""
+    self.currentGoal = CustomGoal.noGoal
     self.bot.on('spawn', self.handle)
     self.bot.on('death', self.handleDeath)
     self.bot.on('chat', self.handleMsg)
@@ -57,7 +70,9 @@ class Kratos:
 
   def goalReached(self, *args):
     self.bot.chat('Goal reached!')
-    self.attackPlayer()
+    match self.currentGoal:
+      case CustomGoal.craftCraftingTable:
+        self.attemptToCraftCraftingTable()
 
   def noPathListener(self, *args):
     pass
@@ -148,7 +163,8 @@ class Kratos:
           self.bot.pathfinder.stop()
 
         case 'inventory':
-          pass
+          print('Inventory is', self.bot.inventory)
+          print('Oak log is', Block.oakLog.value)
 
         case 'player':
           player = self.bot.players['RoyalCentaur']
@@ -166,14 +182,41 @@ class Kratos:
           print('Player physics is', entity)
           print('bot.physics is', self.bot.physics)
 
-  def attemptToCraftCraftingTable(self):
-    recipe = self.getCraftingTableRecipe()
-    if recipe is not None:
-      self.craft(recipe)
+  def hasOakLogsInInventory(self):
+    items = self.bot.inventory.slots
+    self.inventory = {}
+    for item in items:
+      if hasattr(item, 'name') and item.name == Block.oakLog.value:
+        if Block.oakLog.value in self.inventory:
+          self.inventory[Block.oakLog.value] += item.count
+        else:
+          self.inventory[Block.oakLog.value] = item.count
+    if self.inventory[Block.oakLog.value] >= 1:
+      return True
     else:
+      return False
+
+  def attemptToCraftCraftingTable(self):
+    self.currentGoal = CustomGoal.craftCraftingTable
+    recipe = self.getCraftingTableRecipe()
+    if len(list(recipe)) == 0:
+      self.attemptToCraftOakPlanks()
+      self.attemptToCraftCraftingTable
+    else:
+      recipe = recipe[0]
+      self.craft(recipe)
+      self.currentGoal = CustomGoal.noGoal
+      print('Crafted table!')
+
+  def attemptToCraftOakPlanks(self):
+    recipe = self.getOakPlanksRecipe()
+    if len(list(recipe)) == 0:
       self.collectLog()
-      self.getOakPlanksRecipe()
-      self.attemptToCraftCraftingTable()
+      self.attemptToCraftOakPlanks()
+    else:
+      recipe = recipe[0]
+      self.craft(recipe)
+      print('Crafted planks!')
 
   def attackPlayer(self):
     player = self.bot.players['RoyalCentaur']
@@ -238,23 +281,22 @@ class Kratos:
     if block is not None:
       try:
         self.bot.collectBlock.collect(block)
-        self.collectLog()
       except:
         print('Couldn\'t collect block!')
     else:
       print('Couldn\'t find a block!')
 
   def getOakPlanksRecipe(self):
-    return self.bot.recipesFor(self.mcData.itemsByName.oak_planks.id)
+    return self.bot.recipesFor(self.mcData.itemsByName.oak_planks.id, None, 1, None)
 
   def getCraftingTableRecipe(self):
-    return self.bot.recipesFor(self.mcData.itemsByName.crafting_table.id)
+    return self.bot.recipesFor(self.mcData.itemsByName.crafting_table.id, None, 1, None)
 
   def getAxeRecipe(self, craftingTable):
     return self.bot.recipesFor(self.mcData.itemsByName.wooden_axe.id, craftingTable)
 
-  def craft(self, recipe, craftingTable=None):
-    self.bot.craft(recipe, None, craftingTable)
+  def craft(self, recipe, count=1, craftingTable=None):
+    self.bot.craft(recipe, count, craftingTable)
 
   def getState(self):
     
