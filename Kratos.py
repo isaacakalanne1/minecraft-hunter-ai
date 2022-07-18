@@ -279,8 +279,6 @@ class Kratos:
     if block is not None:
 
       try:
-        
-        # self.bot.collectBlock.collect(block)
         @AsyncTask(start=True)
         def getLog(task):
           self.bot.collectBlock.collect(block, {
