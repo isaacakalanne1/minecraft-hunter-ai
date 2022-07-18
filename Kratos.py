@@ -69,14 +69,15 @@ class Kratos:
 
   def pathStopped(self, *args):
     self.bot.chat('Path stopped!')
-    match self.currentGoal:
-      case CustomGoal.craftCraftingTable:
-        self.attemptToCraftCraftingTable()
-      case CustomGoal.collectScaffolding:
-        self.collectDirt()
+    
 
   def goalReached(self, *args):
-    self.bot.chat('Goal reached!')
+    print('Goal reached!')
+    # time.sleep(0.2)
+    if self.bot.targetDigBlock == None:
+      match self.currentGoal:
+        case CustomGoal.collectLog:
+          self.collectLog()
 
   def noPathListener(self, *args):
     pass
@@ -147,15 +148,6 @@ class Kratos:
         case 'collect':
           self.collectLog()
 
-        case 'craft':
-          self.attemptToCraftCraftingTable()
-
-        case 'axe':
-          self.attemptToCraftAxe()
-
-        case 'scaffolding':
-          self.collectDirt()
-
         case 'items':
           print('items are', self.mcData.itemsByName.wooden_axe.id)
 
@@ -169,11 +161,7 @@ class Kratos:
           self.bot.resetPath()
 
         case 'stop':
-          try:
-            self.currentGoal = CustomGoal.noGoal
-            self.bot.pathfinder.stop()
-          except:
-            print('Couldn\'t stop pathfinder!')
+          self.stop()
 
         case 'inventory':
           print('Inventory is', self.bot.inventory)
@@ -194,6 +182,13 @@ class Kratos:
           entity = self.action.getNearestEntity(self.bot)
           print('Player physics is', entity)
           print('bot.physics is', self.bot.physics)
+    
+  def stop(self):
+    try:
+      self.currentGoal = CustomGoal.noGoal
+      self.bot.pathfinder.stop()
+    except:
+      print('Couldn\'t stop pathfinder!')
 
   def hasOakLogsInInventory(self):
     items = self.bot.inventory.slots
@@ -209,49 +204,11 @@ class Kratos:
     else:
       return False
 
-  def attemptToCraftCraftingTable(self):
-    self.currentGoal = CustomGoal.craftCraftingTable
-    recipe = self.getCraftingTableRecipe()
-    if len(list(recipe)) == 0:
-      self.attemptToCraftOakPlanks()
-      self.attemptToCraftCraftingTable()
-    else:
-      recipe = recipe[0]
-      self.craft(recipe)
-      self.currentGoal = CustomGoal.noGoal
-      print('Crafted table!')
-
-  def attemptToPlaceCraftingTable(self):
-    self.bot.equip(246)
-    blockToPlace = self.bot.findBlock({
-      'maxDistance' : 5
-    })
-    self.bot.placeBlock(blockToPlace, Vec3(0, 1, 0))
-
-  def attemptToCraftAxe(self):
-    craftingTable = self.bot.findBlock({
-      'matching' : self.mcData.blocksByName.crafting_table.id,
-      'maxDistance' : 64
-    })
-    recipe = self.getAxeRecipe(craftingTable)
-    if len(list(recipe)) == 0:
-      self.attemptToCraftOakPlanks()
-      self.attemptToCraftCraftingTable()
-      self.attemptToPlaceCraftingTable()
-      self.attemptToCraftAxe()
-    else:
-      
-      recipe = recipe[0]
-      self.craft(recipe, 1, craftingTable)
-      self.currentGoal = CustomGoal.noGoal
-      print('Crafted axe!')
-
   def attemptToCraftOakPlanks(self):
     recipe = self.getOakPlanksRecipe()
     if len(list(recipe)) == 0:
+      print('Collecting log!')
       self.collectLog()
-      print('Crafting planks!')
-      self.attemptToCraftOakPlanks()
     else:
       recipe = recipe[0]
       self.craft(recipe)
@@ -312,59 +269,47 @@ class Kratos:
     return x, z
       
   def collectLog(self):
+    self.stop()
+    self.currentGoal = CustomGoal.collectLog
     block = self.bot.findBlock({
       'matching' : self.mcData.blocksByName.oak_log.id,
       'maxDistance' : 64
     })
 
     if block is not None:
+
       try:
+        
+        # self.bot.collectBlock.collect(block)
         @AsyncTask(start=True)
-        def breakBlock(task):
+        def getLog(task):
           self.bot.collectBlock.collect(block, {
             'ignoreNoPath' : True
           }, timeout=99)
-        # asyncio.run(self.bot.collectBlock.collect(block))
-        # self.barrier.wait()
+          if self.currentGoal == CustomGoal.collectLog:
+            self.collectLog()
+              
         print('Done!')
       except:
         print('Couldn\'t collect block!')
     else:
       print('Couldn\'t find a block!')
-
-  async def collectIt(self, block):
-    await self.bot.collectBlock.collect(block)
-
-  def collectDirt(self):
-    self.currentGoal = CustomGoal.collectScaffolding
-    block = self.bot.findBlock({
-      'matching' : self.mcData.blocksByName.dirt.id,
-      'maxDistance' : 64
-    })
-
-    if block is not None:
-      try:
-        @AsyncTask(start=True)
-        def breakBlock(task):
-          self.bot.collectBlock.collect(block, {
-            'ignoreNoPath' : True
-          }, timeout=99)
-      except:
-        print('Couldn\'t collect block!')
-    else:
-      print('Couldn\'t find a block!')
+    
 
   def getOakPlanksRecipe(self):
     return self.bot.recipesFor(self.mcData.itemsByName.oak_planks.id, None, 1, None)
 
-  def getCraftingTableRecipe(self):
-    return self.bot.recipesFor(self.mcData.itemsByName.crafting_table.id, None, 1, None)
-
-  def getAxeRecipe(self, craftingTable):
-    return self.bot.recipesFor(self.mcData.itemsByName.wooden_axe.id, craftingTable)
-
-  def craft(self, recipe, count=1, craftingTable=None):
-    self.bot.craft(recipe, count, craftingTable)
+  def attemptToPlaceCraftingTable(self):
+    print('Placing crafting table!')
+    self.bot.equip(246)
+    print('A!')
+    blockToPlace = Vec3(2, 1, 0)
+    print('B!')
+    # self.bot.placeBlock(blockToPlace, Vec3(0, 1, 0))
+    self.bot.pathfinder.goto(goals.GoalPlaceBlock(blockToPlace.offset(0, 1, 0), self.bot.world, {
+      range: 4
+    }))
+    print('C!')
 
   def getState(self):
     
@@ -413,7 +358,7 @@ class Kratos:
     self.bot.chat('/weather clear')
     self.bot.chat('/kill')
 
-kratos = Kratos('localHost', 49525, 'Kratos')
+kratos = Kratos('localHost', 63109, 'Kratos')
 
 while True:
   time.sleep(1)
